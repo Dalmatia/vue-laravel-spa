@@ -11,7 +11,7 @@ import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue';
 
-import MenuItem from '../Components/MenuItem.vue';
+import MenuItem from '@/Components/MenuItem.vue';
 import CreatePostOverlay from '@/Components/CreatePostOverlay.vue';
 
 let showCreatePost = ref(false);

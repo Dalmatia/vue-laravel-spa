@@ -1,5 +1,30 @@
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+
+const router = useRouter();
+const form = ref({
+    email: '',
+    password: '',
+});
+const errors = ref([]);
+
+const login = async () => {
+    await axios.get('/sanctum/csrf-cookie');
+    await axios
+        .post('/api/login', form.value)
+        .then(() => {
+            router.push('/');
+        })
+        .catch((reason) => {
+            errors.value = reason?.response?.data?.errors ?? {};
+        });
+};
+</script>
+
 <template>
-    <div class="bg-white my-6 py-6 sm:py-8 lg:py-12">
+    <div class="bg-white sm:py-8 lg:py-12">
         <div class="max-w-screen-2xl px-4 md:px-8 mx-auto">
             <h2
                 class="text-gray-800 text-2xl lg:text-3xl font-bold text-center mb-4 md:mb-8"
@@ -9,7 +34,7 @@
 
             <form
                 class="max-w-lg border rounded-lg mx-auto"
-                @submit.prevent="submit"
+                @submit.prevent="login()"
             >
                 <div class="flex flex-col gap-4 p-4 md:p-8">
                     <div>
@@ -22,11 +47,16 @@
                             type="text"
                             id="email"
                             class="w-full bg-gray-50 text-gray-800 border focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"
-                            v-model="fields.email"
+                            v-model="form.email"
+                            required
                         />
-                        <span v-if="errors.email" class="error">{{
-                            errors.email[0]
-                        }}</span>
+                        <span
+                            v-if="errors.email"
+                            class="text-sm text-red-700 m-1"
+                            role="alert"
+                        >
+                            {{ errors.email[0] }}
+                        </span>
                     </div>
 
                     <div>
@@ -39,9 +69,13 @@
                             type="password"
                             id="password"
                             class="w-full bg-gray-50 text-gray-800 border focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"
-                            v-model="fields.password"
+                            v-model="form.password"
                         />
-                        <span v-if="errors.password" class="error">
+                        <span
+                            v-if="errors.password"
+                            class="text-sm text-red-700 m-1"
+                            role="alert"
+                        >
                             {{ errors.password[0] }}
                         </span>
                     </div>
@@ -59,8 +93,9 @@
                         ></span>
                         <span
                             class="bg-white text-gray-400 text-sm relative px-4"
-                            >こちらもご利用いただけます</span
                         >
+                            こちらもご利用いただけます
+                        </span>
                     </div>
 
                     <button
@@ -131,31 +166,5 @@
         </div>
     </div>
 </template>
-
-<script>
-export default {
-    data() {
-        return {
-            fields: {},
-            errors: {},
-        };
-    },
-    methods: {
-        submit() {
-            axios
-                .post('/api/login', this.fields)
-                .then(() => {
-                    this.$router.push({ name: 'Home' });
-                    localStorage.setItem('authenticated', 'true');
-                    this.$emit('updateHeader');
-                    location.reload();
-                })
-                .catch((error) => {
-                    this.errors = error.response.data.errors;
-                });
-        },
-    },
-};
-</script>
 
 <style></style>
