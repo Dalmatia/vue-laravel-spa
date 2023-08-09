@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 import Magnify from 'vue-material-design-icons/Magnify.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
@@ -15,6 +16,18 @@ import MenuItem from '@/Components/MenuItem.vue';
 import CreatePostOverlay from '@/Components/CreatePostOverlay.vue';
 
 let showCreatePost = ref(false);
+
+const name = ref('');
+onMounted(() => {
+    axios
+        .get('/api/user')
+        .then((response) => {
+            name.value = response?.data?.name;
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+});
 </script>
 
 <template>
@@ -57,7 +70,7 @@ let showCreatePost = ref(false);
             <router-link :to="{ name: 'Home' }" class="px-4">
                 <ChevronLeft :size="30" class="cursor-pointer"></ChevronLeft>
             </router-link>
-            <div class="font-extrabold text-lg">Name Here</div>
+            <div class="font-extrabold text-lg">{{ name }}</div>
             <AccountPlusOutline :size="30" class="px-4"></AccountPlusOutline>
         </div>
 
@@ -132,7 +145,7 @@ let showCreatePost = ref(false);
                         />
                         <div class="pl-4">
                             <div class="text-black font-extrabold">
-                                NAME HERE
+                                {{ name }}
                             </div>
                             <div class="text-gray-500 text-extrabold text-sm">
                                 NAME HERE
