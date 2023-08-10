@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 import Magnify from 'vue-material-design-icons/Magnify.vue';
@@ -17,6 +18,8 @@ import CreatePostOverlay from '@/Components/CreatePostOverlay.vue';
 
 let showCreatePost = ref(false);
 
+const router = useRouter();
+
 const name = ref('');
 onMounted(() => {
     axios
@@ -28,11 +31,18 @@ onMounted(() => {
             console.log(error);
         });
 });
+
+const logout = async () => {
+    await axios.post('/api/logout').then(() => {
+        router.push('/login');
+    });
+};
 </script>
 
 <template>
     <div id="MainLayout" class="w-full h-screen">
         <div
+            v-if="this.$route.path == '/'"
             id="TopNavHome"
             class="fixed z-30 md:hidden block w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -64,6 +74,7 @@ onMounted(() => {
         </div>
 
         <div
+            v-if="this.$route.path !== '/'"
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -108,9 +119,13 @@ onMounted(() => {
                 </router-link>
             </div>
 
-            <a href="/" class="absolute bottom-0 px-3 w-full">
+            <button
+                type="button"
+                class="absolute bottom-0 px-3 w-full"
+                @click="logout"
+            >
                 <MenuItem iconString="Logout" class="mb-4" />
-            </a>
+            </button>
         </div>
 
         <div
