@@ -9,6 +9,7 @@ import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import Plus from 'vue-material-design-icons/Plus.vue';
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
 import Menu from 'vue-material-design-icons/Menu.vue';
+import Login from 'vue-material-design-icons/Login.vue';
 
 const props = defineProps({ iconString: String });
 const { iconString } = toRefs(props);
@@ -21,6 +22,7 @@ if (iconString.value === 'Explore') icon = Compass;
 if (iconString.value === 'Messages') icon = SendOutline;
 if (iconString.value === 'Notifications') icon = HeartOutline;
 if (iconString.value === 'Create') icon = Plus;
+if (iconString.value === 'Login') icon = Login;
 if (iconString.value === 'Profile') icon = AccountOutline;
 if (iconString.value === 'Logout') icon = Menu;
 </script>

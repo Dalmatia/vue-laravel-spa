@@ -20,8 +20,17 @@ let showCreatePost = ref(false);
 
 const router = useRouter();
 
+let loggedIn = ref(false);
+const emit = defineEmits(['updateSidebar']);
+
 const name = ref('');
 onMounted(() => {
+    if (localStorage.getItem('authenticated')) {
+        loggedIn.value = true;
+    } else {
+        loggedIn.value = false;
+    }
+
     axios
         .get('/api/user')
         .then((response) => {
@@ -34,7 +43,9 @@ onMounted(() => {
 
 const logout = async () => {
     await axios.post('/api/logout').then(() => {
-        router.push('/login');
+        router.go('/');
+        localStorage.removeItem('authenticated');
+        emit('updateSidebar');
     });
 };
 </script>
@@ -114,7 +125,10 @@ const logout = async () => {
                     iconString="Create"
                     class="mb-4"
                 />
-                <router-link :to="{ name: 'User' }">
+                <router-link :to="{ name: 'Login' }" v-if="!loggedIn">
+                    <MenuItem iconString="Login" class="mb-4" />
+                </router-link>
+                <router-link :to="{ name: 'User' }" v-if="loggedIn">
                     <MenuItem iconString="Profile" class="mb-4" />
                 </router-link>
             </div>
@@ -152,6 +166,7 @@ const logout = async () => {
                 <a
                     href="/"
                     class="flex items-center justify-between max-w-[300px]"
+                    v-if="loggedIn"
                 >
                     <div class="flex items-center">
                         <img
@@ -226,25 +241,25 @@ const logout = async () => {
                 />
             </router-link>
             <Compass fillColor="#000000" :size="33" class="cursor-pointer" />
-            <SendOutline
-                fillColor="#000000"
-                :size="33"
-                class="cursor-pointer"
-            />
             <Plus
                 @click="showCreatePost = true"
                 fillColor="#000000"
                 :size="33"
                 class="cursor-pointer"
             />
-            <router-link :to="{ name: 'User' }">
+            <SendOutline
+                fillColor="#000000"
+                :size="33"
+                class="cursor-pointer"
+            />
+            <router-link :to="{ name: 'Login' }" v-if="!loggedIn">
                 <AccountOutline
                     fillColor="#000000"
                     :size="33"
                     class="cursor-pointer"
                 />
             </router-link>
-            <router-link :to="{ name: 'User' }">
+            <router-link :to="{ name: 'User' }" v-if="loggedIn">
                 <img
                     class="rounded-full w-[30px] cursor-pointer"
                     src="https://picsum.photos/id/200/300/320"

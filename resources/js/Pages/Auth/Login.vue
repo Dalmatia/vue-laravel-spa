@@ -9,13 +9,16 @@ const form = ref({
     password: '',
 });
 const errors = ref([]);
+const emit = defineEmits(['updateSidebar']);
 
 const login = async () => {
     await axios.get('/sanctum/csrf-cookie');
     await axios
         .post('/api/login', form.value)
         .then(() => {
-            router.push('/');
+            router.go('/');
+            localStorage.setItem('authenticated', 'true');
+            emit('updateSidebar');
         })
         .catch((reason) => {
             errors.value = reason?.response?.data?.errors ?? {};
