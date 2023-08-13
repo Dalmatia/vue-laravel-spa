@@ -9,7 +9,7 @@ const form = ref({
     password: '',
 });
 const errors = ref([]);
-const emit = defineEmits(['updateSidebar']);
+// const emit = defineEmits(['updateSidebar']);
 
 const login = async () => {
     await axios.get('/sanctum/csrf-cookie');
@@ -18,7 +18,7 @@ const login = async () => {
         .then(() => {
             router.go('/');
             localStorage.setItem('authenticated', 'true');
-            emit('updateSidebar');
+            // emit('updateSidebar');
         })
         .catch((reason) => {
             errors.value = reason?.response?.data?.errors ?? {};

@@ -21,7 +21,7 @@ let showCreatePost = ref(false);
 const router = useRouter();
 
 let loggedIn = ref(false);
-const emit = defineEmits(['updateSidebar']);
+// const emit = defineEmits(['updateSidebar']);
 
 const name = ref('');
 onMounted(() => {
@@ -38,7 +38,7 @@ onMounted(() => {
         })
         .catch((error) => {
             if (error.response.status === 401) {
-                emit('updateSidebar');
+                // emit('updateSidebar');
                 localStorage.removeItem('authenticated');
                 loggedIn.value = false;
                 router.push({ name: 'Login' });
@@ -51,7 +51,7 @@ const logout = async () => {
         router.push('/login');
         loggedIn.value = false;
         localStorage.removeItem('authenticated');
-        emit('updateSidebar');
+        // emit('updateSidebar');
     });
 };
 </script>
