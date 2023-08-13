@@ -37,13 +37,19 @@ onMounted(() => {
             name.value = response?.data?.name;
         })
         .catch((error) => {
-            console.log(error);
+            if (error.response.status === 401) {
+                emit('updateSidebar');
+                localStorage.removeItem('authenticated');
+                loggedIn.value = false;
+                router.push({ name: 'Login' });
+            }
         });
 });
 
 const logout = async () => {
     await axios.post('/api/logout').then(() => {
-        router.go('/');
+        router.push('/login');
+        loggedIn.value = false;
         localStorage.removeItem('authenticated');
         emit('updateSidebar');
     });
@@ -92,7 +98,7 @@ const logout = async () => {
             <router-link :to="{ name: 'Home' }" class="px-4">
                 <ChevronLeft :size="30" class="cursor-pointer"></ChevronLeft>
             </router-link>
-            <div class="font-extrabold text-lg">{{ name }}</div>
+            <div class="font-extrabold text-lg" v-if="loggedIn">{{ name }}</div>
             <AccountPlusOutline :size="30" class="px-4"></AccountPlusOutline>
         </div>
 
@@ -137,6 +143,7 @@ const logout = async () => {
                 type="button"
                 class="absolute bottom-0 px-3 w-full"
                 @click="logout"
+                v-if="loggedIn"
             >
                 <MenuItem iconString="Logout" class="mb-4" />
             </button>
