@@ -3,7 +3,7 @@ import { toRefs } from 'vue';
 
 import HomeOutline from 'vue-material-design-icons/HomeOutline.vue';
 import Magnify from 'vue-material-design-icons/Magnify.vue';
-import Compass from 'vue-material-design-icons/Compass.vue';
+import Calendar from 'vue-material-design-icons/Calendar.vue';
 import SendOutline from 'vue-material-design-icons/SendOutline.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import Plus from 'vue-material-design-icons/Plus.vue';
@@ -18,7 +18,7 @@ let icon = null;
 
 if (iconString.value === 'Home') icon = HomeOutline;
 if (iconString.value === 'Search') icon = Magnify;
-if (iconString.value === 'Explore') icon = Compass;
+if (iconString.value === 'Calendar') icon = Calendar;
 if (iconString.value === 'Messages') icon = SendOutline;
 if (iconString.value === 'Notifications') icon = HeartOutline;
 if (iconString.value === 'Create') icon = Plus;

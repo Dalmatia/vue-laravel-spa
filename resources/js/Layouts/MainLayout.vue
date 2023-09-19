@@ -6,7 +6,7 @@ import axios from 'axios';
 import Magnify from 'vue-material-design-icons/Magnify.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import HomeOutline from 'vue-material-design-icons/HomeOutline.vue';
-import Compass from 'vue-material-design-icons/Compass.vue';
+import Calendar from 'vue-material-design-icons/Calendar.vue';
 import SendOutline from 'vue-material-design-icons/SendOutline.vue';
 import Plus from 'vue-material-design-icons/Plus.vue';
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
@@ -123,7 +123,9 @@ const logout = async () => {
                     <MenuItem iconString="Home" class="mb-4" />
                 </router-link>
                 <MenuItem iconString="Search" class="mb-4" />
-                <!-- <MenuItem iconString="Explore" class="mb-4" /> -->
+                <router-link :to="{ name: 'Calendar' }">
+                    <MenuItem iconString="Calendar" class="mb-4" />
+                </router-link>
                 <!-- <MenuItem iconString="Messages" class="mb-4" /> -->
                 <MenuItem iconString="Notifications" class="mb-4" />
                 <MenuItem
@@ -247,7 +249,13 @@ const logout = async () => {
                     class="cursor-pointer"
                 />
             </router-link>
-            <Compass fillColor="#000000" :size="33" class="cursor-pointer" />
+            <router-link :to="{ name: 'Calendar' }">
+                <Calendar
+                    fillColor="#000000"
+                    :size="33"
+                    class="cursor-pointer"
+                />
+            </router-link>
             <Plus
                 @click="showCreatePost = true"
                 fillColor="#000000"

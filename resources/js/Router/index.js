@@ -4,6 +4,7 @@ import Home from '../Pages/Home.vue';
 import User from '../Pages/User.vue';
 import Login from '../Pages/Auth/Login.vue';
 import Register from '../Pages/Auth/Register.vue';
+import Calendar from '../Pages/Calendar.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -30,6 +31,12 @@ const router = createRouter({
             name: 'Register',
             component: Register,
             meta: { requiresGuest: true },
+        },
+        {
+            path: '/calendar',
+            name: 'Calendar',
+            component: Calendar,
+            meta: { requiresAuth: true },
         },
     ],
 });
