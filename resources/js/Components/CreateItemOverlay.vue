@@ -1,11 +1,13 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
 // const user = usePage().props.auth.user;
+const router = useRouter();
 
 const emit = defineEmits(['close']);
 
@@ -25,7 +27,6 @@ const seasons = ref([]);
 
 let isValidFile = ref(null);
 let fileDisplay = ref('');
-let textarea = ref('');
 let error = ref({
     file: null,
     main_category: '',
@@ -35,7 +36,37 @@ let error = ref({
     memo: null,
 });
 
-const createItemFunc = () => {
+// const createItemFunc = () => {
+//     error.value.file = null;
+//     error.value.main_category = '';
+//     error.value.sub_category = '';
+//     error.value.color = '';
+//     error.value.season = '';
+//     error.value.memo = null;
+
+//     axios.post('/api/items', form, {
+//         forceFormData: true,
+//         preserveScroll: true,
+//         onError: (errors) => {
+//             console.error('エラーが発生しました:', errors);
+//             errors && errors.file ? (error.value.file = errors.file) : '';
+//             errors && errors.main_category
+//                 ? (error.value.main_category = errors.main_category)
+//                 : '';
+//             errors && errors.sub_category
+//                 ? (error.value.sub_category = errors.sub_category)
+//                 : '';
+//             errors && errors.color ? (error.value.color = errors.color) : '';
+//             errors && errors.season ? (error.value.season = errors.season) : '';
+//             errors && errors.memo ? (error.value.memo = errors.memo) : '';
+//         },
+//         onSuccess: () => {
+//             closeOverlay();
+//         },
+//     });
+// };
+
+const createItemFunc = async () => {
     error.value.file = null;
     error.value.main_category = '';
     error.value.sub_category = '';
@@ -43,25 +74,35 @@ const createItemFunc = () => {
     error.value.season = '';
     error.value.memo = null;
 
-    axios.post('/api/items', form.value, {
-        forceFormData: true,
-        preserveScroll: true,
-        onError: (errors) => {
-            errors && errors.file ? (error.value.file = errors.file) : '';
-            errors && errors.main_category
-                ? (error.value.main_category = errors.main_category)
-                : '';
-            errors && errors.sub_category
-                ? (error.value.sub_category = errors.sub_category)
-                : '';
-            errors && errors.color ? (error.value.color = errors.color) : '';
-            errors && errors.season ? (error.value.season = errors.season) : '';
-            errors && errors.memo ? (error.value.memo = errors.memo) : '';
-        },
-        onSuccess: () => {
+    try {
+        const response = axios.post('/api/items', form, {
+            forceFormData: true,
+            preserveScroll: true,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        if (response.status === 200) {
             closeOverlay();
-        },
-    });
+            // router.push(router.currentRoute.value);
+        }
+    } catch (errors) {
+        console.error('エラーが発生しました:', errors);
+
+        if (errors.response) {
+            const responseErrors = errors.response.data.errors;
+
+            if (responseErrors) {
+                error.value.file = responseErrors.file;
+                error.value.main_category = responseErrors.main_category;
+                error.value.sub_category = responseErrors.sub_category;
+                error.value.color = responseErrors.color;
+                error.value.season = responseErrors.season;
+                error.value.memo = responseErrors.memo;
+            }
+        }
+    }
 };
 
 const getUploadedImage = (e) => {
@@ -196,6 +237,21 @@ onMounted(async () => {
                         <select v-model="form.main_category">
                             <option
                                 v-for="(label, value) in mainCategories"
+                                :key="value"
+                                :value="value"
+                            >
+                                {{ label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between border-b p-3">
+                        <div class="text-lg font-extrabold text-gray-500">
+                            サブカテゴリー
+                        </div>
+                        <select v-model="form.sub_category">
+                            <option
+                                v-for="(label, value) in subCategories"
                                 :key="value"
                                 :value="value"
                             >
