@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, toRefs } from 'vue';
+import { reactive, toRefs, ref } from 'vue';
 
 import ContentOverlay from '@/Components/ContentOverlay.vue';
 
@@ -7,7 +7,12 @@ import Cog from 'vue-material-design-icons/Cog.vue';
 import Grid from 'vue-material-design-icons/Grid.vue';
 import PlayBoxOutline from 'vue-material-design-icons/PlayBoxOutline.vue';
 import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue';
-import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue';
+import Hanger from 'vue-material-design-icons/Hanger.vue';
+import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
+
+import CreateItemOverlay from '@/Components/CreateItemOverlay.vue';
+
+let showCreateItem = ref(false);
 
 let data = reactive({ post: null });
 const form = reactive({ file: null });
@@ -111,6 +116,14 @@ const getUploadedImage = (e) => {
                 />
             </div>
             <div class="p-3 w-1/4 flex justify-center border-t">
+                <PlusCircle
+                    @click="showCreateItem = true"
+                    :size="28"
+                    fillColor="#8E8E8E"
+                    class="cursor-pointer"
+                />
+            </div>
+            <div class="p-3 w-1/4 flex justify-center border-t">
                 <BookmarkOutline
                     :size="28"
                     fillColor="#8E8E8E"
@@ -118,11 +131,7 @@ const getUploadedImage = (e) => {
                 />
             </div>
             <div class="p-3 w-1/4 flex justify-center border-t">
-                <AccountBoxOutline
-                    :size="28"
-                    fillColor="#8E8E8E"
-                    class="cursor-pointer"
-                />
+                <Hanger :size="28" fillColor="#8E8E8E" class="cursor-pointer" />
             </div>
         </div>
     </div>
@@ -151,6 +160,14 @@ const getUploadedImage = (e) => {
                     <div class="ml-2 -mb-[1px] text-gray-900">REELS</div>
                 </div>
                 <div class="p-[17px] w-1/4 flex justify-center items-center">
+                    <PlusCircle
+                        @click="showCreateItem = true"
+                        :size="40"
+                        fillColor="#8E8E8E"
+                        class="cursor-pointer"
+                    />
+                </div>
+                <div class="p-[17px] w-1/4 flex justify-center items-center">
                     <BookmarkOutline
                         :size="15"
                         fillColor="#8E8E8E"
@@ -159,12 +176,12 @@ const getUploadedImage = (e) => {
                     <span class="ml-2 -mb-[1px]">SAVED</span>
                 </div>
                 <div class="p-[17px] w-1/4 flex justify-center items-center">
-                    <AccountBoxOutline
+                    <Hanger
                         :size="15"
                         fillColor="#8E8E8E"
                         class="cursor-pointer"
                     />
-                    <span class="ml-2 -mb-[1px]">TAGGED</span>
+                    <span class="ml-2 -mb-[1px]">ITEMS</span>
                 </div>
             </div>
         </div>
@@ -175,4 +192,6 @@ const getUploadedImage = (e) => {
 
         <div class="pb-20"></div>
     </div>
+
+    <CreateItemOverlay v-if="showCreateItem" @close="showCreateItem = false" />
 </template>

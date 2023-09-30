@@ -17,16 +17,6 @@ class ItemController extends Controller
         //
     }
 
-    public function create()
-    {
-        $mainCategories = MainCategory::toSelectArray();
-        $subCategories = SubCategory::toSelectArray();
-        $colors = Color::toSelectArray();
-        $seasons = Season::toSelectArray();
-
-        return view('items.create', compact('mainCategories', 'subCategories', 'colors', 'seasons'));
-    }
-
     public function store(Request $request)
     {
         $item = new Item();
@@ -44,7 +34,7 @@ class ItemController extends Controller
         $item->sub_category = $request->sub_category;
         $item->color = $request->color;
         $item->season = $request->season;
-        $item->memo = $request->input('text');
+        $item->memo = $request->input('memo');
         $item->save();
     }
 
@@ -63,8 +53,18 @@ class ItemController extends Controller
         //
     }
 
-    public function destroy(Item $item)
+    public function destroy($id)
     {
-        //
+        $item = Item::find($id);
+
+        if (!empty($item->file)) {
+            $currentFile = public_path() . $item->file;
+
+            if (file_exists($currentFile)) {
+                unlink($currentFile);
+            }
+        }
+
+        $item->delete();
     }
 }
