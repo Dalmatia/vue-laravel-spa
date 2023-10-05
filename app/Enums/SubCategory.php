@@ -11,22 +11,22 @@ use BenSampo\Enum\Enum;
  */
 final class SubCategory extends Enum
 {
-    const tShirt = 0;
-    const shirt = 1;
-    const poloShirt = 2;
-    const parka = 3;
-    const sweatshirt = 4;
-    const knit = 5;
-    const pants = 6;
-    const denimPants = 7;
-    const skirt = 8;
-    const jacket = 9;
-    const coat = 10;
-    const sneaker = 11;
-    const leather_shoes = 12;
-    const boots = 13;
-    const formal_suit = 14;
-    const other = 15;
+    const tShirt = 1;
+    const shirt = 2;
+    const poloShirt = 3;
+    const parka = 4;
+    const sweatshirt = 5;
+    const knit = 6;
+    const pants = 7;
+    const denimPants = 8;
+    const skirt = 9;
+    const jacket = 10;
+    const coat = 11;
+    const sneaker = 12;
+    const leather_shoes = 13;
+    const boots = 14;
+    const formal_suit = 15;
+    const other = 16;
 
     protected static $labels = [
         self::tShirt => 'Tシャツ',

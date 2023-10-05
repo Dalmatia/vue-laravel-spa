@@ -1,13 +1,11 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, onMounted, watch } from 'vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
 // const user = usePage().props.auth.user;
-const router = useRouter();
 
 const emit = defineEmits(['close']);
 
@@ -36,36 +34,7 @@ let error = ref({
     memo: null,
 });
 
-// const createItemFunc = () => {
-//     error.value.file = null;
-//     error.value.main_category = '';
-//     error.value.sub_category = '';
-//     error.value.color = '';
-//     error.value.season = '';
-//     error.value.memo = null;
-
-//     axios.post('/api/items', form, {
-//         forceFormData: true,
-//         preserveScroll: true,
-//         onError: (errors) => {
-//             console.error('エラーが発生しました:', errors);
-//             errors && errors.file ? (error.value.file = errors.file) : '';
-//             errors && errors.main_category
-//                 ? (error.value.main_category = errors.main_category)
-//                 : '';
-//             errors && errors.sub_category
-//                 ? (error.value.sub_category = errors.sub_category)
-//                 : '';
-//             errors && errors.color ? (error.value.color = errors.color) : '';
-//             errors && errors.season ? (error.value.season = errors.season) : '';
-//             errors && errors.memo ? (error.value.memo = errors.memo) : '';
-//         },
-//         onSuccess: () => {
-//             closeOverlay();
-//         },
-//     });
-// };
-
+// クローゼットアイテム登録
 const createItemFunc = async () => {
     error.value.file = null;
     error.value.main_category = '';
@@ -75,7 +44,7 @@ const createItemFunc = async () => {
     error.value.memo = null;
 
     try {
-        const response = axios.post('/api/items', form, {
+        const response = await axios.post('/api/items', form, {
             forceFormData: true,
             preserveScroll: true,
             headers: {
@@ -85,7 +54,6 @@ const createItemFunc = async () => {
 
         if (response.status === 200) {
             closeOverlay();
-            // router.push(router.currentRoute.value);
         }
     } catch (errors) {
         console.error('エラーが発生しました:', errors);
@@ -105,6 +73,7 @@ const createItemFunc = async () => {
     }
 };
 
+// ファイルアップロード
 const getUploadedImage = (e) => {
     form.file = e.target.files[0];
     let extention = form.file.name.substring(
@@ -129,15 +98,16 @@ const getUploadedImage = (e) => {
 
 const closeOverlay = () => {
     form.file = null;
-    (form.main_category = ''),
-        (form.sub_category = ''),
-        (form.color = ''),
-        (form.season = ''),
-        (form.memo = null);
+    form.main_category = '';
+    form.sub_category = '';
+    form.color = '';
+    form.season = '';
+    form.memo = null;
     fileDisplay.value = '';
     emit('close');
 };
 
+// 各選択項目の値取得
 onMounted(async () => {
     try {
         const response = await axios.get('/api/enums');
@@ -147,6 +117,29 @@ onMounted(async () => {
         seasons.value = response.data.seasons;
     } catch (error) {
         console.error('Enum データの取得に失敗しました', error);
+    }
+});
+
+watch(form, (newValue) => {
+    if (newValue.main_category !== form.main_category) {
+        axios
+            .get('/api/enums')
+            .then((response) => {
+                subCategories.value = response.data.subCategories;
+            })
+            .catch((error) => {
+                console.error('Enum データの取得に失敗しました', error);
+            });
+    }
+    if (newValue.sub_category !== form.sub_category) {
+        axios
+            .get('/api/enums')
+            .then((response) => {
+                seasons.value = response.data.seasons;
+            })
+            .catch((error) => {
+                console.error('Enum データの取得に失敗しました', error);
+            });
     }
 });
 </script>
@@ -207,7 +200,7 @@ onMounted(async () => {
                             v-if="error && error.file"
                             class="text-red-500 text-center p-2 font-extrabold"
                         >
-                            {{ error.file }}
+                            {{ error.file[0] }}
                         </div>
                         <div
                             v-if="!fileDisplay && isValidFile === false"
@@ -223,18 +216,20 @@ onMounted(async () => {
                     />
                 </div>
 
+                <!-- メインカテゴリー選択 -->
                 <div id="TextAreaSection" class="max-w-[720px] w-full relative">
                     <div
                         v-if="error && error.main_category"
                         class="text-red-500 text-center p-2 font-extrabold"
                     >
-                        {{ error.main_category }}
+                        {{ error.main_category[0] }}
                     </div>
                     <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
                             カテゴリー選択
                         </div>
                         <select v-model="form.main_category">
+                            <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in mainCategories"
                                 :key="value"
@@ -245,11 +240,22 @@ onMounted(async () => {
                         </select>
                     </div>
 
-                    <div class="flex items-center justify-between border-b p-3">
+                    <!-- サブカテゴリー選択 -->
+                    <div
+                        v-if="error && error.sub_category"
+                        class="text-red-500 text-center p-2 font-extrabold"
+                    >
+                        {{ error.sub_category[0] }}
+                    </div>
+                    <div
+                        v-if="form.main_category"
+                        class="flex items-center justify-between border-b p-3"
+                    >
                         <div class="text-lg font-extrabold text-gray-500">
                             サブカテゴリー
                         </div>
                         <select v-model="form.sub_category">
+                            <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in subCategories"
                                 :key="value"
@@ -260,17 +266,19 @@ onMounted(async () => {
                         </select>
                     </div>
 
+                    <!-- カラー選択 -->
                     <div
                         v-if="error && error.color"
                         class="text-red-500 text-center p-2 font-extrabold"
                     >
-                        {{ error.color }}
+                        {{ error.color[0] }}
                     </div>
                     <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー選択
                         </div>
                         <select v-model="form.color">
+                            <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in colors"
                                 :key="value"
@@ -281,17 +289,22 @@ onMounted(async () => {
                         </select>
                     </div>
 
+                    <!-- 季節選択 -->
                     <div
                         v-if="error && error.season"
                         class="text-red-500 text-center p-2 font-extrabold"
                     >
-                        {{ error.season }}
+                        {{ error.season[0] }}
                     </div>
-                    <div class="flex items-center justify-between border-b p-3">
+                    <div
+                        v-if="form.sub_category"
+                        class="flex items-center justify-between border-b p-3"
+                    >
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
                         <select v-model="form.season">
+                            <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in seasons"
                                 :key="value"

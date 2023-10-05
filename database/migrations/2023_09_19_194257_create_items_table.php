@@ -21,9 +21,9 @@ return new class extends Migration
 
             $table->string('file');
             $table->unsignedInteger('main_category');
-            $table->unsignedInteger('sub_category');
+            $table->unsignedInteger('sub_category')->nullable();
             $table->unsignedInteger('color');
-            $table->unsignedInteger('season');
+            $table->unsignedInteger('season')->nullable();
             $table->text('memo')->nullable();
             $table->timestamps();
         });

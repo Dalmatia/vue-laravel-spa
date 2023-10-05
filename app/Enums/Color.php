@@ -13,22 +13,28 @@ use BenSampo\Enum\Enum;
  */
 final class Color extends Enum
 {
-    const black = 0;
-    const white = 1;
-    const gray = 2;
-    const red = 3;
-    const navy = 4;
-    const blue = 5;
-    const light_blue = 6;
-    const green = 7;
-    const olive = 8;
-    const yellow = 9;
-    const orange = 10;
-    const neon = 11;
-    const border = 12;
-    const patterned = 13;
-    const denim = 14;
-    const other = 15;
+    const black = 1;
+    const white = 2;
+    const gray = 3;
+    const red = 4;
+    const navy = 5;
+    const blue = 6;
+    const light_blue = 7;
+    const green = 8;
+    const olive = 9;
+    const brown = 10;
+    const beige = 11;
+    const purple = 12;
+    const yellow = 13;
+    const orange = 14;
+    const pink = 15;
+    const neon = 16;
+    const border = 17;
+    const patterned = 18;
+    const denim = 19;
+    const silver = 20;
+    const gold = 21;
+    const other = 22;
 
     protected static $labels = [
         self::black => 'ブラック',
@@ -40,12 +46,18 @@ final class Color extends Enum
         self::light_blue => 'ライトブルー',
         self::green => 'グリーン',
         self::olive => 'オリーブ',
+        self::brown => 'ブラウン',
+        self::beige => 'ベージュ',
+        self::purple => 'パープル',
         self::yellow => 'イエロー',
         self::orange => 'オレンジ',
+        self::pink => 'ピンク',
         self::neon => 'ネオン',
         self::border => 'ボーダー柄',
         self::patterned => 'パターン柄',
         self::denim => 'デニム',
+        self::silver => 'シルバー',
+        self::gold => 'ゴールド',
         self::other => 'その他',
     ];
 
@@ -66,12 +78,18 @@ final class Color extends Enum
             'ライトブルー' => self::light_blue,
             'グリーン' => self::green,
             'オリーブ' => self::olive,
+            'ブラウン' => self::brown,
+            'ベージュ' => self::beige,
+            'パープル' => self::purple,
             'イエロー' => self::yellow,
             'オレンジ' => self::orange,
+            'ピンク' => self::pink,
             'ネオン' => self::neon,
             'ボーダー柄' => self::border,
             'パターン柄' => self::patterned,
             'デニム' => self::denim,
+            'シルバー' => self::silver,
+            'ゴールド' => self::gold,
             'その他' => self::other,
         ];
 

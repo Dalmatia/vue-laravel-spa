@@ -13,10 +13,10 @@ use BenSampo\Enum\Enum;
  */
 final class Season extends Enum
 {
-    const spring = 0;
-    const summer = 1;
-    const fall = 2;
-    const winter = 3;
+    const spring = 1;
+    const summer = 2;
+    const fall = 3;
+    const winter = 4;
 
     protected static $labels = [
         self::spring => '春',

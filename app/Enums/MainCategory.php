@@ -13,16 +13,18 @@ use BenSampo\Enum\Enum;
  */
 final class MainCategory extends Enum
 {
-    const outer = 0;
-    const tops = 1;
-    const bottoms = 2;
-    const shoes = 3;
+    const outer = 1;
+    const tops = 2;
+    const bottoms = 3;
+    const shoes = 4;
+    const accessories = 5;
 
     protected static $labels = [
         self::outer => 'アウター',
         self::tops => 'トップス',
         self::bottoms => 'ボトムス',
         self::shoes => 'シューズ',
+        self::accessories => 'アクセサリー'
     ];
 
     public static function getDescription($value): string
@@ -37,6 +39,7 @@ final class MainCategory extends Enum
             'トップス' => self::tops,
             'ボトムス' => self::bottoms,
             'シューズ' => self::shoes,
+            'アクセサリー' => self::accessories
         ];
 
         return $keyValueMap[$key] ?? null;
