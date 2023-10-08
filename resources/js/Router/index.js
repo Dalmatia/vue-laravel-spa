@@ -1,41 +1,35 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import Home from '../Pages/Home.vue';
-import User from '../Pages/User.vue';
-import Login from '../Pages/Auth/Login.vue';
-import Register from '../Pages/Auth/Register.vue';
-import Calendar from '../Pages/Calendar.vue';
-
 const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
             path: '/',
             name: 'Home',
-            component: Home,
+            component: () => import('../Pages/Home.vue'),
         },
         {
             path: '/user',
             name: 'User',
-            component: User,
+            component: () => import('../Pages/User.vue'),
             meta: { requiresAuth: true },
         },
         {
             path: '/login',
             name: 'Login',
-            component: Login,
+            component: () => import('../Pages/Auth/Login.vue'),
             meta: { requiresGuest: true },
         },
         {
             path: '/register',
             name: 'Register',
-            component: Register,
+            component: () => import('../Pages/Auth/Register.vue'),
             meta: { requiresGuest: true },
         },
         {
             path: '/calendar',
             name: 'Calendar',
-            component: Calendar,
+            component: () => import('../Pages/Calendar.vue'),
             meta: { requiresAuth: true },
         },
     ],
