@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
 import Magnify from 'vue-material-design-icons/Magnify.vue';
@@ -19,6 +19,7 @@ import CreatePostOverlay from '@/Components/CreatePostOverlay.vue';
 let showCreatePost = ref(false);
 
 const router = useRouter();
+const route = useRoute();
 
 let loggedIn = ref(false);
 // const emit = defineEmits(['updateSidebar']);
@@ -59,7 +60,7 @@ const logout = async () => {
 <template>
     <div id="MainLayout" class="w-full h-screen">
         <div
-            v-if="this.$route.path == '/'"
+            v-if="route.path == '/'"
             id="TopNavHome"
             class="fixed z-30 md:hidden block w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -91,7 +92,7 @@ const logout = async () => {
         </div>
 
         <div
-            v-if="this.$route.path !== '/'"
+            v-if="route.path !== '/'"
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -157,9 +158,7 @@ const logout = async () => {
             <div
                 class="mx-auto md:pt-6 pt-20"
                 :class="
-                    this.$route.path === '/'
-                        ? 'lg:w-8/12 w-full'
-                        : 'max-w-[1200px]'
+                    route.path === '/' ? 'lg:w-8/12 w-full' : 'max-w-[1200px]'
                 "
             >
                 <main>
@@ -168,7 +167,7 @@ const logout = async () => {
             </div>
 
             <div
-                v-if="this.$route.path == '/'"
+                v-if="route.path == '/'"
                 id="SuggestionsSection"
                 class="lg:w-4/12 lg:block hidden text-black mt-10"
             >

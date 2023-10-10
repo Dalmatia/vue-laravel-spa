@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, toRefs, ref } from 'vue';
+import { reactive, toRefs, ref, onMounted } from 'vue';
 
 import ContentOverlay from '@/Components/ContentOverlay.vue';
 
@@ -26,6 +26,17 @@ const getUploadedImage = (e) => {
         preserveState: false,
     });
 };
+
+// const getUser = () => {
+//     axios
+//         .get('api/users/' + this.id)
+//         .then((response) => (user.value = response.data))
+//         .catch((error) => console.log(error));
+// };
+
+// onMounted(() => {
+//     getUser();
+// });
 </script>
 
 <template>
