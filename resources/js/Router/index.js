@@ -35,17 +35,15 @@ const router = createRouter({
     ],
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach((to, from, next) => {
     const authenticated = localStorage.getItem('authenticated');
 
     if (to.meta.requiresGuest && authenticated) {
-        return {
-            name: 'Home',
-        };
+        next({ name: 'Home' });
     } else if (to.meta.requiresAuth && !authenticated) {
-        return {
-            name: 'Login',
-        };
+        next({ name: 'Login' });
+    } else {
+        next(); // 通常のルート遷移
     }
 });
 
