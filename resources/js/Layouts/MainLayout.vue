@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
@@ -16,45 +16,53 @@ import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue
 import MenuItem from '@/Components/MenuItem.vue';
 import CreatePostOverlay from '@/Components/CreatePostOverlay.vue';
 
-let showCreatePost = ref(false);
-
 const router = useRouter();
 const route = useRoute();
 
+let showCreatePost = ref(false);
 let loggedIn = ref(false);
-// const emit = defineEmits(['updateSidebar']);
 
-const name = ref('');
-onMounted(() => {
-    if (localStorage.getItem('authenticated')) {
-        loggedIn.value = true;
-    } else {
-        loggedIn.value = false;
-    }
-
-    axios
-        .get('/api/user')
-        .then((response) => {
-            name.value = response?.data?.name;
-        })
-        .catch((error) => {
-            if (error.response.status === 401) {
-                // emit('updateSidebar');
-                localStorage.removeItem('authenticated');
-                loggedIn.value = false;
-                router.push({ name: 'Login' });
-            }
-        });
+const user = ref([]);
+// 認証済みの場合の処理
+const isAuthenticated = computed(() => {
+    return loggedIn.value;
 });
 
-const logout = async () => {
-    await axios.post('/api/logout').then(() => {
-        router.push('/login');
-        loggedIn.value = false;
-        localStorage.removeItem('authenticated');
-        // emit('updateSidebar');
-    });
+// 認証ステータスの確認
+const checkAuthStatus = () => {
+    if (localStorage.getItem('authenticated')) {
+        loggedIn.value = true;
+    }
 };
+
+// ユーザー情報の取得
+const fetchUserData = async () => {
+    try {
+        const response = await axios.get('/api/user');
+        user.value = response.data;
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            handleUnauthorized();
+        }
+    }
+};
+
+// ユーザー認証の判別
+const handleUnauthorized = () => {
+    localStorage.removeItem('authenticated');
+    loggedIn.value = false;
+    router.push({ name: 'Login' });
+};
+
+const logout = async () => {
+    await axios.post('/api/logout');
+    handleUnauthorized();
+};
+
+onMounted(() => {
+    checkAuthStatus();
+    fetchUserData();
+});
 </script>
 
 <template>
@@ -99,7 +107,9 @@ const logout = async () => {
             <router-link :to="{ name: 'Home' }" class="px-4">
                 <ChevronLeft :size="30" class="cursor-pointer"></ChevronLeft>
             </router-link>
-            <div class="font-extrabold text-lg" v-if="loggedIn">{{ name }}</div>
+            <div class="font-extrabold text-lg" v-if="loggedIn">
+                {{ user.name }}
+            </div>
             <AccountPlusOutline :size="30" class="px-4"></AccountPlusOutline>
         </div>
 
@@ -146,7 +156,7 @@ const logout = async () => {
                 type="button"
                 class="absolute bottom-0 px-3 w-full"
                 @click="logout"
-                v-if="loggedIn"
+                v-if="isAuthenticated"
             >
                 <MenuItem iconString="Logout" class="mb-4" />
             </button>
@@ -183,7 +193,7 @@ const logout = async () => {
                         />
                         <div class="pl-4">
                             <div class="text-black font-extrabold">
-                                {{ name }}
+                                {{ user.name }}
                             </div>
                             <div class="text-gray-500 text-extrabold text-sm">
                                 NAME HERE
