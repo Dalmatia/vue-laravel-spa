@@ -1,7 +1,6 @@
 <script setup>
 import { reactive, toRefs, ref, onMounted } from 'vue';
-
-import ContentOverlay from '@/Components/ContentOverlay.vue';
+import { useAuthStore } from '../stores/auth.js';
 
 import Cog from 'vue-material-design-icons/Cog.vue';
 import Grid from 'vue-material-design-icons/Grid.vue';
@@ -11,6 +10,7 @@ import Hanger from 'vue-material-design-icons/Hanger.vue';
 import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
 import CreateItemOverlay from '@/Components/CreateItemOverlay.vue';
+import ContentOverlay from '@/Components/ContentOverlay.vue';
 
 let showCreateItem = ref(false);
 
@@ -19,6 +19,7 @@ const form = reactive({ file: null });
 
 const props = defineProps({ postsByUser: Object, user: Object });
 const { postsByUser, user } = toRefs(props);
+const authStore = useAuthStore();
 
 const getUploadedImage = (e) => {
     form.file = e.target.files[0];
@@ -27,16 +28,20 @@ const getUploadedImage = (e) => {
     });
 };
 
-// const getUser = () => {
-//     axios
-//         .get('api/users/' + this.id)
-//         .then((response) => (user.value = response.data))
-//         .catch((error) => console.log(error));
-// };
+// ユーザー情報の取得
+const fetchUserData = async () => {
+    try {
+        await authStore.fetchUserData();
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            handleUnauthorized();
+        }
+    }
+};
 
-// onMounted(() => {
-//     getUser();
-// });
+onMounted(() => {
+    fetchUserData();
+});
 </script>
 
 <template>
@@ -58,8 +63,11 @@ const getUploadedImage = (e) => {
 
             <div class="ml-6 w-full">
                 <div class="flex items-center md:mb-8 mb-5">
-                    <div class="md:mr-6 mr-3 rounded-lg text-[22px]">
-                        name here
+                    <div
+                        class="md:mr-6 mr-3 rounded-lg text-[22px]"
+                        v-if="authStore.user"
+                    >
+                        {{ authStore.user.name }}
                     </div>
                     <button
                         class="md:block hidden md:mr-6 p-1 px-4 rounded-lg text-[16px] font-extrabold bg-gray-100 hover:bg-gray-200"

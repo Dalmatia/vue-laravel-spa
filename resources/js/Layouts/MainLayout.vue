@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import { useAuthStore } from '../stores/auth.js';
 
 import Magnify from 'vue-material-design-icons/Magnify.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
@@ -18,28 +18,14 @@ import CreatePostOverlay from '@/Components/CreatePostOverlay.vue';
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
 
 let showCreatePost = ref(false);
-let loggedIn = ref(false);
-
-const user = ref([]);
-// 認証済みの場合の処理
-const isAuthenticated = computed(() => {
-    return loggedIn.value;
-});
-
-// 認証ステータスの確認
-const checkAuthStatus = () => {
-    if (localStorage.getItem('authenticated')) {
-        loggedIn.value = true;
-    }
-};
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
     try {
-        const response = await axios.get('/api/user');
-        user.value = response.data;
+        await authStore.fetchUserData();
     } catch (error) {
         if (error.response && error.response.status === 401) {
             handleUnauthorized();
@@ -50,17 +36,16 @@ const fetchUserData = async () => {
 // ユーザー認証の判別
 const handleUnauthorized = () => {
     localStorage.removeItem('authenticated');
-    loggedIn.value = false;
+    authStore.logout();
     router.push({ name: 'Login' });
 };
 
-const logout = async () => {
-    await axios.post('/api/logout');
+const logout = () => {
+    authStore.logout();
     handleUnauthorized();
 };
 
 onMounted(() => {
-    checkAuthStatus();
     fetchUserData();
 });
 </script>
@@ -107,8 +92,8 @@ onMounted(() => {
             <router-link :to="{ name: 'Home' }" class="px-4">
                 <ChevronLeft :size="30" class="cursor-pointer"></ChevronLeft>
             </router-link>
-            <div class="font-extrabold text-lg" v-if="loggedIn">
-                {{ user.name }}
+            <div class="font-extrabold text-lg" v-if="authStore.user">
+                {{ authStore.user.name }}
             </div>
             <AccountPlusOutline :size="30" class="px-4"></AccountPlusOutline>
         </div>
@@ -144,10 +129,13 @@ onMounted(() => {
                     iconString="Create"
                     class="mb-4"
                 />
-                <router-link :to="{ name: 'Login' }" v-if="!loggedIn">
+                <router-link :to="{ name: 'Login' }" v-if="!authStore.user">
                     <MenuItem iconString="Login" class="mb-4" />
                 </router-link>
-                <router-link :to="{ name: 'User' }" v-if="loggedIn">
+                <router-link
+                    :to="{ name: 'User', params: { id: authStore.user.id } }"
+                    v-if="authStore.user"
+                >
                     <MenuItem iconString="Profile" class="mb-4" />
                 </router-link>
             </div>
@@ -156,7 +144,7 @@ onMounted(() => {
                 type="button"
                 class="absolute bottom-0 px-3 w-full"
                 @click="logout"
-                v-if="isAuthenticated"
+                v-if="authStore.user"
             >
                 <MenuItem iconString="Logout" class="mb-4" />
             </button>
@@ -184,16 +172,23 @@ onMounted(() => {
                 <a
                     href="/"
                     class="flex items-center justify-between max-w-[300px]"
-                    v-if="loggedIn"
+                    v-if="authStore.user"
                 >
                     <div class="flex items-center">
-                        <img
-                            class="rounded-full z-10 w-[58px] h-[58px]"
-                            src="https://picsum.photos/id/50/300/320"
-                        />
+                        <router-link
+                            :to="{
+                                name: 'User',
+                                params: { id: authStore.user.id },
+                            }"
+                        >
+                            <img
+                                class="rounded-full z-10 w-[58px] h-[58px]"
+                                src="https://picsum.photos/id/50/300/320"
+                            />
+                        </router-link>
                         <div class="pl-4">
                             <div class="text-black font-extrabold">
-                                {{ user.name }}
+                                {{ authStore.user.name }}
                             </div>
                             <div class="text-gray-500 text-extrabold text-sm">
                                 NAME HERE
@@ -276,14 +271,17 @@ onMounted(() => {
                 :size="33"
                 class="cursor-pointer"
             />
-            <router-link :to="{ name: 'Login' }" v-if="!loggedIn">
+            <router-link :to="{ name: 'Login' }" v-if="!authStore.user">
                 <AccountOutline
                     fillColor="#000000"
                     :size="33"
                     class="cursor-pointer"
                 />
             </router-link>
-            <router-link :to="{ name: 'User' }" v-if="loggedIn">
+            <router-link
+                :to="{ name: 'User', params: { id: authStore.user.id } }"
+                v-if="authStore.user"
+            >
                 <img
                     class="rounded-full w-[30px] cursor-pointer"
                     src="https://picsum.photos/id/200/300/320"
