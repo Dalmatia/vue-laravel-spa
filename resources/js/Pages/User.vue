@@ -10,7 +10,6 @@ import Hanger from 'vue-material-design-icons/Hanger.vue';
 import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
 import CreateItemOverlay from '@/Components/CreateItemOverlay.vue';
-import ContentOverlay from '@/Components/ContentOverlay.vue';
 
 let showCreateItem = ref(false);
 
@@ -37,6 +36,11 @@ const fetchUserData = async () => {
             handleUnauthorized();
         }
     }
+};
+
+let tab = ref('User');
+const select = (selectedTab) => {
+    tab.value = selectedTab;
 };
 
 onMounted(() => {
@@ -122,11 +126,14 @@ onMounted(() => {
         <div
             class="w-full flex items-center justify-between border-t border-t-gray-300"
         >
-            <div
+            <router-link
                 class="p-3 w-1/4 flex justify-center border-t border-t-gray-900"
+                :to="{ name: 'User' }"
+                :class="{ active: tab === 'User' }"
+                @click="select('User')"
             >
                 <Grid :size="28" fillColor="#0095F6" class="cursor-pointer" />
-            </div>
+            </router-link>
             <div class="p-3 w-1/4 flex justify-center border-t">
                 <PlayBoxOutline
                     :size="28"
@@ -149,9 +156,13 @@ onMounted(() => {
                     class="cursor-pointer"
                 />
             </div>
-            <div class="p-3 w-1/4 flex justify-center border-t">
+            <router-link
+                class="p-3 w-1/4 flex justify-center border-t"
+                :to="{ name: 'Items' }"
+                @click="select('Items')"
+            >
                 <Hanger :size="28" fillColor="#8E8E8E" class="cursor-pointer" />
-            </div>
+            </router-link>
         </div>
     </div>
 
@@ -160,16 +171,15 @@ onMounted(() => {
             <div
                 class="flex items-center justify-between max-w-[600px] mx-auto font-extrabold text-gray-400 text-[15px]"
             >
-                <div
+                <router-link
                     class="p-[17px] w-1/4 flex justify-center items-center border-t border-t-gray-900"
+                    :to="{ name: 'User' }"
+                    :class="{ active: tab === 'User' }"
+                    @click="select('User')"
                 >
-                    <Grid
-                        :size="15"
-                        fillColor="#000000"
-                        class="cursor-pointer"
-                    />
+                    <Grid :size="15" fillColor="#000000" />
                     <div class="ml-2 -mb-[1px] text-gray-900">POSTS</div>
-                </div>
+                </router-link>
                 <div class="p-[17px] w-1/4 flex justify-center items-center">
                     <PlayBoxOutline
                         :size="15"
@@ -194,19 +204,19 @@ onMounted(() => {
                     />
                     <span class="ml-2 -mb-[1px]">SAVED</span>
                 </div>
-                <div class="p-[17px] w-1/4 flex justify-center items-center">
-                    <Hanger
-                        :size="15"
-                        fillColor="#8E8E8E"
-                        class="cursor-pointer"
-                    />
+                <router-link
+                    class="p-[17px] w-1/4 flex justify-center items-center"
+                    :to="{ name: 'Items' }"
+                    @click="select('Items')"
+                >
+                    <Hanger :size="15" fillColor="#8E8E8E" />
                     <span class="ml-2 -mb-[1px]">ITEMS</span>
-                </div>
+                </router-link>
             </div>
         </div>
 
         <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
-            <ContentOverlay />
+            <router-view></router-view>
         </div>
 
         <div class="pb-20"></div>

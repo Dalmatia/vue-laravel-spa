@@ -1,35 +1,56 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+const Home = () => import('../Pages/Home.vue');
+const Login = () => import('../Pages/Auth/Login.vue');
+const Register = () => () => import('../Pages/Auth/Register.vue');
+const User = () => import('../Pages/User.vue');
+const ContentOverlay = () => import('@/Components/ContentOverlay.vue');
+const Items = () => import('../Pages/Items.vue');
+const Calendar = () => import('../Pages/Calendar.vue');
+
 const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
             path: '/',
             name: 'Home',
-            component: () => import('../Pages/Home.vue'),
+            component: Home,
         },
         {
             path: '/user/:id',
-            name: 'User',
-            component: () => import('../Pages/User.vue'),
+            component: User,
             meta: { requiresAuth: true },
+            children: [
+                {
+                    path: '',
+                    name: 'User',
+                    component: ContentOverlay,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'items',
+                    name: 'Items',
+                    component: Items,
+                    meta: { requiresAuth: true },
+                },
+            ],
         },
         {
             path: '/login',
             name: 'Login',
-            component: () => import('../Pages/Auth/Login.vue'),
+            component: Login,
             meta: { requiresGuest: true },
         },
         {
             path: '/register',
             name: 'Register',
-            component: () => import('../Pages/Auth/Register.vue'),
+            component: Register,
             meta: { requiresGuest: true },
         },
         {
             path: '/calendar',
             name: 'Calendar',
-            component: () => import('../Pages/Calendar.vue'),
+            component: Calendar,
             meta: { requiresAuth: true },
         },
     ],
