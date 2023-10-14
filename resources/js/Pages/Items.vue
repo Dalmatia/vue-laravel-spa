@@ -2,16 +2,25 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
+import ShowItemOverlay from '../Components/ShowItemOverlay.vue';
+
+let currentItem = ref(null);
+let openOverlay = ref(false);
+
 const items = ref([]);
 
 const fetchItems = async () => {
     try {
         const response = await axios.get('/api/items');
         items.value = response.data.items;
-        console.log(items.value);
     } catch (error) {
         console.error(error);
     }
+};
+
+const openItemOverlay = (item) => {
+    currentItem.value = item;
+    openOverlay.value = true;
 };
 
 onMounted(() => {
@@ -29,6 +38,12 @@ onMounted(() => {
             v-if="item.file"
             :src="item.file"
             class="aspect-square mx-auto z-0 object-cover cursor-pointer"
+            @click="openItemOverlay(item)"
         />
     </div>
+    <ShowItemOverlay
+        v-if="openOverlay"
+        :item="currentItem"
+        @closeOverlay="openOverlay = false"
+    />
 </template>
