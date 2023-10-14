@@ -11,7 +11,8 @@ class ItemController extends Controller
 {
     public function index()
     {
-        //
+        $items = Item::all();
+        return response()->json(['items' => $items], 200);
     }
 
     public function store(Request $request)

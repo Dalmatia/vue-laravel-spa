@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AllItemsCollection;
+use App\Models\Item;
 use App\Models\User;
 use App\Services\FileService;
 use Illuminate\Http\Request;
@@ -41,7 +43,10 @@ class UserController extends Controller
         if ($user === null) {
             return redirect()->route('home.index');
         }
-        return response()->json($user);
+
+        $items = Item::where('user_id', $id)->orderBy('created_at', 'desc')->get();
+
+        return response()->json(['user' => $user, 'itemsByUser' => new AllItemsCollection($items)]);
     }
 
     /**

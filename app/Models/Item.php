@@ -20,4 +20,9 @@ class Item extends Model
         'season',
         'memo',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

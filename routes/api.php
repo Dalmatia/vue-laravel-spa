@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->post('logout', [AuthenticatedSessionControlle
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
     Route::post('/users', [UserController::class, 'update'])->name('users.update');
+    Route::get('/items', [ItemController::class, 'index']);
     Route::post('items', [ItemController::class, 'store']);
     Route::delete('/items/{id}', [ItemController::class, 'destroy']);
 });
