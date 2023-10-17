@@ -1,20 +1,38 @@
 <script setup>
-import ShowItemOptionsOverlay from './ShowItemOptionsOverlay.vue';
+import { onMounted, toRefs, ref } from 'vue';
+import { useAuthStore } from '../stores/auth.js';
 import { getEnumStore } from '../stores/enum.js';
+
+import ShowItemOptionsOverlay from './ShowItemOptionsOverlay.vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
-// const user = usePage().props.auth.user;
+const deleteType = ref(null);
+const id = ref(null);
+
+const authStore = useAuthStore();
+// ユーザー情報の取得
+const fetchUserData = async () => {
+    try {
+        await authStore.fetchUserData();
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            handleUnauthorized();
+        }
+    }
+};
+
+const props = defineProps({ item: Object });
+const { item } = toRefs(props);
+
+// 選択したメイン・サブカテゴリー、カラー、季節の情報の取得
 const selection = getEnumStore();
 
 defineEmits(['closeOverlay', 'deleteSelected']);
 
-const currentItem = defineProps({
-    item: Object,
-});
-
+// 選択したメイン・サブカテゴリー、カラー、季節の表示
 const fetchMainCategory = (main_category) => {
     return selection.getMainCategoryName(main_category);
 };
@@ -30,6 +48,10 @@ const fetchColor = (color) => {
 const fetchSeason = (season) => {
     return selection.getSeason(season);
 };
+
+onMounted(() => {
+    fetchUserData();
+});
 </script>
 
 <template>
@@ -57,7 +79,13 @@ const fetchSeason = (season) => {
                     @click="$emit('closeOverlay')"
                 />
                 <div class="text-lg font-extrabold">アイテム詳細</div>
-                <button>
+                <button
+                    v-if="authStore.user.id === item.user_id"
+                    @click="
+                        deleteType = 'Item';
+                        id = item.id;
+                    "
+                >
                     <DotsHorizontal class="cursor-pointer" :size="27" />
                 </button>
             </div>
@@ -70,7 +98,7 @@ const fetchSeason = (season) => {
                 >
                     <img
                         class="h-full min-w-[200px] p-4 mx-auto"
-                        :src="currentItem.item.file"
+                        :src="item.file"
                     />
                 </div>
 
@@ -81,11 +109,7 @@ const fetchSeason = (season) => {
                             メインカテゴリー
                         </div>
                         <option>
-                            {{
-                                fetchMainCategory(
-                                    currentItem.item.main_category
-                                )
-                            }}
+                            {{ fetchMainCategory(item.main_category) }}
                         </option>
                     </div>
 
@@ -95,9 +119,7 @@ const fetchSeason = (season) => {
                             サブカテゴリー
                         </div>
                         <option>
-                            {{
-                                fetchSubCategory(currentItem.item.sub_category)
-                            }}
+                            {{ fetchSubCategory(item.sub_category) }}
                         </option>
                     </div>
 
@@ -107,7 +129,7 @@ const fetchSeason = (season) => {
                             カラー
                         </div>
                         <option>
-                            {{ fetchColor(currentItem.item.color) }}
+                            {{ fetchColor(item.color) }}
                         </option>
                     </div>
 
@@ -117,7 +139,7 @@ const fetchSeason = (season) => {
                             シーズン
                         </div>
                         <option>
-                            {{ fetchSeason(currentItem.item.season) }}
+                            {{ fetchSeason(item.season) }}
                         </option>
                     </div>
 
@@ -126,7 +148,7 @@ const fetchSeason = (season) => {
                             ref="textarea"
                             rows="10"
                             class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 text-gray-600 text-[18px] outline-none resize-none"
-                            v-model="currentItem.item.memo"
+                            v-model="item.memo"
                             readonly
                         ></textarea>
                     </div>
@@ -134,4 +156,22 @@ const fetchSeason = (season) => {
             </div>
         </div>
     </div>
+    <ShowItemOptionsOverlay
+        v-if="deleteType"
+        :deleteType="deleteType"
+        :id="id"
+        @deleteSelected="
+            $emit('deleteSelected', {
+                deleteType: $event.deleteType,
+                id: $event.id,
+                item: item,
+            });
+            deleteType = null;
+            id = null;
+        "
+        @close="
+            deleteType = null;
+            id = null;
+        "
+    />
 </template>

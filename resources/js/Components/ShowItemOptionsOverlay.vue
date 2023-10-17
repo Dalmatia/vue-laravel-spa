@@ -1,10 +1,29 @@
 <script setup>
+import axios from 'axios';
 import { toRefs } from 'vue';
 
 defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
 
 const { deleteType, id } = toRefs(props);
+
+// 登録アイテムの削除
+const deleteItem = () => {
+    let url = '';
+    if (deleteType.value === 'Item') {
+        url = `/api/items/${id.value}`;
+        setTimeout(() => {
+            axios
+                .delete(url)
+                .then((response) => {
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }, 100);
+    }
+};
 </script>
 
 <template>
@@ -17,6 +36,7 @@ const { deleteType, id } = toRefs(props);
         >
             <button
                 class="font-extrabold w-full text-red-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
+                @click="deleteItem"
             >
                 アイテムの削除
             </button>
