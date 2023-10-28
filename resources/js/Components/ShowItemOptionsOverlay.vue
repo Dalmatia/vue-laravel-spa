@@ -1,8 +1,10 @@
 <script setup>
 import axios from 'axios';
-import { toRefs } from 'vue';
+import { toRefs, ref, onMounted } from 'vue';
 
-defineEmits(['close', 'deleteSelected']);
+import EditItemOverlay from '../Components/EditItemOverlay.vue';
+
+const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
 
 const { deleteType, id } = toRefs(props);
@@ -17,6 +19,7 @@ const deleteItem = () => {
                 .delete(url)
                 .then((response) => {
                     console.log(response);
+                    emit('close');
                 })
                 .catch((error) => {
                     console.error(error);
@@ -24,6 +27,30 @@ const deleteItem = () => {
         }, 100);
     }
 };
+
+// アイテム情報取得
+const item = ref(null);
+
+const fetchItems = async () => {
+    try {
+        const response = await axios.get(`/api/items/${id.value}`);
+        item.value = response.data;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+let editItem = ref(null);
+let openEdit = ref(false);
+
+const openEditItemOverlay = (item) => {
+    editItem.value = item;
+    openEdit.value = true;
+};
+
+onMounted(() => {
+    fetchItems();
+});
 </script>
 
 <template>
@@ -35,6 +62,12 @@ const deleteItem = () => {
             class="max-w-sm w-full mx-auto mt-10 bg-white rounded-xl text-center"
         >
             <button
+                class="font-extrabold w-full text-blue-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
+                @click="openEditItemOverlay(editItem)"
+            >
+                編集
+            </button>
+            <button
                 class="font-extrabold w-full text-red-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
                 @click="deleteItem"
             >
@@ -45,4 +78,9 @@ const deleteItem = () => {
             </div>
         </div>
     </div>
+    <EditItemOverlay
+        v-if="openEdit"
+        :editItem="item"
+        @closeOverlay="openEdit = false"
+    />
 </template>
