@@ -38,7 +38,11 @@ const itemEdit = async () => {
 
     try {
         const formData = new FormData();
-        formData.append('file', localEditItem.value.file);
+        if (localEditItem.value.file) {
+            formData.append('file', localEditItem.value.file);
+        } else {
+            formData.append('file', editItem.file);
+        }
         formData.append('main_category', localEditItem.value.main_category);
         formData.append('sub_category', localEditItem.value.sub_category);
         formData.append('color', localEditItem.value.color);
@@ -108,21 +112,23 @@ const getUploadedImage = (e) => {
     }, 300);
 };
 
-// メインカテゴリーなどの情報取得
-onMounted(async () => {
-    try {
-        const response = await axios.get('/api/enums');
-        mainCategories.value = response.data.mainCategories;
-        subCategories.value = response.data.subCategories;
-        colors.value = response.data.colors;
-        seasons.value = response.data.seasons;
-    } catch (error) {
-        console.error('Enum データの取得に失敗しました', error);
-    }
+onMounted(() => {
+    // メインカテゴリーなどの情報取得
+    axios
+        .get('/api/enums')
+        .then((response) => {
+            mainCategories.value = response.data.mainCategories;
+            subCategories.value = response.data.subCategories;
+            colors.value = response.data.colors;
+            seasons.value = response.data.seasons;
+        })
+        .catch((error) => {
+            console.error('Enum データの取得に失敗しました', error);
+        });
 });
 
 watch(localEditItem, (newValue) => {
-    if (newValue.main_category !== localEditItem.main_category) {
+    if (newValue.main_category !== localEditItem.value.main_category) {
         axios
             .get('/api/enums')
             .then((response) => {
@@ -132,7 +138,7 @@ watch(localEditItem, (newValue) => {
                 console.error('Enum データの取得に失敗しました', error);
             });
     }
-    if (newValue.sub_category !== localEditItem.sub_category) {
+    if (newValue.sub_category !== localEditItem.value.sub_category) {
         axios
             .get('/api/enums')
             .then((response) => {
@@ -184,10 +190,12 @@ watch(localEditItem, (newValue) => {
                 <div
                     class="flex items-center bg-gray-100 w-full h-full overflow-hidden"
                     @click="selectNewImage"
+                    style="position: relative; text-align: center"
                 >
                     <div
                         v-if="!fileDisplay"
                         class="flex flex-col items-center mx-auto"
+                        style="position: absolute; top: 3%; left: 6%"
                     >
                         <input
                             id="file"
@@ -198,12 +206,14 @@ watch(localEditItem, (newValue) => {
                         <div
                             v-if="error && error.file"
                             class="text-red-500 text-center p-2 font-extrabold"
+                            style="display: inline-block"
                         >
                             {{ error.file[0] }}
                         </div>
                         <div
                             v-if="!fileDisplay && isValidFile === false"
                             class="text-red-500 text-center p-2 font-extrabold"
+                            style="display: inline-block"
                         >
                             ファイルが受け付けられませんでした。
                         </div>

@@ -135,7 +135,10 @@ class ItemController extends Controller
         ];
 
         $customMessages = [
+            'file' => '登録アイテムを選択してください。',
             'file.mimes' => 'ファイル形式は jpg、jpeg、png のいずれかを選択してください。',
+            'main_category' => 'メインカテゴリーを選択してください。',
+            'color' => 'カラーを選択してください。'
         ];
 
         // 必須フィールドの値が空でないかをチェックする
