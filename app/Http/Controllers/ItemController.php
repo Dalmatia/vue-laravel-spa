@@ -26,6 +26,9 @@ class ItemController extends Controller
         // ファイルが選択されているかどうかをチェックし、選択されている場合のみ更新する
         if ($request->hasFile('file')) {
             $item = $this->fileService->updateFile($item, $request, 'item');
+        } elseif ($request->input('file') === null && $item->file !== null) {
+            // ファイルが選択されていない場合は以前のファイルを保持する
+            $item->file = $item->file;
         }
 
         // メインカテゴリーやカラーが空でないかをチェックし、空でない場合のみ更新する
@@ -89,10 +92,10 @@ class ItemController extends Controller
         if (auth()->user()->id !== $item->user_id) {
             return abort(403);
         }
-        $validator = $this->validateRequest($request);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        // ファイルが更新された場合のみバリデーションを無効にする
+        if ($request->hasFile('file')) {
+            $this->validateRequest($request);
         }
 
         $item = $this->createOrUpdateItem($item, $request);
@@ -141,15 +144,12 @@ class ItemController extends Controller
             'color' => 'カラーを選択してください。'
         ];
 
-        // 必須フィールドの値が空でないかをチェックする
-        if (!$request->hasFile('file') && empty($request->input('main_category')) && empty($request->input('color'))) {
-            return Validator::make($request->all(), $rules, $customMessages);
-        }
-
         // 必須フィールドが空でない場合は、必須バリデーションを適用する
-        $rules['file'] = 'required|mimes:jpg,jpeg,png';
-        $rules['main_category'] = 'required';
-        $rules['color'] = 'required';
+        if ($request->filled('file') || $request->filled('main_category') || $request->filled('color')) {
+            $rules['file'] = 'required|mimes:jpg,jpeg,png';
+            $rules['main_category'] = 'required';
+            $rules['color'] = 'required';
+        }
 
         return Validator::make($request->all(), $rules, $customMessages);
     }

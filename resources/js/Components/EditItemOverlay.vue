@@ -7,7 +7,7 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editItem: Object, required: true });
-const editItem = props.editItem;
+const editForm = ref(props.editItem);
 
 const mainCategories = ref([]);
 const subCategories = ref([]);
@@ -25,10 +25,8 @@ let error = ref({
     memo: null,
 });
 
-const localEditItem = ref(editItem);
-
 // アイテムの編集機能
-const itemEdit = async () => {
+const itemUpdate = async () => {
     error.value.file = null;
     error.value.main_category = '';
     error.value.sub_category = '';
@@ -38,19 +36,19 @@ const itemEdit = async () => {
 
     try {
         const formData = new FormData();
-        if (localEditItem.value.file) {
-            formData.append('file', localEditItem.value.file);
+        if (editForm.value.file) {
+            formData.append('file', editForm.value.file);
         } else {
-            formData.append('file', editItem.file);
+            formData.append('file', editForm.value.file);
         }
-        formData.append('main_category', localEditItem.value.main_category);
-        formData.append('sub_category', localEditItem.value.sub_category);
-        formData.append('color', localEditItem.value.color);
-        formData.append('season', localEditItem.value.season);
-        formData.append('memo', localEditItem.value.memo);
+        formData.append('main_category', editForm.value.main_category);
+        formData.append('sub_category', editForm.value.sub_category);
+        formData.append('color', editForm.value.color);
+        formData.append('season', editForm.value.season);
+        formData.append('memo', editForm.value.memo);
 
         const response = await axios.post(
-            `/api/items/${localEditItem.value.id}`,
+            `/api/items/${editForm.value.id}`,
             formData,
             {
                 forceFormData: true,
@@ -91,13 +89,13 @@ const selectNewImage = () => {
 
 // ファイルアップロード
 const getUploadedImage = (e) => {
-    localEditItem.value.file = e.target.files[0];
-    let extention = localEditItem.value.file.name.substring(
-        localEditItem.value.file.name.lastIndexOf('.') + 1
+    editForm.value.file = e.target.files[0];
+    let extension = editForm.value.file.name.substring(
+        editForm.value.file.name.lastIndexOf('.') + 1
     );
 
-    console.log(extention);
-    if (extention == 'png' || extention == 'jpg' || extention == 'jpeg') {
+    console.log(extension);
+    if (extension == 'png' || extension == 'jpg' || extension == 'jpeg') {
         isValidFile.value = true;
     } else {
         isValidFile.value = false;
@@ -127,8 +125,8 @@ onMounted(() => {
         });
 });
 
-watch(localEditItem, (newValue) => {
-    if (newValue.main_category !== localEditItem.value.main_category) {
+watch(editForm, (newValue) => {
+    if (newValue.main_category !== editForm.value.main_category) {
         axios
             .get('/api/enums')
             .then((response) => {
@@ -138,7 +136,7 @@ watch(localEditItem, (newValue) => {
                 console.error('Enum データの取得に失敗しました', error);
             });
     }
-    if (newValue.sub_category !== localEditItem.value.sub_category) {
+    if (newValue.sub_category !== editForm.value.sub_category) {
         axios
             .get('/api/enums')
             .then((response) => {
@@ -178,7 +176,7 @@ watch(localEditItem, (newValue) => {
                 <div class="text-lg font-extrabold">アイテム編集</div>
                 <button
                     class="text-lg text-blue-500 hover:text-gray-900 font-extrabold"
-                    @click="itemEdit()"
+                    @click="itemUpdate()"
                 >
                     更新
                 </button>
@@ -220,7 +218,7 @@ watch(localEditItem, (newValue) => {
                     </div>
                     <img
                         class="h-full min-w-[200px] p-4 mx-auto"
-                        :src="fileDisplay || editItem.file"
+                        :src="fileDisplay || editForm.file"
                     />
                 </div>
 
@@ -236,7 +234,7 @@ watch(localEditItem, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             メインカテゴリー
                         </div>
-                        <select v-model="localEditItem.main_category">
+                        <select v-model="editForm.main_category">
                             <option value="" selected>選択してください</option>
                             <option
                                 v-for="(label, value) in mainCategories"
@@ -259,7 +257,7 @@ watch(localEditItem, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             サブカテゴリー
                         </div>
-                        <select v-model="localEditItem.sub_category">
+                        <select v-model="editForm.sub_category">
                             <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in subCategories"
@@ -282,7 +280,7 @@ watch(localEditItem, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー選択
                         </div>
-                        <select v-model="localEditItem.color">
+                        <select v-model="editForm.color">
                             <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in colors"
@@ -299,7 +297,7 @@ watch(localEditItem, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
-                        <select v-model="localEditItem.season">
+                        <select v-model="editForm.season">
                             <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in seasons"
@@ -322,7 +320,7 @@ watch(localEditItem, (newValue) => {
                             ref="textarea"
                             rows="10"
                             class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 text-gray-600 text-[18px] outline-none resize-none"
-                            v-model="localEditItem.memo"
+                            v-model="editForm.memo"
                         ></textarea>
                     </div>
                 </div>
