@@ -14,17 +14,15 @@ const deleteItem = () => {
     let url = '';
     if (deleteType.value === 'Item') {
         url = `/api/items/${id.value}`;
-        setTimeout(() => {
-            axios
-                .delete(url)
-                .then((response) => {
-                    console.log(response);
-                    emit('close');
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        }, 100);
+        axios
+            .delete(url)
+            .then((response) => {
+                console.log(response);
+                emit('close');
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     }
 };
 

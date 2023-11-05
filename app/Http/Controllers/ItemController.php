@@ -57,7 +57,7 @@ class ItemController extends Controller
 
     public function index()
     {
-        $items = Item::all();
+        $items = Item::where('user_id', auth()->user()->id)->orderBy('created_at', 'desc')->get();
         return response()->json(['items' => $items], 200);
     }
 
@@ -116,7 +116,9 @@ class ItemController extends Controller
             $currentFile = public_path() . $item->file;
 
             if (file_exists($currentFile)) {
-                unlink($currentFile);
+                if (!unlink($currentFile)) {
+                    return response()->json(['error' => 'ファイルの削除に失敗しました'], 500);
+                }
             }
         }
 

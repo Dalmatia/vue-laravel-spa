@@ -33,24 +33,19 @@ const selection = getEnumStore();
 defineEmits(['closeOverlay', 'deleteSelected']);
 
 // 選択したメイン・サブカテゴリー、カラー、季節の表示
-const fetchMainCategory = (main_category) => {
-    return selection.getMainCategoryName(main_category);
-};
-
-const fetchSubCategory = (sub_category) => {
-    return selection.getSubCategoryName(sub_category);
-};
-
-const fetchColor = (color) => {
-    return selection.getColor(color);
-};
-
-const fetchSeason = (season) => {
-    return selection.getSeason(season);
-};
+const main_category = ref(null);
+const sub_category = ref(null);
+const color = ref(null);
+const season = ref(null);
 
 onMounted(() => {
     fetchUserData();
+    main_category.value = selection.getMainCategoryName(
+        item.value.main_category
+    );
+    sub_category.value = selection.getSubCategoryName(item.value.sub_category);
+    color.value = selection.getColor(item.value.color);
+    season.value = selection.getSeason(item.value.season);
 });
 </script>
 
@@ -109,7 +104,7 @@ onMounted(() => {
                             メインカテゴリー
                         </div>
                         <option>
-                            {{ fetchMainCategory(item.main_category) }}
+                            {{ main_category }}
                         </option>
                     </div>
 
@@ -119,7 +114,7 @@ onMounted(() => {
                             サブカテゴリー
                         </div>
                         <option>
-                            {{ fetchSubCategory(item.sub_category) }}
+                            {{ sub_category }}
                         </option>
                     </div>
 
@@ -129,7 +124,7 @@ onMounted(() => {
                             カラー
                         </div>
                         <option>
-                            {{ fetchColor(item.color) }}
+                            {{ color }}
                         </option>
                     </div>
 
@@ -139,7 +134,7 @@ onMounted(() => {
                             シーズン
                         </div>
                         <option>
-                            {{ fetchSeason(item.season) }}
+                            {{ season }}
                         </option>
                     </div>
 
