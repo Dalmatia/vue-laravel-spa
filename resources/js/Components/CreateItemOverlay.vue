@@ -54,6 +54,7 @@ const createItemFunc = async () => {
 
         if (response.status === 200) {
             closeOverlay();
+            window.dispatchEvent(new Event('item-created'));
         }
     } catch (errors) {
         console.error('エラーが発生しました:', errors);
@@ -96,6 +97,18 @@ const getUploadedImage = (e) => {
     }, 300);
 };
 
+const getEnums = async () => {
+    try {
+        const response = await axios.get('/api/enums');
+        mainCategories.value = response.data.mainCategories;
+        subCategories.value = response.data.subCategories;
+        colors.value = response.data.colors;
+        seasons.value = response.data.seasons;
+    } catch (error) {
+        console.error('Enum データの取得に失敗しました', error);
+    }
+};
+
 const closeOverlay = () => {
     form.file = null;
     form.main_category = '';
@@ -108,16 +121,8 @@ const closeOverlay = () => {
 };
 
 // 各選択項目の値取得
-onMounted(async () => {
-    try {
-        const response = await axios.get('/api/enums');
-        mainCategories.value = response.data.mainCategories;
-        subCategories.value = response.data.subCategories;
-        colors.value = response.data.colors;
-        seasons.value = response.data.seasons;
-    } catch (error) {
-        console.error('Enum データの取得に失敗しました', error);
-    }
+onMounted(() => {
+    getEnums();
 });
 
 watch(form, (newValue) => {

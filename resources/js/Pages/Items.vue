@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 import ShowItemOverlay from '../Components/ShowItemOverlay.vue';
@@ -25,6 +25,11 @@ const openItemOverlay = (item) => {
 
 onMounted(() => {
     fetchItems();
+    window.addEventListener('item-created', fetchItems);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('item-created', fetchItems);
 });
 </script>
 
