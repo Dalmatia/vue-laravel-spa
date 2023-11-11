@@ -31,25 +31,25 @@ class ItemController extends Controller
             $item->file = $item->file;
         }
 
-        // メインカテゴリーやカラーが空でないかをチェックし、空でない場合のみ更新する
+        // メインカテゴリーやカラーが空でないかをチェックする。サブカテゴリー等null許容項目に関しては更新しない場合はnullを返す。
         if ($request->filled('main_category')) {
             $item->main_category = $request->main_category;
         }
 
         if ($request->filled('sub_category')) {
-            $item->sub_category = $request->sub_category;
+            $item->sub_category = ($request->sub_category !== 'null') ? $request->sub_category : null;
         }
 
         if ($request->filled('color')) {
-            $item->color = $request->color;
+            $item->color =  $request->color;
         }
 
         if ($request->filled('season')) {
-            $item->season = $request->season;
+            $item->season =  ($request->season !== 'null') ? $request->season : null;
         }
 
         if ($request->filled('memo')) {
-            $item->memo = $request->input('memo');
+            $item->memo =  ($request->memo !== 'null') ? $request->memo : null;
         }
 
         return $item;

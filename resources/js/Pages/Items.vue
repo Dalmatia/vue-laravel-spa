@@ -1,12 +1,12 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import axios from 'axios';
 
 import ShowItemOverlay from '../Components/ShowItemOverlay.vue';
 
 let currentItem = ref(null);
 let openOverlay = ref(false);
-
+const emit = defineEmits(['close']);
 const items = ref([]);
 
 const fetchItems = async () => {
@@ -21,6 +21,24 @@ const fetchItems = async () => {
 const openItemOverlay = (item) => {
     currentItem.value = item;
     openOverlay.value = true;
+};
+
+// 登録アイテムの削除
+const deleteItem = (object) => {
+    let url = '';
+    if (object.deleteType === 'Item') {
+        url = `/api/items/` + object.id;
+        axios
+            .delete(url)
+            .then((response) => {
+                console.log(response);
+                openOverlay.value = false;
+                fetchItems();
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
 };
 
 onMounted(() => {
@@ -49,6 +67,7 @@ onUnmounted(() => {
     <ShowItemOverlay
         v-if="openOverlay"
         :item="currentItem"
-        @closeOverlay="openOverlay = false"
+        @delete-selected="deleteItem($event)"
+        @close-overlay="openOverlay = false"
     />
 </template>

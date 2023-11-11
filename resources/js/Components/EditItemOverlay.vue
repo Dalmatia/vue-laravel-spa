@@ -34,19 +34,17 @@ const itemUpdate = async () => {
     error.value.season = '';
     error.value.memo = null;
 
-    try {
-        const formData = new FormData();
-        if (editForm.value.file) {
-            formData.append('file', editForm.value.file);
-        } else {
-            formData.append('file', editForm.value.file);
-        }
-        formData.append('main_category', editForm.value.main_category);
-        formData.append('sub_category', editForm.value.sub_category);
-        formData.append('color', editForm.value.color);
-        formData.append('season', editForm.value.season);
-        formData.append('memo', editForm.value.memo);
+    const formData = new FormData();
+    if (editForm.value.file) {
+        formData.append('file', editForm.value.file);
+    }
+    formData.append('main_category', editForm.value.main_category);
+    formData.append('sub_category', editForm.value.sub_category);
+    formData.append('color', editForm.value.color);
+    formData.append('season', editForm.value.season);
+    formData.append('memo', editForm.value.memo);
 
+    try {
         const response = await axios.post(
             `/api/items/${editForm.value.id}`,
             formData,

@@ -9,23 +9,6 @@ const props = defineProps({ deleteType: String, id: Number });
 
 const { deleteType, id } = toRefs(props);
 
-// 登録アイテムの削除
-const deleteItem = () => {
-    let url = '';
-    if (deleteType.value === 'Item') {
-        url = `/api/items/${id.value}`;
-        axios
-            .delete(url)
-            .then((response) => {
-                console.log(response);
-                emit('close');
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }
-};
-
 // アイテム情報取得
 const item = ref(null);
 
@@ -38,11 +21,9 @@ const fetchItems = async () => {
     }
 };
 
-let editItem = ref(null);
 let openEdit = ref(false);
 
 const openEditItemOverlay = (item) => {
-    editItem.value = item;
     openEdit.value = true;
 };
 
@@ -67,11 +48,11 @@ onMounted(() => {
             </button>
             <button
                 class="font-extrabold w-full text-red-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
-                @click="deleteItem"
+                @click="emit('deleteSelected', { deleteType, id })"
             >
                 アイテムの削除
             </button>
-            <div class="p-3 text-lg cursor-pointer" @click="$emit('close')">
+            <div class="p-3 text-lg cursor-pointer" @click="emit('close')">
                 キャンセル
             </div>
         </div>
