@@ -2,13 +2,14 @@
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import axios from 'axios';
 
-import ShowItemOverlay from '../Components/ShowItemOverlay.vue';
+import ShowItemOverlay from '../Components/Items/ShowItemOverlay.vue';
 
 let currentItem = ref(null);
 let openOverlay = ref(false);
 const emit = defineEmits(['close']);
 const items = ref([]);
 
+// 登録アイテムの表示
 const fetchItems = async () => {
     try {
         const response = await axios.get('/api/items');

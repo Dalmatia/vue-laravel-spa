@@ -9,7 +9,7 @@ import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue';
 import Hanger from 'vue-material-design-icons/Hanger.vue';
 import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
-import CreateItemOverlay from '@/Components/CreateItemOverlay.vue';
+import CreateItemOverlay from '@/Components/Items/CreateItemOverlay.vue';
 
 let showCreateItem = ref(false);
 

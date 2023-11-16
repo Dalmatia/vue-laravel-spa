@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, onBeforeMount } from 'vue';
-import { useAuthStore } from '../stores/auth.js';
-import { getEnumStore } from '../stores/enum.js';
+import { useAuthStore } from '../../stores/auth.js';
+import { getEnumStore } from '../../stores/enum.js';
 
 import ShowItemOptionsOverlay from './ShowItemOptionsOverlay.vue';
 

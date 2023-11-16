@@ -2,16 +2,15 @@
 import axios from 'axios';
 import { toRefs, ref, onMounted } from 'vue';
 
-import EditItemOverlay from '../Components/EditItemOverlay.vue';
+import EditItemOverlay from '@/Components/Items/EditItemOverlay.vue';
 
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
-
 const { deleteType, id } = toRefs(props);
+const item = ref(null);
+let openEdit = ref(false);
 
 // アイテム情報取得
-const item = ref(null);
-
 const fetchItems = async () => {
     try {
         const response = await axios.get(`/api/items/${id.value}`);
@@ -21,9 +20,7 @@ const fetchItems = async () => {
     }
 };
 
-let openEdit = ref(false);
-
-const openEditItemOverlay = (item) => {
+const openEditItemOverlay = () => {
     openEdit.value = true;
 };
 
