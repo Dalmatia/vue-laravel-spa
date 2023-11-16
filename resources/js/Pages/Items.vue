@@ -44,10 +44,12 @@ const deleteItem = (object) => {
 onMounted(() => {
     fetchItems();
     window.addEventListener('item-created', fetchItems);
+    window.addEventListener('item-updated', fetchItems);
 });
 
 onUnmounted(() => {
     window.removeEventListener('item-created', fetchItems);
+    window.removeEventListener('item-updated', fetchItems);
 });
 </script>
 

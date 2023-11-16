@@ -59,6 +59,7 @@ const itemUpdate = async () => {
         console.log(response);
         if (response.status === 200) {
             emit('closeOverlay');
+            window.dispatchEvent(new Event('item-updated'));
         }
     } catch (errors) {
         console.error('エラーが発生しました:', errors);

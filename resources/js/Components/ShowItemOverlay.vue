@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, toRefs, ref } from 'vue';
+import { onMounted, ref, onBeforeMount } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { getEnumStore } from '../stores/enum.js';
 
@@ -9,10 +9,20 @@ import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
+const authStore = useAuthStore();
+const props = defineProps({ item: Object });
+const item = ref(props.item);
+const main_category = ref(null);
+const sub_category = ref(null);
+const color = ref(null);
+const season = ref(null);
 const deleteType = ref(null);
 const id = ref(null);
+// 選択したメイン・サブカテゴリー、カラー、季節の情報の取得
+const selection = getEnumStore();
 
-const authStore = useAuthStore();
+defineEmits(['closeOverlay', 'deleteSelected']);
+
 // ユーザー情報の取得
 const fetchUserData = async () => {
     try {
@@ -24,28 +34,39 @@ const fetchUserData = async () => {
     }
 };
 
-const props = defineProps({ item: Object });
-const { item } = toRefs(props);
+// 登録・更新時のアイテム情報取得
+const fetchItemData = async () => {
+    try {
+        const response = await axios.get(`/api/items/${item.value.id}`);
 
-// 選択したメイン・サブカテゴリー、カラー、季節の情報の取得
-const selection = getEnumStore();
+        // EditItemOverlay.vueのitemUpdateメソッドで変更された場合、データを反映
+        const updatedItem = response.data;
+        item.value = updatedItem;
+        fetchSelectData();
+    } catch (error) {
+        console.error(error);
+    }
+};
 
-defineEmits(['closeOverlay', 'deleteSelected']);
-
-// 選択したメイン・サブカテゴリー、カラー、季節の表示
-const main_category = ref(null);
-const sub_category = ref(null);
-const color = ref(null);
-const season = ref(null);
-
-onMounted(() => {
-    fetchUserData();
+// 選択したメインカテゴリー名等のデータ取得
+const fetchSelectData = () => {
     main_category.value = selection.getMainCategoryName(
         item.value.main_category
     );
     sub_category.value = selection.getSubCategoryName(item.value.sub_category);
     color.value = selection.getColor(item.value.color);
     season.value = selection.getSeason(item.value.season);
+};
+
+onMounted(() => {
+    fetchUserData();
+    fetchItemData();
+    // EditItemOverlay.vueのitemUpdateメソッドで定義したイベントの購読
+    window.addEventListener('item-updated', fetchItemData);
+});
+
+onBeforeMount(() => {
+    window.removeEventListener('item-updated', fetchItemData);
 });
 </script>
 
