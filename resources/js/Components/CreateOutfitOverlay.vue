@@ -1,9 +1,9 @@
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
-import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue';
+import Calendar from 'vue-material-design-icons/Calendar.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
 // const user = usePage().props.auth.user;
@@ -11,28 +11,56 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 const emit = defineEmits(['close']);
 
 const form = reactive({
-    text: null,
-    file: null,
+    outfit: null,
+    description: null,
+    outfit_date: '',
+    season: '',
+    tops: '',
+    outer: '',
+    bottoms: '',
+    shoes: '',
 });
+
+const seasons = ref([]);
 
 let isValidFile = ref(null);
 let fileDisplay = ref('');
 let textarea = ref('');
 let error = ref({
-    text: null,
-    file: null,
+    outfit: null,
+    description: null,
+    outfit_date: '',
+    season: '',
+    tops: '',
+    outer: '',
+    bottoms: '',
+    shoes: '',
 });
 
-const createPostFunc = () => {
-    error.value.text = null;
-    error.value.file = null;
+const createOutfit = () => {
+    error.value.outfit = null;
+    error.value.description = null;
+    error.value.season = null;
+    error.value.tops = null;
+    error.value.outer = null;
+    error.value.bottoms = null;
+    error.value.shoes = null;
 
-    axios.post('/posts', form, {
+    axios.post('/api/outfit', form, {
         forceFormData: true,
         preserveScroll: true,
         onError: (errors) => {
-            errors && errors.text ? (error.value.text = errors.text) : '';
-            errors && errors.file ? (error.value.file = errors.file) : '';
+            errors && errors.outfit ? (error.value.outfit = errors.outfit) : '';
+            errors && errors.description
+                ? (error.value.description = errors.description)
+                : '';
+            errors && errors.season ? (error.value.season = errors.season) : '';
+            errors && errors.tops ? (error.value.tops = errors.tops) : '';
+            errors && errors.outer ? (error.value.outer = errors.outer) : '';
+            errors && errors.bottoms
+                ? (error.value.bottoms = errors.bottoms)
+                : '';
+            errors && errors.shoes ? (error.value.shoes = errors.shoes) : '';
         },
         onSuccess: () => {
             closeOverlay();
@@ -41,9 +69,9 @@ const createPostFunc = () => {
 };
 
 const getUploadedImage = (e) => {
-    form.file = e.target.files[0];
-    let extention = form.file.name.substring(
-        form.file.name.lastIndexOf('.') + 1
+    form.outfit = e.target.files[0];
+    let extention = form.outfit.name.substring(
+        form.outfit.name.lastIndexOf('.') + 1
     );
 
     console.log(extention);
@@ -62,12 +90,31 @@ const getUploadedImage = (e) => {
     }, 300);
 };
 
+const getSeason = async () => {
+    try {
+        const response = await axios.get('/api/enums');
+        seasons.value = response.data.seasons;
+    } catch (error) {
+        console.error('Enum データの取得に失敗しました', error);
+    }
+};
+
 const closeOverlay = () => {
-    form.text = null;
-    form.file = null;
+    form.outfit = null;
+    form.description = null;
+    form.outfit_date = '';
+    form.season = '';
+    form.tops = '';
+    form.outer = '';
+    form.bottoms = '';
+    form.shoes = '';
     fileDisplay.value = '';
     emit('close');
 };
+
+onMounted(() => {
+    getSeason();
+});
 </script>
 
 <template>
@@ -94,6 +141,7 @@ const closeOverlay = () => {
                 <div class="text-lg font-extrabold">新規投稿</div>
                 <button
                     class="text-lg text-blue-500 hover:text-gray-900 font-extrabold"
+                    @click="createOutfit()"
                 >
                     投稿
                 </button>
@@ -122,10 +170,10 @@ const closeOverlay = () => {
                             @input="getUploadedImage($event)"
                         />
                         <div
-                            v-if="error && error.file"
+                            v-if="error && error.outfit"
                             class="text-red-500 text-center p-2 font-extrabold"
                         >
-                            {{ error.file }}
+                            {{ error.outfit[0] }}
                         </div>
                         <div
                             v-if="!fileDisplay && isValidFile === false"
@@ -155,44 +203,63 @@ const closeOverlay = () => {
                     </div>
 
                     <div
-                        v-if="error && error.text"
+                        v-if="error && error.description"
                         class="text-red-500 p-2 font-extrabold"
                     >
-                        {{ error.text }}
+                        {{ error.description }}
                     </div>
-                    <div class="flex w-full max-h-[200px] bg-white border-b">
+                    <div class="flex w-full max-h-[150px] bg-white border-b">
                         <textarea
                             ref="textarea"
-                            v-model="form.text"
+                            v-model="form.description"
                             placeholder="何か書く(コーディネートのポイント等)"
                             rows="10"
-                            class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 focus:ring-0 text-gray-600 text-[18px]"
+                            class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 focus:ring-0 text-gray-600 text-[18px] outline-none"
                         ></textarea>
                     </div>
 
                     <!-- 以下の部分不要 -->
-                    <!-- <div class="flex items-center justify-between border-b p-3">
+                    <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
-                            Add Location
+                            着用日
                         </div>
-                        <MapMarkerOutline :size="27" />
+                        <Calendar :size="27" />
+                    </div>
+
+                    <!-- 季節選択 -->
+                    <div
+                        v-if="error && error.season"
+                        class="text-red-500 text-center p-2 font-extrabold"
+                    >
+                        {{ error.season[0] }}
+                    </div>
+                    <div class="flex items-center justify-between border-b p-3">
+                        <div class="text-lg font-extrabold text-gray-500">
+                            シーズン
+                        </div>
+                        <select
+                            class="text-lg text-right font-extrabold text-gray-500 outline-none"
+                            v-model="form.season"
+                        >
+                            <option value="" disabled>選択してください</option>
+                            <option
+                                v-for="(label, value) in seasons"
+                                :key="value"
+                                :value="value"
+                            >
+                                {{ label }}
+                            </option>
+                        </select>
                     </div>
 
                     <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
-                            Accessibility
+                            着用アイテム
                         </div>
                         <ChevronDown :size="27" />
                     </div>
 
-                    <div class="flex items-center justify-between border-b p-3">
-                        <div class="text-lg font-extrabold text-gray-500">
-                            Advanced Settings
-                        </div>
-                        <ChevronDown :size="27" />
-                    </div>
-
-                    <div class="text-gray-500 mt-3 p-3 text-sm">
+                    <!-- <div class="text-gray-500 mt-3 p-3 text-sm">
                         Your reel will be shared with your followers in their
                         feeds and can be seen on your profile. It may also
                         appear in places such as Reels, where anyone can see it.

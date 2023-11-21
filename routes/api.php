@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EnumController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,11 +28,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
     Route::post('/users', [UserController::class, 'update'])->name('users.update');
 
+    // クローゼットアイテム関連
     Route::post('items', [ItemController::class, 'store']);
     Route::get('/items', [ItemController::class, 'index']);
     Route::get('/items/{id}', [ItemController::class, 'show']);
     Route::post('/items/{id}', [ItemController::class, 'update']);
     Route::delete('/items/{id}', [ItemController::class, 'destroy']);
+
+    // コーディネート投稿関連
+    Route::post('outfit', [OutfitController::class, 'store']);
 });
 Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
