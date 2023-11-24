@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
-            $table->string('outfit');
+            $table->string('file');
             $table->string('description')->nullable();
             $table->date('outfit_date');
             $table->unsignedInteger('season')->nullable();

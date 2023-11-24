@@ -6,12 +6,16 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Calendar from 'vue-material-design-icons/Calendar.vue';
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import axios from 'axios';
+
 // const user = usePage().props.auth.user;
 
 const emit = defineEmits(['close']);
 
 const form = reactive({
-    outfit: null,
+    file: null,
     description: null,
     outfit_date: '',
     season: '',
@@ -27,7 +31,7 @@ let isValidFile = ref(null);
 let fileDisplay = ref('');
 let textarea = ref('');
 let error = ref({
-    outfit: null,
+    file: null,
     description: null,
     outfit_date: '',
     season: '',
@@ -37,8 +41,8 @@ let error = ref({
     shoes: '',
 });
 
-const createOutfit = () => {
-    error.value.outfit = null;
+const createOutfit = async () => {
+    error.value.file = null;
     error.value.description = null;
     error.value.season = null;
     error.value.tops = null;
@@ -46,36 +50,46 @@ const createOutfit = () => {
     error.value.bottoms = null;
     error.value.shoes = null;
 
-    axios.post('/api/outfit', form, {
-        forceFormData: true,
-        preserveScroll: true,
-        onError: (errors) => {
-            errors && errors.outfit ? (error.value.outfit = errors.outfit) : '';
-            errors && errors.description
-                ? (error.value.description = errors.description)
-                : '';
-            errors && errors.season ? (error.value.season = errors.season) : '';
-            errors && errors.tops ? (error.value.tops = errors.tops) : '';
-            errors && errors.outer ? (error.value.outer = errors.outer) : '';
-            errors && errors.bottoms
-                ? (error.value.bottoms = errors.bottoms)
-                : '';
-            errors && errors.shoes ? (error.value.shoes = errors.shoes) : '';
-        },
-        onSuccess: () => {
+    try {
+        const response = await axios.post('/api/outfit', form, {
+            forceFormData: true,
+            preserveScroll: true,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        if (response.status === 200) {
             closeOverlay();
-        },
-    });
+        }
+    } catch (errors) {
+        console.error('エラーが発生しました:', errors);
+
+        if (errors.response) {
+            const responseErrors = errors.response.data.errors;
+
+            if (responseErrors) {
+                error.value.file = responseErrors.file;
+                error.value.description = responseErrors.description;
+                error.value.outfit_date = responseErrors.outfit_date;
+                error.value.season = responseErrors.season;
+                error.value.tops = responseErrors.tops;
+                error.value.outer = responseErrors.outer;
+                error.value.bottoms = responseErrors.bottoms;
+                error.value.shoes = responseErrors.shoes;
+            }
+        }
+    }
 };
 
 const getUploadedImage = (e) => {
-    form.outfit = e.target.files[0];
-    let extention = form.outfit.name.substring(
-        form.outfit.name.lastIndexOf('.') + 1
+    form.file = e.target.files[0];
+    let extension = form.file.name.substring(
+        form.file.name.lastIndexOf('.') + 1
     );
 
-    console.log(extention);
-    if (extention == 'png' || extention == 'jpg' || extention == 'jpeg') {
+    console.log(extension);
+    if (extension == 'png' || extension == 'jpg' || extension == 'jpeg') {
         isValidFile.value = true;
     } else {
         isValidFile.value = false;
@@ -100,7 +114,7 @@ const getSeason = async () => {
 };
 
 const closeOverlay = () => {
-    form.outfit = null;
+    form.file = null;
     form.description = null;
     form.outfit_date = '';
     form.season = '';
@@ -170,10 +184,10 @@ onMounted(() => {
                             @input="getUploadedImage($event)"
                         />
                         <div
-                            v-if="error && error.outfit"
+                            v-if="error && error.file"
                             class="text-red-500 text-center p-2 font-extrabold"
                         >
-                            {{ error.outfit[0] }}
+                            {{ error.file[0] }}
                         </div>
                         <div
                             v-if="!fileDisplay && isValidFile === false"
@@ -206,7 +220,7 @@ onMounted(() => {
                         v-if="error && error.description"
                         class="text-red-500 p-2 font-extrabold"
                     >
-                        {{ error.description }}
+                        {{ error.description[0] }}
                     </div>
                     <div class="flex w-full max-h-[150px] bg-white border-b">
                         <textarea
@@ -218,12 +232,27 @@ onMounted(() => {
                         ></textarea>
                     </div>
 
-                    <!-- 以下の部分不要 -->
+                    <div
+                        v-if="error && error.outfit_date"
+                        class="text-red-500 text-center p-2 font-extrabold"
+                    >
+                        {{ error.outfit_date[0] }}
+                    </div>
                     <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
                             着用日
                         </div>
-                        <Calendar :size="27" />
+                        <VueDatePicker
+                            v-model="form.outfit_date"
+                            teleport-center
+                            locale="ja"
+                            format="yyyy-MM-dd"
+                            model-type="yyyy-MM-dd"
+                            week-start="0"
+                            :enable-time-picker="false"
+                            auto-apply
+                            style="width: auto"
+                        />
                     </div>
 
                     <!-- 季節選択 -->

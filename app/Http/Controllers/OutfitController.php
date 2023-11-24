@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Outfit;
 use Illuminate\Http\Request;
 use App\Services\FileService;
+use Illuminate\Support\Facades\Validator;
 
 class OutfitController extends Controller
 {
@@ -23,22 +24,28 @@ class OutfitController extends Controller
     {
         $outfit = new Outfit();
 
-        $request->validate([
-            'outfit' => 'required | mimes:jpg,jpeg,png',
+        $validator = Validator::make($request->all(), [
+            'file' => 'required | mimes:jpg,jpeg,png',
             'description' => 'nullable',
             'outfit_date' => 'required',
-            'season' => 'required',
+            'season' => 'nullable',
             'tops' => 'nullable |exists:items,id',
             'outer' => 'nullable |exists:items,id',
             'bottoms' => 'nullable |exists:items,id',
             'shoes' => 'nullable |exists:items,id'
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         $outfit->user_id = auth()->user()->id;
-        $outfit->outfit = (new fileService)->updateFile($outfit, $request, 'outfit');
+        $outfit = (new fileService)->updateFile($outfit, $request, 'outfit');
         $outfit->description = $request->input('description');
         // コーディネートした日付を選択する
         $outfit->outfit_date = $request->input('outfit_date');
+        // コーディネートのシーズンを選択
+        $outfit->season = $request->input('season');
         // 着用したアイテムをItemテーブルから選択
         $outfit->tops = $request->input('tops');
         $outfit->outer = $request->input('outer');

@@ -119,7 +119,9 @@ return [
     'attributes' => [
         'name' => 'ユーザーネーム',
         'email' => 'メールアドレス',
-        'password' => 'パスワード'
+        'password' => 'パスワード',
+        'file' => '画像',
+        'outfit_date' => '着用日の選択'
     ],
 
 ];
