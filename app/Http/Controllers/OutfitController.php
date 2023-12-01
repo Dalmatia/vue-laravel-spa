@@ -29,10 +29,10 @@ class OutfitController extends Controller
             'description' => 'nullable',
             'outfit_date' => 'required',
             'season' => 'nullable',
-            'tops' => 'nullable |exists:items,id',
-            'outer' => 'nullable |exists:items,id',
-            'bottoms' => 'nullable |exists:items,id',
-            'shoes' => 'nullable |exists:items,id'
+            'tops' => 'required |exists:items,id',
+            'outer' => 'required |exists:items,id',
+            'bottoms' => 'required |exists:items,id',
+            'shoes' => 'required |exists:items,id'
         ]);
 
         if ($validator->fails()) {

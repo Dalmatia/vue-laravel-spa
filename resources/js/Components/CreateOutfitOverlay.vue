@@ -9,6 +9,7 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import axios from 'axios';
+import SelectItemsOverlay from './SelectItemsOverlay.vue';
 
 // const user = usePage().props.auth.user;
 
@@ -19,10 +20,10 @@ const form = reactive({
     description: null,
     outfit_date: '',
     season: '',
-    tops: '',
-    outer: '',
-    bottoms: '',
-    shoes: '',
+    tops: null,
+    outer: null,
+    bottoms: null,
+    shoes: null,
 });
 
 const seasons = ref([]);
@@ -40,6 +41,8 @@ let error = ref({
     bottoms: '',
     shoes: '',
 });
+let showItemSelectionModal = ref(false);
+let selectedItemType = ref(null);
 
 const createOutfit = async () => {
     error.value.file = null;
@@ -113,15 +116,42 @@ const getSeason = async () => {
     }
 };
 
+const openModal = (itemType) => {
+    // itemTypeを設定
+    selectedItemType.value = itemType;
+    // アイテム選択モーダルを表示
+    showItemSelectionModal.value = true;
+};
+
+const handleItemSelected = (selectedItem) => {
+    // モーダルで選択されたアイテムのIDをformに設定
+    if (selectedItemType.value === 'tops') {
+        form.tops = selectedItem.id;
+        form.topsImage = selectedItem.file;
+    } else if (selectedItemType.value === 'outer') {
+        form.outer = selectedItem.id;
+        form.outerImage = selectedItem.file;
+    } else if (selectedItemType.value === 'bottoms') {
+        form.bottoms = selectedItem.id;
+        form.bottomsImage = selectedItem.file;
+    } else if (selectedItemType.value === 'shoes') {
+        form.shoes = selectedItem.id;
+        form.shoesImage = selectedItem.file;
+    }
+
+    // モーダルを閉じる
+    showItemSelectionModal.value = false;
+};
+
 const closeOverlay = () => {
     form.file = null;
     form.description = null;
     form.outfit_date = '';
     form.season = '';
-    form.tops = '';
-    form.outer = '';
-    form.bottoms = '';
-    form.shoes = '';
+    form.tops = null;
+    form.outer = null;
+    form.bottoms = null;
+    form.shoes = null;
     fileDisplay.value = '';
     emit('close');
 };
@@ -287,6 +317,102 @@ onMounted(() => {
                         </div>
                         <ChevronDown :size="27" />
                     </div>
+                    <div class="min-h-fit p-2">
+                        <div class="grid grid-cols-4 gap-4">
+                            <!-- トップス選択 -->
+                            <div>
+                                <div
+                                    class="flex flex-col rounded-md items-center space-y-4"
+                                >
+                                    <div @click="openModal('tops')">
+                                        <button
+                                            v-if="!form.tops"
+                                            class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                            @click="openModal('tops')"
+                                        >
+                                            トップス
+                                        </button>
+                                        <img
+                                            v-if="form.tops"
+                                            class="w-48"
+                                            :src="form.topsImage"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- アウター選択 -->
+                            <div>
+                                <div
+                                    class="flex flex-col rounded-md items-center space-y-4"
+                                >
+                                    <div @click="openModal('outer')">
+                                        <button
+                                            v-if="!form.outer"
+                                            class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                            @click="openModal('outer')"
+                                        >
+                                            アウター
+                                        </button>
+                                        <img
+                                            v-if="form.outer"
+                                            class="w-48"
+                                            :src="form.outerImage"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ボトムス選択 -->
+                            <div>
+                                <div
+                                    class="flex flex-col rounded-md items-center space-y-4"
+                                >
+                                    <div @click="openModal('bottoms')">
+                                        <button
+                                            v-if="!form.bottoms"
+                                            class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                            @click="openModal('bottoms')"
+                                        >
+                                            ボトムス
+                                        </button>
+                                        <img
+                                            v-if="form.bottoms"
+                                            class="w-48"
+                                            :src="form.bottomsImage"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- シューズ選択 -->
+                            <div>
+                                <div
+                                    class="flex flex-col rounded-md items-center space-y-4"
+                                >
+                                    <div @click="openModal('shoes')">
+                                        <button
+                                            v-if="!form.shoes"
+                                            class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                            @click="openModal('shoes')"
+                                        >
+                                            シューズ
+                                        </button>
+                                        <img
+                                            v-if="form.shoes"
+                                            class="w-48"
+                                            :src="form.shoesImage"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <SelectItemsOverlay
+                        v-if="showItemSelectionModal"
+                        @onItemSelected="handleItemSelected"
+                        @close="showItemSelectionModal = false"
+                    />
 
                     <!-- <div class="text-gray-500 mt-3 p-3 text-sm">
                         Your reel will be shared with your followers in their
