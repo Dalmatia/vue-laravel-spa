@@ -131,10 +131,10 @@ class ItemController extends Controller
     private function validateRequest(Request $request)
     {
         $rules = [
-            'file' => 'nullable|mimes:jpg,jpeg,png',
-            'main_category' => 'nullable',
+            'file' => 'required|mimes:jpg,jpeg,png',
+            'main_category' => 'required',
             'sub_category' => 'nullable',
-            'color' => 'nullable',
+            'color' => 'required',
             'season' => 'nullable',
             'memo' => 'nullable',
         ];
