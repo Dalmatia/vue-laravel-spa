@@ -27,4 +27,9 @@ class Outfit extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function scopeOnDate($query, $date)
+    {
+        return $query->where('outfit_date', $date);
+    }
 }

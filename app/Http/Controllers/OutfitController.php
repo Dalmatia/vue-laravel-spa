@@ -22,28 +22,40 @@ class OutfitController extends Controller
      */
     public function store(Request $request)
     {
-        $outfit = new Outfit();
-
         $validator = Validator::make($request->all(), [
             'file' => 'required | mimes:jpg,jpeg,png',
             'description' => 'nullable',
             'outfit_date' => 'required',
             'season' => 'nullable',
-            'tops' => 'required |exists:items,id',
-            'outer' => 'required |exists:items,id',
-            'bottoms' => 'required |exists:items,id',
-            'shoes' => 'required |exists:items,id'
+            'tops' => 'nullable |exists:items,id',
+            'outer' => 'nullable |exists:items,id',
+            'bottoms' => 'nullable |exists:items,id',
+            'shoes' => 'nullable |exists:items,id'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $outfit = new Outfit();
         $outfit->user_id = auth()->user()->id;
-        $outfit = (new fileService)->updateFile($outfit, $request, 'outfit');
+        $outfit = (new FileService)->updateFile($outfit, $request, 'outfit');
         $outfit->description = $request->input('description');
+
         // コーディネートした日付を選択する
         $outfit->outfit_date = $request->input('outfit_date');
+        // 指定された日付に既に投稿があるか確認
+        $validator->after(function ($validator) use ($outfit) {
+            if (Outfit::onDate($outfit->outfit_date)->where('user_id', $outfit->user_id)->exists()) {
+                $validator->errors()->add('outfit_date', '同じ日付に複数の投稿はできません。');
+            }
+        });
+
+        // バリデーションが失敗した場合（2回目のチェック）
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         // コーディネートのシーズンを選択
         $outfit->season = $request->input('season');
         // 着用したアイテムをItemテーブルから選択
