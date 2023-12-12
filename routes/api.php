@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EnumController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\UserController;
@@ -38,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // コーディネート投稿関連
     Route::post('outfit', [OutfitController::class, 'store']);
 });
+
+Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);
 Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
