@@ -2,13 +2,13 @@
 import { ref, onMounted, toRefs } from 'vue';
 
 import MainLayout from '@/Layouts/MainLayout.vue';
-import ShowPostOverlay from '@/Components/ShowPostOverlay.vue';
+import ShowOutfitOverlay from '@/Components/ShowOutfitOverlay.vue';
 
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
 let wWidth = ref(window.innerWidth);
 let currentSlide = ref(0);
-let currentPost = ref(null);
+let currentOutfit = ref(null);
 let openOverlay = ref(false);
 
 // const props = defineProps({ posts: Object, allUsers: Object });
@@ -20,10 +20,14 @@ const fetchOutfits = async () => {
     try {
         const response = await axios.get('/api/home');
         outfits.value = response.data.outfits;
-        console.log(outfits);
     } catch (error) {
         console.error(error);
     }
+};
+
+const openOutfitOverlay = (outfit) => {
+    currentOutfit.value = outfit;
+    openOverlay.value = true;
 };
 
 onMounted(() => {
@@ -42,7 +46,7 @@ onMounted(() => {
                 v-for="outfit in outfits"
                 :key="outfit.id"
             >
-                <a @click="openOverlay = true">
+                <a @click="openOutfitOverlay(outfit)">
                     <img
                         class="block h-[193px] w-[177px] md:h-[300px] md:w-full"
                         :src="outfit.file"
@@ -74,9 +78,9 @@ onMounted(() => {
         </div>
     </div>
 
-    <ShowPostOverlay
+    <ShowOutfitOverlay
         v-if="openOverlay"
-        :post="currentPost"
+        :outfit="currentOutfit"
         @closeOverlay="openOverlay = false"
     />
 </template>

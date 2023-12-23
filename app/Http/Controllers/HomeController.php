@@ -11,7 +11,7 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $outfits = Outfit::orderBy('created_at', 'desc')->get();
+        $outfits = Outfit::with('user')->orderBy('created_at', 'desc')->get();
 
         return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
     }
