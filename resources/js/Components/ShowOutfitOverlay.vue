@@ -1,5 +1,7 @@
 <script setup>
 import { onMounted, ref, toRefs } from 'vue';
+import axios from 'axios';
+import { getEnumStore } from '../stores/enum';
 
 import LikesSection from './LikesSection.vue';
 import ShowPostOptionsOverlay from './ShowPostOptionsOverlay.vue';
@@ -7,7 +9,6 @@ import ShowPostOptionsOverlay from './ShowPostOptionsOverlay.vue';
 import Close from 'vue-material-design-icons/Close.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue';
-import axios from 'axios';
 
 let comment = ref('');
 let deleteType = ref(null);
@@ -15,6 +16,9 @@ let id = ref(null);
 
 const props = defineProps({ outfit: Object });
 const outfit = ref(props.outfit);
+const season = ref(null);
+// 選択したシーズン情報の取得
+const selectData = getEnumStore();
 
 defineEmits(['closeOverlay', 'addComment', 'updateLike', 'deleteSelected']);
 
@@ -29,6 +33,8 @@ const fetchDataAndUpdate = async (property) => {
             const outfitRefs = toRefs(outfit.value);
             outfitRefs[property].value = responseData.file;
         }
+
+        fetchSelectData();
     }
 };
 
@@ -42,6 +48,11 @@ const fetchItemData = async () => {
 const textareaInput = (e) => {
     textarea.value.style.height = 'auto';
     textarea.value.style.height = `${e.target.scrollHeight}px`;
+};
+
+// 選択したメインカテゴリー名等のデータ取得
+const fetchSelectData = () => {
+    season.value = selectData.getSeason(outfit.value.season);
 };
 
 onMounted(() => {
@@ -463,22 +474,19 @@ onMounted(() => {
                                 </div>
                                 <div class="pt-1 lg:pt-5">
                                     <p
-                                        class="flex items-center leading-[1.8] text-gray-500 lg:text-[12px] lg:leading-none lg:tracking-widest lg:text-gray-600"
-                                    >
-                                        <span class="pr-[5px] lg:text-[13px]"
-                                            >着用日:</span
-                                        >
-                                        <span>{{ outfit.outfit_date }}</span>
-                                    </p>
-                                </div>
-                                <div class="pt-1 lg:pt-5 flex flex-row-reverse">
-                                    <p
-                                        class="flex items-center leading-[1.8] text-gray-500 lg:text-[12px] lg:leading-none lg:tracking-widest lg:text-gray-600"
+                                        class="flex items-center justify-between leading-[1.8] text-gray-500 lg:text-[12px] lg:leading-none lg:tracking-widest lg:text-gray-600"
                                     >
                                         <span class="pr-[5px] lg:text-[13px]">
-                                            シーズン:
+                                            着用日:
+                                            <span>
+                                                {{ outfit.outfit_date }}
+                                            </span>
                                         </span>
-                                        <span>{{ outfit.season }}</span>
+
+                                        <span class="pr-[5px] lg:text-[13px]">
+                                            シーズン:
+                                            <span>{{ season }}</span>
+                                        </span>
                                     </p>
                                 </div>
                             </div>
