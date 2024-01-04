@@ -25,6 +25,24 @@ const fetchOutfits = async () => {
     }
 };
 
+// コーディネートの削除
+const deleteOutfit = (object) => {
+    let url = '';
+    if (object.deleteType === 'Outfit') {
+        url = `/api/outfit/` + object.id;
+        axios
+            .delete(url)
+            .then((response) => {
+                console.log(response);
+                openOverlay.value = false;
+                fetchOutfits();
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+};
+
 const openOutfitOverlay = (outfit) => {
     currentOutfit.value = outfit;
     openOverlay.value = true;
@@ -81,6 +99,7 @@ onMounted(() => {
     <ShowOutfitOverlay
         v-if="openOverlay"
         :outfit="currentOutfit"
-        @closeOverlay="openOverlay = false"
+        @delete-selected="deleteOutfit($event)"
+        @close-overlay="openOverlay = false"
     />
 </template>

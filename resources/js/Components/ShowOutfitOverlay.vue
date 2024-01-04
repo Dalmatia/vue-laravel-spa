@@ -1,14 +1,17 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
+import { useAuthStore } from '../stores/auth';
 import { getEnumStore } from '../stores/enum';
 
 import LikesSection from './LikesSection.vue';
-import ShowPostOptionsOverlay from './ShowPostOptionsOverlay.vue';
+import ShowOutfitOptionsOverlay from './ShowOutfitOptionsOverlay.vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue';
+
+const authStore = useAuthStore();
 
 let comment = ref('');
 let deleteType = ref(null);
@@ -16,6 +19,7 @@ let id = ref(null);
 
 const props = defineProps(['outfit']);
 const outfit = ref(props.outfit);
+const postsByUser = outfit.value.user.name;
 const tops = ref({});
 const outer = ref({});
 const bottoms = ref({});
@@ -101,6 +105,21 @@ const fetchItem = async () => {
     }
 };
 
+// 登録・更新時のアイテム情報取得
+const fetchOutfit = async () => {
+    try {
+        const response = await axios.get(`/api/outfit/${outfit.value.id}`);
+
+        // EditOutfitOverlay.vueのOutfitUpdateメソッドで変更された場合、データを反映
+        const updatedOutfit = response.data;
+        outfit.value = updatedOutfit;
+
+        fetchItem();
+    } catch (error) {
+        console.error(error);
+    }
+};
+
 const textareaInput = (e) => {
     textarea.value.style.height = 'auto';
     textarea.value.style.height = `${e.target.scrollHeight}px`;
@@ -108,6 +127,7 @@ const textareaInput = (e) => {
 
 onMounted(() => {
     fetchItem();
+    fetchOutfit();
 });
 </script>
 
@@ -145,7 +165,7 @@ onMounted(() => {
                                     class="items-center pt-[2px] leading-[1.2] tracking-wider"
                                 >
                                     <p class="font-extrabold text-[15px]">
-                                        {{ outfit.user.name }}
+                                        {{ postsByUser }}
                                     </p>
                                 </div>
                             </div>
@@ -164,7 +184,13 @@ onMounted(() => {
                             </div>
                         </div>
                         <div class="ml-auto mt-2">
-                            <button>
+                            <button
+                                v-if="authStore.user.id === outfit.user_id"
+                                @click="
+                                    deleteType = 'Outfit';
+                                    id = outfit.id;
+                                "
+                            >
                                 <DotsHorizontal
                                     class="cursor-pointer"
                                     :size="27"
@@ -220,7 +246,7 @@ onMounted(() => {
                                 <h2
                                     class="text-[16px] font-bold leading-[1] tracking-wide"
                                 >
-                                    {{ outfit.user.name }} さんへのコメント
+                                    {{ postsByUser }} さんへのコメント
                                 </h2>
                             </div>
 
@@ -258,7 +284,9 @@ onMounted(() => {
                                                             <span
                                                                 class="lg:text-[14px]"
                                                             >
-                                                                名無さん2
+                                                                {{
+                                                                    postsByUser
+                                                                }}
                                                             </span>
                                                         </p>
                                                     </div>
@@ -567,7 +595,7 @@ onMounted(() => {
                             <h1
                                 class="hidden text-[16px] font-bold leading-[1.5] lg:block"
                             >
-                                {{ outfit.user.name }}さんのコーディネート
+                                {{ postsByUser }}さんのコーディネート
                             </h1>
                             <div class="px-4 pt-[38px] lg:px-0 lg:pt-4">
                                 <div>
@@ -628,5 +656,22 @@ onMounted(() => {
             <!-- ここまでメインセクション -->
         </div>
     </div>
-    <ShowPostOptionsOverlay v-if="deleteType" />
+    <ShowOutfitOptionsOverlay
+        v-if="deleteType"
+        :deleteType="deleteType"
+        :id="id"
+        @deleteSelected="
+            $emit('deleteSelected', {
+                deleteType: $event.deleteType,
+                id: $event.id,
+                outfit: outfit,
+            });
+            deleteType = null;
+            id = null;
+        "
+        @close="
+            deleteType = null;
+            id = null;
+        "
+    />
 </template>

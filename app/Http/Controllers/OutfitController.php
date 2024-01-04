@@ -71,9 +71,13 @@ class OutfitController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Outfit $outfit)
+    public function show($id)
     {
-        //
+        $outfit = Outfit::find($id);
+        if (!$outfit) {
+            return response()->json(['message' => 'お探しのコーディネートが見つかりません'], 404);
+        }
+        return response()->json($outfit, 200);
     }
 
     /**
@@ -95,8 +99,26 @@ class OutfitController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Outfit $outfit)
+    public function destroy($id)
     {
-        //
+        $outfit = Outfit::find($id);
+
+        if (!$outfit) {
+            return response()->json(['error' => 'コーディネートが見つかりません'], 404);
+        }
+
+        if (!empty($outfit->file)) {
+            $currentFile = public_path() . $outfit->file;
+
+            if (file_exists($currentFile)) {
+                if (!unlink($currentFile)) {
+                    return response()->json(['error' => 'ファイルの削除に失敗しました'], 500);
+                }
+            }
+        }
+
+        $outfit->delete();
+
+        return response()->json(['message' => 'コーディネートを削除しました'], 200);
     }
 }

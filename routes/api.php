@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // コーディネート投稿関連
     Route::post('outfit', [OutfitController::class, 'store']);
+    Route::get('/outfit/{id}', [OutfitController::class, 'show']);
+    Route::delete('/outfit/{id}', [OutfitController::class, 'destroy']);
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);
