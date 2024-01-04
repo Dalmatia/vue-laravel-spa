@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, toRefs } from 'vue';
+import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import { getEnumStore } from '../stores/enum';
 
@@ -14,35 +14,91 @@ let comment = ref('');
 let deleteType = ref(null);
 let id = ref(null);
 
-const props = defineProps({ outfit: Object });
+const props = defineProps(['outfit']);
 const outfit = ref(props.outfit);
+const tops = ref({});
+const outer = ref({});
+const bottoms = ref({});
+const shoes = ref({});
 const season = ref(null);
+
+const tops_category = ref(null);
+const tops_color = ref(null);
+const outer_category = ref(null);
+const outer_color = ref(null);
+const bottoms_category = ref(null);
+const bottoms_color = ref(null);
+const shoes_category = ref(null);
+const shoes_color = ref(null);
 // 選択したシーズン情報の取得
 const selectData = getEnumStore();
 
 defineEmits(['closeOverlay', 'addComment', 'updateLike', 'deleteSelected']);
 
-const fetchDataAndUpdate = async (property) => {
-    if (outfit.value[property]) {
-        const response = await axios.get(
-            `/api/items/${outfit.value[property]}`
-        );
-        const responseData = response.data;
+const fetchItem = async () => {
+    try {
+        const fetchItemData = async (itemId, item, category, color) => {
+            const response = await axios.get(`/api/items/${itemId}`);
+            const itemData = response.data;
 
-        if (responseData && responseData.file) {
-            const outfitRefs = toRefs(outfit.value);
-            outfitRefs[property].value = responseData.file;
+            item.value = itemData;
+            category.value = selectData.getSubCategoryName(
+                itemData.sub_category
+            );
+            color.value = selectData.getColor(itemData.color);
+        };
+
+        const fetchPromises = [];
+
+        if (outfit.value.tops) {
+            fetchPromises.push(
+                fetchItemData(
+                    outfit.value.tops,
+                    tops,
+                    tops_category,
+                    tops_color
+                )
+            );
         }
 
-        fetchSelectData();
-    }
-};
+        if (outfit.value.outer) {
+            fetchPromises.push(
+                fetchItemData(
+                    outfit.value.outer,
+                    outer,
+                    outer_category,
+                    outer_color
+                )
+            );
+        }
 
-const fetchItemData = async () => {
-    await fetchDataAndUpdate('tops');
-    await fetchDataAndUpdate('outer');
-    await fetchDataAndUpdate('bottoms');
-    await fetchDataAndUpdate('shoes');
+        if (outfit.value.bottoms) {
+            fetchPromises.push(
+                fetchItemData(
+                    outfit.value.bottoms,
+                    bottoms,
+                    bottoms_category,
+                    bottoms_color
+                )
+            );
+        }
+
+        if (outfit.value.shoes) {
+            fetchPromises.push(
+                fetchItemData(
+                    outfit.value.shoes,
+                    shoes,
+                    shoes_category,
+                    shoes_color
+                )
+            );
+        }
+
+        await Promise.all(fetchPromises);
+        season.value = selectData.getSeason(outfit.value.season);
+    } catch (error) {
+        console.error('データの取得に失敗しました:', error);
+    }
 };
 
 const textareaInput = (e) => {
@@ -50,13 +106,8 @@ const textareaInput = (e) => {
     textarea.value.style.height = `${e.target.scrollHeight}px`;
 };
 
-// 選択したメインカテゴリー名等のデータ取得
-const fetchSelectData = () => {
-    season.value = selectData.getSeason(outfit.value.season);
-};
-
 onMounted(() => {
-    fetchItemData();
+    fetchItem();
 });
 </script>
 
@@ -72,6 +123,7 @@ onMounted(() => {
         <div
             class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl overflow-auto"
         >
+            <!-- ヘッダーセクション -->
             <div class="top-[54px] z-contentHeader lg:block">
                 <div
                     class="w-full bg-white pb-[14px] pt-[11px] border-b-[1px] border-gray-300 rounded-xl"
@@ -122,6 +174,9 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
+            <!-- ここまでヘッダーセクション -->
+
+            <!-- メインセクション -->
             <section
                 class="lg:mx-auto lg:grid lg:w-[990px] lg:grid-cols-[558px_1fr] lg:gap-x-5 lg:pt-5 lg:grid-areas-[main_sub,main-bottom_sub]"
             >
@@ -129,6 +184,7 @@ onMounted(() => {
                 <section
                     class="border-y border-gray-300 lg:h-fit lg:overflow-hidden lg:rounded-t-[3px] lg:border lg:place-items-center lg:grid-in-[main]"
                 >
+                    <!-- コーディネート画像表示部分 -->
                     <article class="relative">
                         <div
                             class="hide-scroll relative flex snap-x snap-mandatory overflow-x-auto"
@@ -150,6 +206,7 @@ onMounted(() => {
                         </div>
                     </article>
 
+                    <!-- いいね!等の表示 -->
                     <div
                         class="justify-between border-t border-gray-300 bg-white px-[23px] py-6 lg:flex"
                     >
@@ -275,6 +332,7 @@ onMounted(() => {
                     </div>
                 </section>
 
+                <!-- サブセクション -->
                 <section
                     class="pt-[18px] lg:overflow-hidden lg:pt-0 lg:grid-in-[sub]"
                 >
@@ -310,7 +368,7 @@ onMounted(() => {
                                                 >
                                                     <span class="item_style">
                                                         <img
-                                                            :src="outfit.tops"
+                                                            :src="tops.file"
                                                             class="item_image"
                                                         />
                                                     </span>
@@ -326,6 +384,17 @@ onMounted(() => {
                                                         >
                                                             トップス
                                                         </span>
+                                                    </p>
+                                                    <p
+                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                                                    >
+                                                        <a
+                                                            href=""
+                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
+                                                        >
+                                                            {{ tops_category }}
+                                                            ({{ tops_color }})
+                                                        </a>
                                                     </p>
                                                 </div>
                                             </div>
@@ -348,7 +417,7 @@ onMounted(() => {
                                                 >
                                                     <span class="item_style">
                                                         <img
-                                                            :src="outfit.outer"
+                                                            :src="outer.file"
                                                             class="item_image"
                                                         />
                                                     </span>
@@ -364,6 +433,17 @@ onMounted(() => {
                                                         >
                                                             アウター
                                                         </span>
+                                                    </p>
+                                                    <p
+                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                                                    >
+                                                        <a
+                                                            href=""
+                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
+                                                        >
+                                                            {{ outer_category }}
+                                                            ({{ outer_color }})
+                                                        </a>
                                                     </p>
                                                 </div>
                                             </div>
@@ -386,9 +466,7 @@ onMounted(() => {
                                                 >
                                                     <span class="item_style">
                                                         <img
-                                                            :src="
-                                                                outfit.bottoms
-                                                            "
+                                                            :src="bottoms.file"
                                                             class="item_image"
                                                         />
                                                     </span>
@@ -404,6 +482,21 @@ onMounted(() => {
                                                         >
                                                             ボトムス
                                                         </span>
+                                                    </p>
+                                                    <p
+                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                                                    >
+                                                        <a
+                                                            href=""
+                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
+                                                        >
+                                                            {{
+                                                                bottoms_category
+                                                            }}
+                                                            ({{
+                                                                bottoms_color
+                                                            }})
+                                                        </a>
                                                     </p>
                                                 </div>
                                             </div>
@@ -426,7 +519,7 @@ onMounted(() => {
                                                 >
                                                     <span class="item_style">
                                                         <img
-                                                            :src="outfit.shoes"
+                                                            :src="shoes.file"
                                                             class="item_image"
                                                         />
                                                     </span>
@@ -443,6 +536,17 @@ onMounted(() => {
                                                             シューズ
                                                         </span>
                                                     </p>
+                                                    <p
+                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                                                    >
+                                                        <a
+                                                            href=""
+                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
+                                                        >
+                                                            {{ shoes_category }}
+                                                            ({{ shoes_color }})
+                                                        </a>
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div
@@ -458,6 +562,7 @@ onMounted(() => {
                             </div>
                         </section>
 
+                        <!-- コーディネートの紹介や着用日等の表示 -->
                         <section class="lg:pr-[23px]">
                             <h1
                                 class="hidden text-[16px] font-bold leading-[1.5] lg:block"
@@ -518,7 +623,9 @@ onMounted(() => {
                         </button>
                     </div> -->
                 </section>
+                <!-- ここまでサブセクション -->
             </section>
+            <!-- ここまでメインセクション -->
         </div>
     </div>
     <ShowPostOptionsOverlay v-if="deleteType" />
