@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, toRefs } from 'vue';
+import { ref, onMounted, toRefs, onUnmounted } from 'vue';
 
 import MainLayout from '@/Layouts/MainLayout.vue';
 import ShowOutfitOverlay from '@/Components/ShowOutfitOverlay.vue';
@@ -53,6 +53,11 @@ onMounted(() => {
         wWidth.value = window.innerWidth;
     });
     fetchOutfits();
+    window.addEventListener('outfit-updated', fetchOutfits);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('outfit-updated', fetchOutfits);
 });
 </script>
 

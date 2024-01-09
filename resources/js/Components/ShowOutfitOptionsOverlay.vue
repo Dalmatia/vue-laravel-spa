@@ -1,20 +1,27 @@
 <script setup>
 import { onMounted, toRefs, ref } from 'vue';
 
+import EditOutfitOverlay from './EditOutfitOverlay.vue';
+
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
 const { deleteType, id } = toRefs(props);
 const outfit = ref(null);
+let openEdit = ref(false);
 
 // 登録・更新時のアイテム情報取得
 const fetchOutfit = async () => {
     try {
-        const response = await axios.get(`/api/outfits/${id.value}`);
+        const response = await axios.get(`/api/outfit/${id.value}`);
 
         outfit.value = response.data;
     } catch (error) {
         console.error(error);
     }
+};
+
+const openEditOutfitOverlay = () => {
+    openEdit.value = true;
 };
 
 onMounted(() => {
@@ -31,6 +38,12 @@ onMounted(() => {
             class="max-w-sm w-full mx-auto mt-10 bg-white rounded-xl text-center"
         >
             <button
+                class="font-extrabold w-full text-blue-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
+                @click="openEditOutfitOverlay(editOutfit)"
+            >
+                編集
+            </button>
+            <button
                 class="font-extrabold w-full text-red-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
                 @click="emit('deleteSelected', { deleteType, id })"
             >
@@ -41,4 +54,9 @@ onMounted(() => {
             </div>
         </div>
     </div>
+    <EditOutfitOverlay
+        v-if="openEdit"
+        :editOutfit="outfit"
+        @closeOverlay="openEdit = false"
+    />
 </template>

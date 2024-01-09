@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
 import { getEnumStore } from '../stores/enum';
@@ -128,6 +128,12 @@ const textareaInput = (e) => {
 onMounted(() => {
     fetchItem();
     fetchOutfit();
+    // EditOutfitOverlay.vueのoutfitUpdateメソッドで定義したイベントの購読
+    window.addEventListener('outfit-updated', fetchOutfit);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('outfit-updated', fetchOutfit);
 });
 </script>
 
