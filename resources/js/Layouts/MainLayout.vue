@@ -119,12 +119,17 @@ onMounted(() => {
                     <MenuItem iconString="Home" class="mb-4" />
                 </router-link>
                 <MenuItem iconString="Search" class="mb-4" />
-                <router-link :to="{ name: 'Calendar' }">
+                <router-link :to="{ name: 'Calendar' }" v-if="authStore.user">
                     <MenuItem iconString="Calendar" class="mb-4" />
                 </router-link>
                 <!-- <MenuItem iconString="Messages" class="mb-4" /> -->
-                <MenuItem iconString="Notifications" class="mb-4" />
                 <MenuItem
+                    iconString="Notifications"
+                    class="mb-4"
+                    v-if="authStore.user"
+                />
+                <MenuItem
+                    v-if="authStore.user"
                     @click="showCreatePost = true"
                     iconString="Create"
                     class="mb-4"
