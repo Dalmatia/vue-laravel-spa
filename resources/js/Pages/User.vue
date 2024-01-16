@@ -13,11 +13,8 @@ import CreateItemOverlay from '@/Components/Items/CreateItemOverlay.vue';
 
 let showCreateItem = ref(false);
 
-let data = reactive({ post: null });
 const form = reactive({ file: null });
 
-const props = defineProps({ postsByUser: Object, user: Object });
-const { postsByUser, user } = toRefs(props);
 const authStore = useAuthStore();
 
 const getUploadedImage = (e) => {

@@ -11,8 +11,6 @@ let currentSlide = ref(0);
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
 
-// const props = defineProps({ posts: Object, allUsers: Object });
-// const { posts, allUsers } = toRefs(props);
 const outfits = ref([]);
 
 // 投稿したコーディネートの表示
