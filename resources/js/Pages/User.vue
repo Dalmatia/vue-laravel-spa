@@ -212,7 +212,7 @@ onMounted(() => {
             </div>
         </div>
 
-        <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
+        <div>
             <router-view></router-view>
         </div>
 

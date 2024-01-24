@@ -59,36 +59,38 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div
-        class="flex items-center justify-center cursor-pointer relative"
-        v-for="(outfit, index) in outfits"
-        :key="outfit.id"
-        @click="openOutfitOverlay(outfit)"
-        @mouseenter="isHover[index] = true"
-        @mouseleave="isHover[index] = false"
-    >
+    <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
         <div
-            v-if="isHover[index]"
-            :class="isHover[index] ? 'bg-black bg-opacity-40' : ''"
-            class="absolute w-full h-full z-50 flex items-center justify-around text-lg font-extrabold text-white"
+            class="flex items-center justify-center cursor-pointer relative"
+            v-for="(outfit, index) in outfits"
+            :key="outfit.id"
+            @click="openOutfitOverlay(outfit)"
+            @mouseenter="isHover[index] = true"
+            @mouseleave="isHover[index] = false"
         >
-            <div class="flex items-center justify-around w-[50%]">
-                <div class="flex items-center justify-center">
-                    <Heart fillColor="#FFFFFF" :size="30" />
-                    <div class="pl-1">3</div>
-                </div>
-                <div class="flex items-center justify-center">
-                    <Comment fillColor="#FFFFFF" :size="30" />
-                    <div class="pl-1">5</div>
+            <div
+                v-if="isHover[index]"
+                :class="isHover[index] ? 'bg-black bg-opacity-40' : ''"
+                class="absolute w-full h-full z-50 flex items-center justify-around text-lg font-extrabold text-white"
+            >
+                <div class="flex items-center justify-around w-[50%]">
+                    <div class="flex items-center justify-center">
+                        <Heart fillColor="#FFFFFF" :size="30" />
+                        <div class="pl-1">3</div>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <Comment fillColor="#FFFFFF" :size="30" />
+                        <div class="pl-1">5</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <img
-            class="aspect-square mx-auto z-0 object-cover cursor-pointer"
-            v-if="outfit.file"
-            :src="outfit.file"
-        />
+            <img
+                class="aspect-square mx-auto z-0 object-cover cursor-pointer"
+                v-if="outfit.file"
+                :src="outfit.file"
+            />
+        </div>
     </div>
     <ShowOutfitOverlay
         v-if="openOverlay"
