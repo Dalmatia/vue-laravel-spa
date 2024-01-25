@@ -38,12 +38,9 @@ const categorizeItems = () => {
     items.value.forEach((item) => {
         // 新しいアイテムだけを分類
         if (!categorizedItems[item.main_category]) {
-            categorizedItems[item.main_category] = {};
+            categorizedItems[item.main_category] = [];
         }
-        if (!categorizedItems[item.main_category][item.sub_category]) {
-            categorizedItems[item.main_category][item.sub_category] = [];
-        }
-        categorizedItems[item.main_category][item.sub_category].push(item);
+        categorizedItems[item.main_category].push(item);
     });
 };
 
@@ -86,23 +83,21 @@ onUnmounted(() => {
     <div class="grid md:gap-4 gap-1 grid-cols-2 relative">
         <!-- カテゴリごとにアイテムを表示 -->
         <div
-            v-for="(mainCategory, mainCategoryName) in categorizedItems"
+            v-for="(mainCategoryItems, mainCategoryName) in categorizedItems"
             :key="mainCategoryName"
         >
             <h2 class="text-xs mb-1 font-semibold">
                 {{ getCategoryName.getMainCategoryName(mainCategoryName) }}
             </h2>
-            <div
-                v-for="(subCategoryItems, subCategoryName) in mainCategory"
-                :key="subCategoryName"
-            >
-                <h3 class="text-xs mb-1 font-semibold">
-                    {{ getCategoryName.getSubCategoryName(subCategoryName) }}
-                </h3>
+            <!-- カテゴリー毎にフォルダー分け -->
+            <div class="border border-gray-300 p-2 rounded-md mb-4">
                 <div
                     class="grid grid-cols-2 md:grid-cols-3 items-center justify-center cursor-pointer relative"
                 >
-                    <div v-for="item in subCategoryItems" :key="item.id">
+                    <div
+                        v-for="item in mainCategoryItems.slice(0, 4)"
+                        :key="item.id"
+                    >
                         <img
                             v-if="item.file"
                             :src="item.file"
