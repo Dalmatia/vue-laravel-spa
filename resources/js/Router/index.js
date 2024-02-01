@@ -6,6 +6,7 @@ const Register = () => () => import('../Pages/Auth/Register.vue');
 const User = () => import('../Pages/User.vue');
 const ContentOverlay = () => import('@/Components/ContentOverlay.vue');
 const Items = () => import('../Pages/Items.vue');
+const CategoryItems = () => import('../Pages/CategoryItems.vue');
 const Calendar = () => import('../Pages/Calendar.vue');
 
 const router = createRouter({
@@ -34,6 +35,11 @@ const router = createRouter({
                     meta: { requiresAuth: true },
                 },
             ],
+        },
+        {
+            path: '/user/:id/items/:mainCategory',
+            name: 'CategoryItems',
+            component: CategoryItems,
         },
         {
             path: '/login',

@@ -164,7 +164,7 @@ onMounted(() => {
                     route.path === '/' ? 'lg:w-8/12 w-full' : 'max-w-[1200px]'
                 "
             >
-                <main>
+                <main class="container">
                     <slot />
                 </main>
             </div>
