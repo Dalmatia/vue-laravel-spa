@@ -7,6 +7,8 @@ import { getEnumStore } from '../stores/enum';
 import ShowItemOverlay from '../Components/Items/ShowItemOverlay.vue';
 
 import Hanger from 'vue-material-design-icons/Hanger.vue';
+import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
 let currentItem = ref(null);
 let openOverlay = ref(false);
@@ -94,8 +96,8 @@ onUnmounted(() => {
 
 <template>
     <div
-        id="topsPage"
-        class="w-full max-w-[880px] lg:ml-0 md:ml-[10px] md:pl-20 px-4 md:w-[90vw]"
+        id="CategorizedItemPage"
+        class="w-full max-w-[1000px] lg:ml-0 md:ml-[10px] md:pl-20 px-4 md:w-[90vw]"
     >
         <div id="contentsBody" class="pt-0">
             <div id="main_content">
@@ -169,15 +171,18 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <!-- ここまで -->
+
                 <div id="item-list" class="relative z-[1]">
+                    <!-- アイテムリスト -->
                     <div
                         class="container grid grid-cols-3 pt-0 pr-0 pb-[20px] pl-0"
                     >
                         <div
                             class="pt-0 pr-[6px] pb-[5px] pl-[6px] w-full"
                             v-for="item in categorizedItems[mainCategoryName]"
-                            :key="item.id"
+                            :key="item.id + item.main_category"
                         >
+                            <!-- アイテム画像表示 -->
                             <div id="imgContainer" class="relative">
                                 <a @click="openItemOverlay(item)">
                                     <p id="img">
@@ -188,10 +193,68 @@ onUnmounted(() => {
                                         />
                                     </p>
                                 </a>
+                                <!-- アイテム画像表示ここまで -->
+                            </div>
+                            <div class="pt-[6px]">
+                                <p
+                                    class="text-[10px] font-bold leading-[1.2] w-full whitespace-nowrap overflow-hidden text-ellipsis"
+                                >
+                                    {{
+                                        getCategoryName.getSubCategoryName(
+                                            item.sub_category
+                                        )
+                                    }}
+                                </p>
                             </div>
                         </div>
                     </div>
+                    <!-- アイテムリストここまで -->
                 </div>
+
+                <!-- ページネーション部分 -->
+                <div
+                    id="pager"
+                    class="clear-both mt-[20px] mr-0 mb-0 ml-0 pt-0 pr-[10px] pb-20 pl-[10px] table w-full"
+                >
+                    <p
+                        id="prev btn"
+                        class="w-[30%] table-cell text-center align-middle"
+                    >
+                        <span
+                            class="bg-[#f6f7f8] flex justify-center items-center pt-[12px] pr-0 pb-[12px] pl-0 text-[#fff] rounded-[4px] text-[0px] leading-none tracking-[0]"
+                        >
+                            <ChevronLeft class="text-[#aaa] text-[20px]" />
+                        </span>
+                    </p>
+                    <p
+                        id="pg-num"
+                        class="text-center text-[#333] table-cell align-middle"
+                    >
+                        <span
+                            id="num"
+                            class="tracking-[0.08em] text-[15px] block leading-[1.4]"
+                        >
+                            1/1
+                        </span>
+                        <span
+                            id="label"
+                            class="text-[12px] block leading-[1.4]"
+                        >
+                            ページ
+                        </span>
+                    </p>
+                    <p
+                        id="next btn"
+                        class="w-[30%] table-cell text-center align-middle"
+                    >
+                        <span
+                            class="bg-[#f6f7f8] flex justify-center items-center pt-[12px] pr-0 pb-[12px] text-[#fff] rounded-[4px] text-[0px] leading-none tracking-[0]"
+                        >
+                            <ChevronRight class="text-[#aaa] text-[20px]" />
+                        </span>
+                    </p>
+                </div>
+                <!-- ページネーション部分ここまで -->
             </div>
         </div>
     </div>

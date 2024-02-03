@@ -47,7 +47,9 @@ onMounted(() => {
 
 <template>
     <div class="mt-2 md:pt-6"></div>
-    <div class="max-w-[880px] lg:ml-0 md:ml-[80px] md:pl-20 px-4 w-[100vw]">
+    <div
+        class="max-w-[880px] lg:ml-0 md:ml-[80px] md:pl-20 px-4 w-[100vw] md:w-[84.5vw]"
+    >
         <div class="flex items-center md:justify-between">
             <label for="fileUser">
                 <img
