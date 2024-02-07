@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../stores/auth';
 
-import ShowOutfitOverlay from './ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from './Outfits/ShowOutfitOverlay.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import Comment from 'vue-material-design-icons/Comment.vue';

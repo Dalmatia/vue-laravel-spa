@@ -2,7 +2,7 @@
 import { ref, onMounted, toRefs, onUnmounted } from 'vue';
 
 import MainLayout from '@/Layouts/MainLayout.vue';
-import ShowOutfitOverlay from '@/Components/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
 
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 

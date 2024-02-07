@@ -1,10 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
-import { useAuthStore } from '../stores/auth';
-import { getEnumStore } from '../stores/enum';
+import { useAuthStore } from '../../stores/auth';
+import { getEnumStore } from '../../stores/enum';
 
-import LikesSection from './LikesSection.vue';
+import LikesSection from '../LikesSection.vue';
 import ShowOutfitOptionsOverlay from './ShowOutfitOptionsOverlay.vue';
 
 import Close from 'vue-material-design-icons/Close.vue';

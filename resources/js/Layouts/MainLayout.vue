@@ -14,7 +14,7 @@ import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue';
 
 import MenuItem from '@/Components/MenuItem.vue';
-import CreateOutfitOverlay from '@/Components/CreateOutfitOverlay.vue';
+import CreateOutfitOverlay from '@/Components/Outfits/CreateOutfitOverlay.vue';
 
 const router = useRouter();
 const route = useRoute();
