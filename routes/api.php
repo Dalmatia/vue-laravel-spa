@@ -3,6 +3,7 @@
 use App\Http\Controllers\EnumController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\LikeController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -42,6 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/outfit/{id}', [OutfitController::class, 'show']);
     Route::post('/outfit/{id}', [OutfitController::class, 'update']);
     Route::delete('/outfit/{id}', [OutfitController::class, 'destroy']);
+
+    // お気に入り機能
+    Route::post('likes', [LikeController::class, 'store'])->name('likes.store');
+    Route::delete('/likes/{id}', [LikeController::class, 'destroy'])->name('likes.destroy');
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);

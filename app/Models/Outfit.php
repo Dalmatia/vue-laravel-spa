@@ -32,4 +32,9 @@ class Outfit extends Model
     {
         return $query->where('outfit_date', $date);
     }
+
+    public function Likes()
+    {
+        return $this->hasMany(Like::class);
+    }
 }

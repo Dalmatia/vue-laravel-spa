@@ -25,6 +25,13 @@ class AllOutfitsCollection extends ResourceCollection
                 'outer' => $outfit->outer,
                 'bottoms' => $outfit->bottoms,
                 'shoes' => $outfit->shoes,
+                'likes' => $outfit->likes->map(function ($like) {
+                    return [
+                        'id' => $like->id,
+                        'user_id' => $like->user_id,
+                        'outfit_id' => $like->outfit_id
+                    ];
+                }),
                 'user' => [
                     'id' => $outfit->user->id,
                     'name' => $outfit->user->name,

@@ -240,9 +240,13 @@ onUnmounted(() => {
 
                     <!-- いいね!等の表示 -->
                     <div
-                        class="justify-between border-t border-gray-300 bg-white px-[23px] py-6 lg:flex"
+                        class="justify-between border-t border-gray-300 bg-white px-[23px] py-6"
                     >
-                        <LikesSection class="px-2 border-t mb-2" />
+                        <LikesSection
+                            v-if="outfit"
+                            :outfit="outfit"
+                            @like="updateLike($event)"
+                        />
                     </div>
 
                     <!-- コメント欄 -->
