@@ -25,7 +25,7 @@ return new class extends Migration
                 ->references('id')
                 ->on('users')
                 ->onDelete('cascade');
-
+            $table->integer('like')->default(0);
             $table->timestamps();
         });
     }

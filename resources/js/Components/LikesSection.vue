@@ -1,5 +1,5 @@
 <script setup>
-import { computed, toRefs } from 'vue';
+import { computed, onMounted, ref, toRefs } from 'vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
@@ -12,24 +12,66 @@ const props = defineProps(['outfit']);
 const { outfit } = toRefs(props);
 const emit = defineEmits(['like']);
 const user = useAuthStore().user;
+const status = ref(false);
+const count = ref(0);
 
-const isHeartActiveComputed = computed(() => {
-    if (outfit.value && outfit.value.likes) {
-        let isTrue = false;
-        for (let i = 0; i < outfit.value.likes.length; i++) {
-            const like = outfit.value.likes[i];
-            if (
-                like.user_id === user.id &&
-                like.outfit_id === outfit.value.id
-            ) {
-                isTrue = true;
-            }
-        }
+const first_check = () => {
+    const id = outfit.value.id;
+    const array = ['/api/outfit/', id, '/firstcheck'];
+    const path = array.join('');
+    axios
+        .get(path)
+        .then((res) => {
+            status.value = res.data[0] === 1;
+            count.value = res.data[1];
+        })
+        .catch(function (err) {
+            console.log(err);
+        });
+};
 
-        return isTrue;
+const toggleLike = () => {
+    if (status.value) {
+        // いいねが既にされている場合は解除
+        unlike();
     } else {
-        return false;
+        // いいねがまだされていない場合はいいね
+        like();
     }
+};
+
+const like = () => {
+    const id = outfit.value.id;
+    const array = ['/api/outfit/', id, '/like'];
+    const path = array.join('');
+    axios
+        .post(path)
+        .then((res) => {
+            status.value = true;
+            count.value = res.data.count;
+        })
+        .catch(function (err) {
+            console.log(err);
+        });
+};
+
+const unlike = () => {
+    const id = outfit.value.id;
+    const array = ['/api/outfit/', id, '/unlike'];
+    const path = array.join('');
+    axios
+        .delete(path)
+        .then((res) => {
+            status.value = false;
+            count.value = res.data.count;
+        })
+        .catch(function (err) {
+            console.log(err);
+        });
+};
+
+onMounted(() => {
+    first_check();
 });
 </script>
 
@@ -38,19 +80,20 @@ const isHeartActiveComputed = computed(() => {
         <div class="flex gap-[6px]">
             <button
                 class="border border-gray-500 bg-white text-gray-500 xl:border-gray-300 xl:bg-gradient-to-b xl:from-white xl:to-gray-60 xl:hover:opacity-70 xl:text-gray-600 block text-center rounded-[4px] leading-[1] xl:rounded-[2px] w-full"
+                @click.prevent="toggleLike()"
             >
                 <span
                     class="flex min-w-[64px] items-center justify-center gap-[5px] px-2 py-[9px]"
                 >
                     <span id="icon-like" class="text-[21px]">
-                        <HeartOutline class="cursor-pointer" />
-                        <!-- <Heart
+                        <HeartOutline class="cursor-pointer" v-if="!status" />
+                        <Heart
                             v-else
                             class="cursor-pointer"
                             fillColor="#FF0000"
-                        /> -->
+                        />
                     </span>
-                    <span class="text-[15px] font-bold"> (39) </span>
+                    <span class="text-[15px] font-bold"> ({{ count }}) </span>
                 </span>
             </button>
             <button
@@ -83,23 +126,4 @@ const isHeartActiveComputed = computed(() => {
             </div>
         </div>
     </div>
-    <!-- <div
-        class="absolute flex border bottom-0 w-full max-h-[200px] bg-white overflow-auto"
-    >
-        <EmoticonHappyOutline class="pl-3 pt-[10px]" :size="30" />
-        <textarea
-            ref="textarea"
-            :onInput="textareaInput"
-            v-model="comment"
-            placeholder="コメントする"
-            rows="1"
-            class="w-full border-0 mt-4 mb-2 text-sm z-50 focus:ring-0 text-gray-600 text-[18px] outline-none"
-        ></textarea>
-        <button
-            v-if="comment"
-            class="text-blue-600 font-extrabold pr-4 min-w-[70px]"
-        >
-            送信
-        </button>
-    </div> -->
 </template>

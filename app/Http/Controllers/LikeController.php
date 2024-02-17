@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Like;
+use App\Models\Outfit;
 use Illuminate\Http\Request;
 
 class LikeController extends Controller
@@ -18,14 +19,42 @@ class LikeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function firstcheck($outfit)
     {
-        $request->validate(['outfit_id' => 'required']);
+        $user = auth()->user();
+        $likes = new Like();
+        $like = Like::where('outfit_id', $outfit)->where('user_id', $user->id)->first();
+        if ($like) {
+            $count = $likes->where('outfit_id', $outfit)->where('like', 1)->count();
+            return [$like->like, $count];
+        } else {
+            $like = $likes->create([
+                'user_id' => $user->id,
+                'outfit_id' => $outfit,
+                'like' => 0
+            ]);
+            $count = $likes->where('outfit_id', $outfit)->where('like', 1)->count();
+            return [$like->like, $count];
+        }
+    }
 
-        $like = new Like();
-        $like->user_id = auth()->user()->id;
-        $like->outfit_id = $request->input('outfit_id');
-        $like->save();
+    public function like($outfit)
+    {
+        $user = auth()->user();
+        $likes = new Like();
+        $like = Like::where('outfit_id', $outfit)->where('user_id', $user->id)->first();
+        if (!$like) {
+            $like = $likes->create([
+                'user_id' => $user->id,
+                'outfit_id' => $outfit,
+                'like' => 1
+            ]);
+        } else {
+            $like->like = 1;
+            $like->save();
+        }
+        $count = $likes->where('outfit_id', $outfit)->where('like', 1)->count();
+        return response()->json(['count' => $count]);
     }
 
     /**
@@ -39,11 +68,16 @@ class LikeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function unlike($outfit)
     {
-        $like = Like::find($id);
-        if (count(collect($like)) > 0) {
-            $like->delete();
+        $user = auth()->user();
+        $likes = new Like();
+        $like = Like::where('outfit_id', $outfit)->where('user_id', $user->id)->first();
+        if ($like) {
+            $like->like = 0;
+            $like->save();
         }
+        $count = $likes->where('outfit_id', $outfit)->where('like', 1)->count();
+        return response()->json(['count' => $count]);
     }
 }
