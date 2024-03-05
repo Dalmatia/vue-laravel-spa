@@ -8,6 +8,7 @@ const ContentOverlay = () => import('@/Components/ContentOverlay.vue');
 const Items = () => import('../Pages/Items.vue');
 const CategoryItems = () => import('../Pages/CategoryItems.vue');
 const Calendar = () => import('../Pages/Calendar.vue');
+const Likes = () => import('../Pages/LikesPage.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -40,6 +41,11 @@ const router = createRouter({
             path: '/user/:id/items/:mainCategory',
             name: 'CategoryItems',
             component: CategoryItems,
+        },
+        {
+            path: '/likes',
+            name: 'Likes',
+            component: Likes,
         },
         {
             path: '/login',

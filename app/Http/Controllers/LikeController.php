@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Like;
 use App\Models\Outfit;
 use Illuminate\Http\Request;
@@ -11,9 +12,24 @@ class LikeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function likes()
     {
-        //
+        $user = auth()->user()->id;
+
+        // いいねしたコーディネートのIDの配列を取得
+        $likes = Like::where('user_id', $user)
+            ->where('like', 1)
+            ->latest()
+            ->pluck('outfit_id')
+            ->toArray();
+
+        // 対応するコーディネートを一度に取得
+        $outfits = Outfit::whereIn('id', $likes)->get();
+
+        // いいねしたコーディネートの一覧を取得
+        $likes = Like::whereIn('outfit_id', $likes)->where('like', 1)->orderBy('created_at', 'desc')->get();
+
+        return response()->json(['likes' => $likes, 'outfits' => new AllOutfitsCollection($outfits)]);
     }
 
     /**

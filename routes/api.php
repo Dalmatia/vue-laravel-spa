@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/outfit/{id}', [OutfitController::class, 'destroy']);
 
     // お気に入り機能
+    Route::get('/likes', [LikeController::class, 'likes'])->name('like.likes');
     Route::get('/outfit/{id}/firstcheck', [LikeController::class, 'firstcheck'])->name('like.firstcheck');
     Route::post('/outfit/{id}/like', [LikeController::class, 'like'])->name('like.like');
     Route::delete('/outfit/{id}/unlike', [LikeController::class, 'unlike'])->name('like.unlike');
