@@ -1,6 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import ShowOutfitOverlay from '../Components/Outfits/ShowOutfitOverlay.vue';
 
 let openOverlay = ref(false);
@@ -40,6 +40,13 @@ const openOutfitOverlay = (like) => {
 
 onMounted(() => {
     fetchLikes();
+    window.addEventListener('liked-created', fetchLikes);
+    window.addEventListener('liked-deleted', fetchLikes);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('liked-created', fetchLikes);
+    window.removeEventListener('liked-deleted', fetchLikes);
 });
 </script>
 

@@ -75,11 +75,9 @@ onMounted(() => {
                             class="bg-transparent w-full placeholder-[#8E8E8E] border-0 ring-0 focus:ring-0"
                         />
                     </div>
-                    <HeartOutline
-                        class="pl-4 pr-3"
-                        fillColor="#000000"
-                        :size="27"
-                    />
+                    <router-link :to="{ name: 'Likes' }" class="pl-4 pr-3">
+                        <HeartOutline fillColor="#000000" :size="27" />
+                    </router-link>
                 </div>
             </div>
         </div>

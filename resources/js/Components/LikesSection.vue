@@ -49,6 +49,7 @@ const like = () => {
         .then((res) => {
             status.value = true;
             count.value = res.data.count;
+            window.dispatchEvent(new Event('liked-created'));
         })
         .catch(function (err) {
             console.log(err);
@@ -64,6 +65,7 @@ const unlike = () => {
         .then((res) => {
             status.value = false;
             count.value = res.data.count;
+            window.dispatchEvent(new Event('liked-deleted'));
         })
         .catch(function (err) {
             console.log(err);
