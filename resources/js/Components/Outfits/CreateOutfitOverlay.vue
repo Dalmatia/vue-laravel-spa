@@ -65,6 +65,7 @@ const createOutfit = async () => {
 
         if (response.status === 200) {
             closeOverlay();
+            window.dispatchEvent(new Event('outfit-created'));
         }
     } catch (errors) {
         console.error('エラーが発生しました:', errors);

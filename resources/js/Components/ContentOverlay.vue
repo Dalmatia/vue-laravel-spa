@@ -50,10 +50,12 @@ const deleteOutfit = (object) => {
 
 onMounted(() => {
     fetchOutfits();
+    window.addEventListener('outfit-created', fetchOutfits);
     window.addEventListener('outfit-updated', fetchOutfits);
 });
 
 onUnmounted(() => {
+    window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
 });
 </script>
