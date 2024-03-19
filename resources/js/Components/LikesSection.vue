@@ -1,19 +1,19 @@
 <script setup>
 import { computed, onMounted, ref, toRefs } from 'vue';
+import CommentsPage from '../Pages/CommentsPage.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue';
 import SendOutline from 'vue-material-design-icons/SendOutline.vue';
 import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue';
-import { useAuthStore } from '../stores/auth';
 
 const props = defineProps(['outfit']);
 const { outfit } = toRefs(props);
 const emit = defineEmits(['like']);
-const user = useAuthStore().user;
 const status = ref(false);
 const count = ref(0);
+let openOverlay = ref(false);
 
 const first_check = () => {
     const id = outfit.value.id;
@@ -72,6 +72,10 @@ const unlike = () => {
         });
 };
 
+const openCommentOverlay = () => {
+    openOverlay.value = true;
+};
+
 onMounted(() => {
     first_check();
 });
@@ -100,6 +104,7 @@ onMounted(() => {
             </button>
             <button
                 class="border border-gray-500 bg-white text-gray-500 xl:border-gray-300 xl:bg-gradient-to-b xl:from-white xl:to-gray-60 xl:hover:opacity-70 xl:text-gray-600 block text-center rounded-[4px] leading-[1] xl:rounded-[2px] w-full"
+                @click="openCommentOverlay()"
             >
                 <span
                     class="flex min-w-[64px] items-center justify-center gap-[5px] px-2 py-[9px]"
@@ -128,4 +133,9 @@ onMounted(() => {
             </div>
         </div>
     </div>
+    <CommentsPage
+        v-if="openOverlay"
+        :outfit_id="outfit.id"
+        @close-overlay="openOverlay = false"
+    />
 </template>

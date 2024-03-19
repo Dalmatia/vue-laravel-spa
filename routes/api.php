@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EnumController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
@@ -49,6 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/outfit/{id}/firstcheck', [LikeController::class, 'firstcheck'])->name('like.firstcheck');
     Route::post('/outfit/{id}/like', [LikeController::class, 'like'])->name('like.like');
     Route::delete('/outfit/{id}/unlike', [LikeController::class, 'unlike'])->name('like.unlike');
+
+    // コメント機能
+    Route::get('/outfit/{id}/get_comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::post('/outfit/{id}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/outfit/{id}/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);
