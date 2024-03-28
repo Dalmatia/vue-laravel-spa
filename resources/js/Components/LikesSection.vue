@@ -135,7 +135,7 @@ onMounted(() => {
     </div>
     <CommentsPage
         v-if="openOverlay"
-        :outfit_id="outfit.id"
+        :outfit="outfit"
         @close-overlay="openOverlay = false"
     />
 </template>

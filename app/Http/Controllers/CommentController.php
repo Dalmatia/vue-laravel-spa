@@ -11,12 +11,15 @@ class CommentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Outfit $outfit)
+    public function index(Request $request)
     {
-        foreach ($outfit->comments() as $comment) {
-            $comment->user = $comment->user;
-        }
-        return $outfit->comments;
+        $outfit_id = $request->input('outfit_id');
+
+        // すべてのコメントを取得し、最新のものが最初に来るようにします
+        $comments = Comment::where('outfit_id', $outfit_id)->latest()->get();
+
+        // JSON形式でコメントを返します
+        return response()->json(['comments' => $comments]);
     }
 
     /**

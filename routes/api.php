@@ -52,8 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/outfit/{id}/unlike', [LikeController::class, 'unlike'])->name('like.unlike');
 
     // コメント機能
-    Route::get('/outfit/{id}/get_comments', [CommentController::class, 'index'])->name('comments.index');
-    Route::post('/outfit/{id}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::post('/outfit/{id}/comment', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('/outfit/{id}/comments/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
 
