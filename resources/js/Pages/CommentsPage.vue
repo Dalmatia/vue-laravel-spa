@@ -8,39 +8,55 @@ import axios from 'axios';
 const user = useAuthStore().user;
 const props = defineProps(['outfit']);
 const outfit = ref(props.outfit);
+const username = ref(null);
 const emit = defineEmits(['closeOverlay']);
 const comments = ref([]);
 let comment = ref('');
 
-const fetchComment = async () => {
-    try {
-        const response = await axios.get('/api/comments', {
-            params: {
-                outfit_id: outfit.value.id,
-            },
-        });
-        comments.value = response.data.comments;
+// 投稿ユーザーの情報とコーディネートに対するコメントの取得を並列で行う
+const fetchUserDataAndComments = async () => {
+    const userData = axios.get(`/api/users/${outfit.value.user_id}`);
+    const commentsData = axios.get('/api/comments', {
+        params: { outfit_id: outfit.value.id },
+    });
 
-        await Promise.all(
-            comments.value.map(async (comment) => {
-                // ユーザー情報を取得してlikeオブジェクトに追加
-                const userResponse = await axios.get(
-                    `/api/users/${comment.user_id}`
-                );
-                comment.user = userResponse.data.user;
-            })
-        );
-    } catch (error) {
-        console.error('コメントの取得に失敗しました。:', error);
-    }
+    const [userDataResponse, commentsResponse] = await Promise.all([
+        userData,
+        commentsData,
+    ]);
+
+    username.value = userDataResponse.data.user.name;
+    comments.value = commentsResponse.data.comments;
+
+    // コメントしたユーザーの情報も取得する
+    const users = await Promise.all(
+        comments.value.map(async (comment) => {
+            const userResponse = await axios.get(
+                `/api/users/${comment.user_id}`
+            );
+            return userResponse.data.user;
+        })
+    );
+
+    // コメントオブジェクトにユーザー情報を追加
+    comments.value.forEach((comment, index) => {
+        comment.user = users[index];
+    });
 };
 
+// コメントがコーディネート投稿者であるかどうかの判別
+const commentedByUser = (comment) => {
+    return comment.user_id === outfit.value.user_id;
+};
+
+// textareaのサイズ調整
 const textareaInput = (e) => {
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
 };
 
+// コメント投稿機能
 const addComment = () => {
     if (comment.value.trim() === '') {
         return; // コメントが空の場合は何もしない
@@ -56,7 +72,7 @@ const addComment = () => {
         .then((res) => {
             // window.dispatchEvent(new Event('comment-posted'));
             comment.value = '';
-            fetchComment();
+            fetchUserDataAndComments();
         })
         .catch(function (err) {
             console.error('コメントの送信に失敗しました。:', err);
@@ -64,7 +80,7 @@ const addComment = () => {
 };
 
 onMounted(() => {
-    fetchComment();
+    fetchUserDataAndComments();
 });
 </script>
 
@@ -87,7 +103,7 @@ onMounted(() => {
                             <p
                                 class="text-[14px] font-bold leading-[1.3] text-black-400"
                             >
-                                {{ user.name }}さんへのコメント ({{
+                                {{ username }}さんへのコメント ({{
                                     comments.length
                                 }})
                             </p>
@@ -96,15 +112,15 @@ onMounted(() => {
                                     class="flex flex-col gap-4 pt-[17px] xl:pt-2"
                                 >
                                     <div
-                                        v-for="(comment, index) in comments"
+                                        v-for="comment in comments"
                                         :key="comment"
                                     >
                                         <div
                                             :class="[
                                                 'flex w-full gap-4 lg:gap-[15px]',
-                                                index % 2 === 0
+                                                commentedByUser(comment)
                                                     ? 'flex-row-reverse'
-                                                    : '', // 偶数番目のコメントは右側に表示する
+                                                    : '', // コメントが投稿主のものであれば何も指定せず、そうでなければ右側に表示
                                             ]"
                                         >
                                             <a
@@ -121,11 +137,18 @@ onMounted(() => {
                                                     class="flex flex-row-reverse"
                                                 >
                                                     <p
-                                                        class="line-clamp-3 max-w-[272px] text-[12px] leading-[1.4] lg:max-w-[420px] lg:tracking-[0.03em]"
                                                         v-if="
                                                             comment.user &&
                                                             comment.user.name
                                                         "
+                                                        :class="[
+                                                            'flex w-full gap-4 lg:gap-[15px]',
+                                                            commentedByUser(
+                                                                comment
+                                                            )
+                                                                ? 'flex-row-reverse'
+                                                                : '',
+                                                        ]"
                                                     >
                                                         {{ comment.user.name }}
                                                     </p>
@@ -154,29 +177,30 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="z-100 fixed bottom-0 flex w-full bg-white p-2">
-                    <p
-                        class="mt-[3px] h-[30px] w-[30px] overflow-hidden rounded-[50%] border-[1px] border-gray-300"
-                    >
-                        <img src="https://picsum.photos/id/32/32/32" alt="" />
-                    </p>
-                    <p class="ml-2 flex-1">
+                    <p class="flex w-full max-h-[200px]">
+                        <img
+                            src="https://picsum.photos/id/32/32/32"
+                            alt=""
+                            class="h-8 w-8 rounded-full border border-gray-300 mr-2"
+                        />
                         <textarea
                             ref="textarea"
                             :onInput="textareaInput"
                             v-model="comment"
                             placeholder="コメントする"
                             rows="1"
-                            class="w-full block rounded-[18px] border-[1px] border-gray-300 bg-gray-100 py-2 pl-3 text-[14px] leading-[1.3] text-gray-500"
+                            class="flex-1 rounded-[18px] border-[1px] border-gray-300 bg-gray-100 py-2 pl-3 text-[14px] leading-[1.3] text-gray-500"
                         ></textarea>
-                        <button
-                            v-if="comment.trim() !== ''"
-                            @click="addComment()"
-                            class="text-blue-600 font-extrabold pr-4"
-                        >
-                            送信
-                        </button>
                     </p>
+                    <button
+                        v-if="comment.trim() !== ''"
+                        @click="addComment()"
+                        class="text-blue-600 font-extrabold pr-4 flex-shrink-0"
+                    >
+                        送信
+                    </button>
                 </div>
+
                 <button
                     class="fixed right-[15px] top-[15px] flex h-[30px] w-[30px] items-center justify-center rounded-[50%] bg-black text-[14px] leading-[1] text-white opacity-60 transition-all duration-300 ease-linear translate-y-0"
                     @click="emit('closeOverlay')"
