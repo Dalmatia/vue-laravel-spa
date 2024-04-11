@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 
 import Close from 'vue-material-design-icons/Close.vue';
@@ -11,6 +11,8 @@ const outfit = ref(props.outfit);
 const username = ref(null);
 const emit = defineEmits(['closeOverlay']);
 const comments = ref([]);
+// 日付毎にコメントをまとめるためのデータ構造
+const commentedDate = reactive({});
 let comment = ref('');
 
 // 投稿ユーザーの情報とコーディネートに対するコメントの取得を並列で行う
@@ -41,6 +43,35 @@ const fetchUserDataAndComments = async () => {
     // コメントオブジェクトにユーザー情報を追加
     comments.value.forEach((comment, index) => {
         comment.user = users[index];
+        // コメントが投稿された日付を取得
+        const commentDate = new Date(comment.created_at);
+        // コメントが投稿された日付を取得してフォーマットする
+        const formattedDate = `${commentDate.getFullYear()}/${(
+            commentDate.getMonth() + 1
+        )
+            .toString()
+            .padStart(2, '0')}/${commentDate
+            .getDate()
+            .toString()
+            .padStart(2, '0')}`;
+        // コメントオブジェクトに日付を追加
+        comment.created_date = formattedDate;
+    });
+    categorizeDate();
+};
+
+// コメントした日付毎に分類する関数
+const categorizeDate = () => {
+    for (const key in commentedDate) {
+        delete commentedDate[key];
+    }
+
+    comments.value.forEach((comment) => {
+        // 新しいコメントだけを分類
+        if (!commentedDate[comment.created_date]) {
+            commentedDate[comment.created_date] = [];
+        }
+        commentedDate[comment.created_date].push(comment);
     });
 };
 
@@ -112,9 +143,27 @@ onMounted(() => {
                                     class="flex flex-col gap-4 pt-[17px] xl:pt-2"
                                 >
                                     <div
-                                        v-for="comment in comments"
+                                        v-for="(comment, index) in comments"
                                         :key="comment"
                                     >
+                                        <div
+                                            v-if="
+                                                index === 0 ||
+                                                comments[index - 1]
+                                                    .created_date !==
+                                                    comment.created_date
+                                            "
+                                        >
+                                            <div
+                                                class="flex flex-col items-center pt-[2px] xl:mt-[14px] xl:border-t xl:border-t-gray-200 xl:pt-0"
+                                            >
+                                                <p
+                                                    class="mb-[10px] inline-block rounded-[10px] bg-black px-[10px] py-1 align-middle text-[12px] leading-[1.2] text-white opacity-50 xl:mb-0 xl:mt-[-14px] xl:bg-white xl:bg-none xl:px-[22px] xl:pb-[14px] xl:text-[14px] xl:tracking-[0.07em] xl:text-gray-600 xl:opacity-100"
+                                                >
+                                                    {{ comment.created_date }}
+                                                </p>
+                                            </div>
+                                        </div>
                                         <div
                                             :class="[
                                                 'flex w-full gap-4 lg:gap-[15px]',
