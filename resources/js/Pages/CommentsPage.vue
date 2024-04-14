@@ -1,9 +1,12 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import axios from 'axios';
 
 import Close from 'vue-material-design-icons/Close.vue';
-import axios from 'axios';
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
+
+import CommentOptionsOverlay from '../Pages/CommentOptionsOverlay.vue';
 
 const user = useAuthStore().user;
 const props = defineProps(['outfit']);
@@ -14,6 +17,8 @@ const comments = ref([]);
 // 日付毎にコメントをまとめるためのデータ構造
 const commentedDate = reactive({});
 let comment = ref('');
+let selectComment = ref(null);
+let id = ref(null);
 
 // 投稿ユーザーの情報とコーディネートに対するコメントの取得を並列で行う
 const fetchUserDataAndComments = async () => {
@@ -110,6 +115,24 @@ const addComment = () => {
         });
 };
 
+// コメントの削除
+const deleteComment = (comment) => {
+    let url = '';
+    if (selectComment.value === 'Comment') {
+        url = `/api/comment/` + comment.id;
+        axios
+            .delete(url)
+            .then((response) => {
+                console.log(response);
+                // 削除に成功した際にコメントの一覧を取得
+                fetchUserDataAndComments();
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+};
+
 onMounted(() => {
     fetchUserDataAndComments();
 });
@@ -126,6 +149,7 @@ onMounted(() => {
                 id="outfitDetail_user_comment"
                 class="min-h-screen transition duration-200 ease-linear opacity-1"
             >
+                <!-- 投稿コメント一覧 -->
                 <div
                     class="w-full transition-all duration-300 ease-linear opacity-1 translate-y-0"
                 >
@@ -200,8 +224,24 @@ onMounted(() => {
                                                         ]"
                                                     >
                                                         {{ comment.user.name }}
+                                                        <button
+                                                            v-if="
+                                                                user.id ===
+                                                                comment.user_id
+                                                            "
+                                                            @click="
+                                                                selectComment =
+                                                                    'Comment';
+                                                                id = comment.id;
+                                                            "
+                                                        >
+                                                            <DotsHorizontal
+                                                                class="cursor-pointer"
+                                                            />
+                                                        </button>
                                                     </p>
                                                 </div>
+
                                                 <div
                                                     class="flex items-end gap-[10px] lg:mt-[5px] flex-row-reverse"
                                                 >
@@ -225,6 +265,9 @@ onMounted(() => {
                         </template>
                     </div>
                 </div>
+                <!-- ここまで -->
+
+                <!-- コメント送信機能 -->
                 <div class="z-100 fixed bottom-0 flex w-full bg-white p-2">
                     <p class="flex w-full max-h-[200px]">
                         <img
@@ -259,4 +302,15 @@ onMounted(() => {
             </div>
         </div>
     </div>
+    <!-- 自身が投稿したコメントに対するオプション -->
+    <CommentOptionsOverlay
+        v-if="selectComment"
+        :selectComment="selectComment"
+        :id="id"
+        @delete-selected="deleteComment($event)"
+        @close="
+            selectComment = null;
+            id = null;
+        "
+    />
 </template>

@@ -71,6 +71,10 @@ class CommentController extends Controller
     public function destroy($id)
     {
         $comment = Comment::find($id);
+        if (!$comment) {
+            return response()->json(['error' => 'コメントが見つかりません'], 404);
+        }
         $comment->delete();
+        return response()->json(['message' => 'コメントを削除しました'], 200);
     }
 }
