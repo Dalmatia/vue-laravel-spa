@@ -1,13 +1,13 @@
 <script setup>
 import { onMounted, toRefs, ref } from 'vue';
 
-// import EditCommentOverlay from './EditCommentOverlay.vue';
+import EditCommentOverlay from '../Pages/EditCommentOverlay.vue';
 
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ selectComment: String, id: Number });
 const { selectComment, id } = toRefs(props);
 const comment = ref(null);
-// let openEdit = ref(false);
+let editMode = ref(false);
 
 // 投稿したコメントの情報取得
 const fetchComment = async () => {
@@ -20,9 +20,9 @@ const fetchComment = async () => {
     }
 };
 
-// const openEditCommentOverlay = () => {
-//     openEdit.value = true;
-// };
+const openEditCommentOverlay = () => {
+    editMode.value = true;
+};
 
 onMounted(() => {
     fetchComment();
@@ -39,6 +39,7 @@ onMounted(() => {
         >
             <button
                 class="font-extrabold w-full text-blue-600 p-3 text-lg border-b border-b-gray-300 cursor-pointer"
+                @click="openEditCommentOverlay(editComment)"
             >
                 編集
             </button>
@@ -53,9 +54,9 @@ onMounted(() => {
             </div>
         </div>
     </div>
-    <!-- <EditCommentOverlay
-        v-if="openEdit"
+    <EditCommentOverlay
+        v-if="editMode"
         :editComment="comment"
-        @closeOverlay="openEdit = false"
-    /> -->
+        @close-overlay="editMode = false"
+    />
 </template>

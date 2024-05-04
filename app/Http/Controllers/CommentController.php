@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Models\Outfit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
@@ -30,23 +31,27 @@ class CommentController extends Controller
         $request->validate([
             'outfit_id' => 'required',
             'user_id' => 'required',
-            'comment' => 'required'
+            'text' => 'required'
         ]);
 
         $comment = new Comment;
 
         $comment->outfit_id = $request->input('outfit_id');
         $comment->user_id = $request->input('user_id');
-        $comment->text = $request->input('comment');
+        $comment->text = $request->input('text');
         $comment->save();
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Comment $comment)
+    public function show($id)
     {
-        //
+        $comment = Comment::find($id);
+        if (!$comment) {
+            return response()->json(['message' => 'コメントが見つかりません'], 404);
+        }
+        return response()->json($comment, 200);
     }
 
     /**
@@ -60,9 +65,23 @@ class CommentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Comment $comment)
+    public function update(Request $request, Comment $comment, $id)
     {
-        //
+        $comment = Comment::find($id);
+        if (!$comment) {
+            return response()->json(['error' => 'コメントが見つかりません'], 404);
+        }
+
+        if (Auth::id() == $comment->user_id) {
+            $request->validate([
+                'text' => 'required'
+            ]);
+
+            $comment->text = $request->input('text');
+            $comment->save();
+        }
+
+        return response()->json(['message' => 'コメントを更新しました'], 200);
     }
 
     /**

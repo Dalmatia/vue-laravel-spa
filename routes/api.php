@@ -53,7 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // コメント機能
     Route::get('/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::get('/comment/{id}', [CommentController::class, 'show']);
     Route::post('/outfit/{id}/comment', [CommentController::class, 'store'])->name('comments.store');
+    Route::put('/comment/{id}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comment/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
 

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import axios from 'axios';
 
@@ -103,7 +103,7 @@ const addComment = () => {
         .post(`/api/outfit/${id}/comment`, {
             outfit_id: id,
             user_id: user.id,
-            comment: comment.value,
+            text: comment.value,
         })
         .then((res) => {
             // window.dispatchEvent(new Event('comment-posted'));
@@ -135,6 +135,11 @@ const deleteComment = (comment) => {
 
 onMounted(() => {
     fetchUserDataAndComments();
+    window.addEventListener('comment-updated', fetchUserDataAndComments);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('comment-updated', fetchUserDataAndComments);
 });
 </script>
 
