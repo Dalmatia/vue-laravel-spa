@@ -22,14 +22,10 @@ let id = ref(null);
 
 // 投稿ユーザーの情報とコーディネートに対するコメントの取得を並列で行う
 const fetchUserDataAndComments = async () => {
-    const userData = axios.get(`/api/users/${outfit.value.user_id}`);
-    const commentsData = axios.get('/api/comments', {
-        params: { outfit_id: outfit.value.id },
-    });
-
     const [userDataResponse, commentsResponse] = await Promise.all([
-        userData,
-        commentsData,
+        // ユーザー情報とコメントを並列で取得
+        axios.get(`/api/users/${outfit.value.user_id}`),
+        axios.get('/api/comments', { params: { outfit_id: outfit.value.id } }),
     ]);
 
     username.value = userDataResponse.data.user.name;
@@ -48,6 +44,7 @@ const fetchUserDataAndComments = async () => {
     // コメントオブジェクトにユーザー情報を追加
     comments.value.forEach((comment, index) => {
         comment.user = users[index];
+
         // コメントが投稿された日付を取得
         const commentDate = new Date(comment.created_at);
         // コメントが投稿された日付を取得してフォーマットする
@@ -61,21 +58,11 @@ const fetchUserDataAndComments = async () => {
             .padStart(2, '0')}`;
         // コメントオブジェクトに日付を追加
         comment.created_date = formattedDate;
-    });
-    categorizeDate();
-};
 
-// コメントした日付毎に分類する関数
-const categorizeDate = () => {
-    for (const key in commentedDate) {
-        delete commentedDate[key];
-    }
-
-    comments.value.forEach((comment) => {
-        // 新しいコメントだけを分類
         if (!commentedDate[comment.created_date]) {
             commentedDate[comment.created_date] = [];
         }
+        // 日付毎にコメントをまとめる
         commentedDate[comment.created_date].push(comment);
     });
 };
@@ -105,22 +92,21 @@ const addComment = () => {
             user_id: user.id,
             text: comment.value,
         })
-        .then((res) => {
-            // window.dispatchEvent(new Event('comment-posted'));
+        .then((response) => {
             comment.value = '';
+            console.log(response);
             fetchUserDataAndComments();
         })
-        .catch(function (err) {
-            console.error('コメントの送信に失敗しました。:', err);
+        .catch(function (error) {
+            console.error('コメントの送信に失敗しました。:', error);
         });
 };
 
 // コメントの削除
-const deleteComment = (comment) => {
-    let url = '';
+const deleteComment = async (comment) => {
     if (selectComment.value === 'Comment') {
-        url = `/api/comment/` + comment.id;
-        axios
+        const url = `/api/comment/${comment.id}`;
+        await axios
             .delete(url)
             .then((response) => {
                 console.log(response);
@@ -128,7 +114,7 @@ const deleteComment = (comment) => {
                 fetchUserDataAndComments();
             })
             .catch((error) => {
-                console.error(error);
+                console.error('コメントの送信に失敗しました。:', error);
             });
     }
 };
