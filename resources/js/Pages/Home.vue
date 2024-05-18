@@ -1,10 +1,13 @@
 <script setup>
-import { ref, onMounted, toRefs, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useAuthStore } from '../stores/auth';
+import { useFollowStore } from '../stores/follow';
 
-import MainLayout from '@/Layouts/MainLayout.vue';
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
 
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
+import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';
+import unFollow from 'vue-material-design-icons/AccountCheckOutline.vue';
 
 let wWidth = ref(window.innerWidth);
 let currentSlide = ref(0);
@@ -12,12 +15,19 @@ let currentOutfit = ref(null);
 let openOverlay = ref(false);
 
 const outfits = ref([]);
+const authStore = useAuthStore();
+const user = authStore.user.id;
+const followStore = useFollowStore();
 
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
     try {
         const response = await axios.get('/api/home');
         outfits.value = response.data.outfits;
+
+        // 各ユーザーのフォロー状態をチェック
+        const follows = outfits.value.map((outfit) => outfit.user.id);
+        await followStore.fetchFollowStatus(follows);
     } catch (error) {
         console.error(error);
     }
@@ -44,6 +54,26 @@ const deleteOutfit = (object) => {
 const openOutfitOverlay = (outfit) => {
     currentOutfit.value = outfit;
     openOverlay.value = true;
+};
+
+const followUser = async (userId) => {
+    try {
+        await followStore.pushFollow(userId);
+        // フォロー状態を更新するために必要ならfetchOutfitsを再度呼び出す
+        followStore.status[userId] = true;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// フォロー解除する
+const deleteFollow = async (userId) => {
+    try {
+        await followStore.deleteFollow(userId);
+        followStore.status[userId] = false;
+    } catch (error) {
+        console.error(error);
+    }
 };
 
 onMounted(() => {
@@ -90,12 +120,28 @@ onUnmounted(() => {
                         />
                         <p class="ml-2 text-xs">{{ outfit.user.name }}</p>
                     </a>
-                    <a
-                        href="#"
-                        class="float-right bg-blue-500 py-1 text-white font-semibold text-sm rounded text-center hidden md:inline-block"
-                    >
-                        フォロー
-                    </a>
+                    <div class="col-md-3">
+                        <div
+                            class="follow"
+                            @click="followUser(outfit.user.id)"
+                            v-show="
+                                outfit.user.id !== user &&
+                                !followStore.followStatus(outfit.user.id)
+                            "
+                        >
+                            <Follow />
+                        </div>
+                        <div
+                            class="unfollow"
+                            @click="deleteFollow(outfit.user.id)"
+                            v-show="
+                                outfit.user.id !== user &&
+                                followStore.followStatus(outfit.user.id)
+                            "
+                        >
+                            <unFollow />
+                        </div>
+                    </div>
                 </footer>
             </article>
         </div>

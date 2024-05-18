@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EnumController;
+use App\Http\Controllers\FollowController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LikeController;
@@ -57,6 +58,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/outfit/{id}/comment', [CommentController::class, 'store'])->name('comments.store');
     Route::put('/comment/{id}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comment/{id}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
+    // フォロー機能
+    Route::get('/follow/status/{user}', [FollowController::class, 'followStatus'])->name('follow.status');
+    Route::post('/follow/{user}', [FollowController::class, 'follow'])->name('follow.follow');
+    Route::delete('/follow/{user}', [FollowController::class, 'unFollow'])->name(('follow.unFollow'));
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);
