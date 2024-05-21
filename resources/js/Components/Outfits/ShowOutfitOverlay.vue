@@ -3,15 +3,16 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../../stores/auth';
 import { getEnumStore } from '../../stores/enum';
+import { useFollowStore } from '../../stores/follow';
 
 import LikesSection from '../LikesSection.vue';
 import ShowOutfitOptionsOverlay from './ShowOutfitOptionsOverlay.vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
-import EmoticonHappyOutline from 'vue-material-design-icons/EmoticonHappyOutline.vue';
 
 const authStore = useAuthStore();
+const followStore = useFollowStore();
 
 let deleteType = ref(null);
 let id = ref(null);
@@ -112,23 +113,44 @@ const fetchOutfit = async () => {
         // EditOutfitOverlay.vueのOutfitUpdateメソッドで変更された場合、データを反映
         const updatedOutfit = response.data;
         outfit.value = updatedOutfit;
-
         fetchItem();
     } catch (error) {
         console.error(error);
     }
 };
 
-const textareaInput = (e) => {
-    textarea.value.style.height = 'auto';
-    textarea.value.style.height = `${e.target.scrollHeight}px`;
+// フォロー状態のチェック
+const followStatus = async () => {
+    if (outfit.value && outfit.value.user_id) {
+        await followStore.followStatusCheck(outfit.value.user.id);
+    }
+};
+
+// フォローする
+const follow = async (userId) => {
+    try {
+        await followStore.pushFollow(userId);
+        followStore.status[userId] = true;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// フォロー解除
+const deleteFollow = async (userId) => {
+    try {
+        await followStore.deleteFollow(userId);
+        followStore.status[userId] = false;
+    } catch (error) {
+        console.error(error);
+    }
 };
 
 onMounted(() => {
-    fetchItem();
     fetchOutfit();
     // EditOutfitOverlay.vueのoutfitUpdateメソッドで定義したイベントの購読
     window.addEventListener('outfit-updated', fetchOutfit);
+    followStatus();
 });
 
 onUnmounted(() => {
@@ -174,16 +196,42 @@ onUnmounted(() => {
                                     </p>
                                 </div>
                             </div>
-                            <div class="ml-3 mt-2">
+                            <div
+                                class="ml-3 mt-2"
+                                v-if="authStore.user.id !== outfit.user_id"
+                            >
                                 <div class="w-[110px]">
                                     <button
                                         class="bg-blue-500 text-white lg:border lg:border-blue-700 lg:bg-gradient-to-b lg:from-blue-500 lg:to-blue-600 lg:hover:opacity-70 block text-center rounded-[4px] leading-[1] lg:rounded-[2px] w-full"
                                         type="button"
+                                        @click="follow(outfit.user_id)"
+                                        v-if="
+                                            !followStore.followStatus(
+                                                outfit.user_id
+                                            )
+                                        "
                                     >
                                         <span
                                             class="block pb-3 pt-[10px] font-bold tracking-[0.03em]"
-                                            >フォローする</span
                                         >
+                                            フォローする
+                                        </span>
+                                    </button>
+                                    <button
+                                        class="bg-blue-500 text-white lg:border lg:border-blue-700 lg:bg-gradient-to-b lg:from-blue-500 lg:to-blue-600 lg:hover:opacity-70 block text-center rounded-[4px] leading-[1] lg:rounded-[2px] w-full"
+                                        type="button"
+                                        @click="deleteFollow(outfit.user_id)"
+                                        v-if="
+                                            followStore.followStatus(
+                                                outfit.user_id
+                                            )
+                                        "
+                                    >
+                                        <span
+                                            class="block pb-3 pt-[10px] font-bold tracking-[0.03em]"
+                                        >
+                                            フォロー中
+                                        </span>
                                     </button>
                                 </div>
                             </div>
@@ -636,29 +684,6 @@ onUnmounted(() => {
 
                         <div class="pb-16 md:hidden"></div>
                     </div>
-
-                    <!-- <div
-                        class="absolute flex border bottom-0 w-full max-h-[200px] bg-white overflow-auto"
-                    >
-                        <EmoticonHappyOutline
-                            class="pl-3 pt-[10px]"
-                            :size="30"
-                        />
-                        <textarea
-                            ref="textarea"
-                            :onInput="textareaInput"
-                            v-model="comment"
-                            placeholder="コメントする"
-                            rows="1"
-                            class="w-full border-0 mt-4 mb-2 text-sm z-50 focus:ring-0 text-gray-600 text-[18px] outline-none"
-                        ></textarea>
-                        <button
-                            v-if="comment"
-                            class="text-blue-600 font-extrabold pr-4 min-w-[70px]"
-                        >
-                            送信
-                        </button>
-                    </div> -->
                 </section>
                 <!-- ここまでサブセクション -->
             </section>

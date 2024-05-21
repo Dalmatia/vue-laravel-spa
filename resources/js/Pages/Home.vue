@@ -124,7 +124,7 @@ onUnmounted(() => {
                         <div
                             class="follow"
                             @click="followUser(outfit.user.id)"
-                            v-show="
+                            v-if="
                                 outfit.user.id !== user &&
                                 !followStore.followStatus(outfit.user.id)
                             "
@@ -134,7 +134,7 @@ onUnmounted(() => {
                         <div
                             class="unfollow"
                             @click="deleteFollow(outfit.user.id)"
-                            v-show="
+                            v-if="
                                 outfit.user.id !== user &&
                                 followStore.followStatus(outfit.user.id)
                             "
