@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Follow;
 use App\Models\User;
-use Illuminate\Http\Request;
 
 class FollowController extends Controller
 {
@@ -55,5 +54,17 @@ class FollowController extends Controller
         }
 
         return response()->json(['success' => false, 'message' => 'フォローしていません'], 404);
+    }
+
+    public function follow_list(User $user)
+    {
+        $follow_list = $user->following()->get();
+        return response()->json(['follow_list' => $follow_list]);
+    }
+
+    public function follower_list(User $user)
+    {
+        $follower_list = $user->followers()->get();
+        return response()->json(['follow_list' => $follower_list]);;
     }
 }

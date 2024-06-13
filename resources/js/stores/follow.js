@@ -4,6 +4,8 @@ import axios from 'axios';
 export const useFollowStore = defineStore('follow', {
     state: () => ({
         status: {},
+        followUsers: [],
+        followerUsers: [],
     }),
     getters: {
         followStatus: (state) => (userId) => state.status[userId],
@@ -53,6 +55,28 @@ export const useFollowStore = defineStore('follow', {
                 if (response.data.success) {
                     this.status[userId] = false;
                 }
+            } catch (error) {
+                console.log(error);
+            }
+        },
+        async followList(userId) {
+            try {
+                const response = await axios.get(
+                    `/api/users/${userId}/follow_list`
+                );
+                this.followUsers = response.data.follow_list;
+                const followIds = this.followUsers.map((user) => user.id);
+                await this.fetchFollowStatus(followIds); // フォローリスト取得後にフォロー状態を取得
+            } catch (error) {
+                console.log(error);
+            }
+        },
+        async followerList(userId) {
+            try {
+                const response = await axios.get(
+                    `/api/users/${userId}/follower_list`
+                );
+                this.followerUsers = response.data.follower_list;
             } catch (error) {
                 console.log(error);
             }

@@ -14,8 +14,8 @@ import CreateItemOverlay from '@/Components/Items/CreateItemOverlay.vue';
 let showCreateItem = ref(false);
 
 const form = reactive({ file: null });
-
 const authStore = useAuthStore();
+const outfits = ref([]);
 
 const getUploadedImage = (e) => {
     form.file = e.target.files[0];
@@ -35,6 +35,16 @@ const fetchUserData = async () => {
     }
 };
 
+// 投稿したコーディネートを取得
+const fetchOutfits = async () => {
+    try {
+        const response = await axios.get(`/api/users/${authStore.user.id}`);
+        outfits.value = response.data.outfits;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
 let tab = ref('User');
 const select = (selectedTab) => {
     tab.value = selectedTab;
@@ -42,6 +52,7 @@ const select = (selectedTab) => {
 
 onMounted(() => {
     fetchUserData();
+    fetchOutfits();
 });
 </script>
 
@@ -87,17 +98,19 @@ onMounted(() => {
                 <div class="md:block hidden">
                     <div class="flex items-center text-[18px]">
                         <div class="mr-6">
-                            <span class="font-extrabold"> 4 </span>
+                            <span class="font-extrabold">
+                                {{ outfits.length }}
+                            </span>
                             投稿
                         </div>
                         <div class="mr-6">
                             <span class="font-extrabold">123</span>
                             フォロワー
                         </div>
-                        <div class="mr-6">
+                        <router-link class="mr-6" :to="{ name: 'FollowList' }">
                             <span class="font-extrabold">456</span>
                             フォロー
-                        </div>
+                        </router-link>
                     </div>
                 </div>
             </div>
@@ -116,10 +129,10 @@ onMounted(() => {
                 <div class="font-extrabold">43</div>
                 <div class="text-gray-400 font-semibold -mt-1.5">followers</div>
             </div>
-            <div class="text-center p-3">
+            <router-link class="text-center p-3" :to="{ name: 'FollowList' }">
                 <div class="font-extrabold">55</div>
                 <div class="text-gray-400 font-semibold -mt-1.5">following</div>
-            </div>
+            </router-link>
         </div>
 
         <div

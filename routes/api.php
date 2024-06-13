@@ -63,6 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/follow/status/{user}', [FollowController::class, 'followStatus'])->name('follow.status');
     Route::post('/follow/{user}', [FollowController::class, 'follow'])->name('follow.follow');
     Route::delete('/follow/{user}', [FollowController::class, 'unFollow'])->name(('follow.unFollow'));
+    Route::get('/users/{user}/follow_list', [FollowController::class, 'follow_list'])->name('follow.follow_list');
+    Route::get('/users/{user}/follower_list', [FollowController::class, 'follower_list'])->name('follow.follower_list');
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);

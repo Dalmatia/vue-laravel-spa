@@ -21,6 +21,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 let showCreatePost = ref(false);
+let isLoading = ref(true);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -30,6 +31,8 @@ const fetchUserData = async () => {
         if (error.response && error.response.status === 401) {
             handleUnauthorized();
         }
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -83,7 +86,11 @@ onMounted(() => {
         </div>
 
         <div
-            v-if="route.path !== '/'"
+            v-if="
+                authStore.user &&
+                route.path !== '/' &&
+                route.path !== `/user/${authStore.user.id}/follow_list`
+            "
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
         >
