@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, toRefs, ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
+import { useFollowStore } from '../stores/follow.js';
 
 import Cog from 'vue-material-design-icons/Cog.vue';
 import Grid from 'vue-material-design-icons/Grid.vue';
@@ -15,6 +16,7 @@ let showCreateItem = ref(false);
 
 const form = reactive({ file: null });
 const authStore = useAuthStore();
+const followStore = useFollowStore();
 const outfits = ref([]);
 
 const getUploadedImage = (e) => {
@@ -50,9 +52,21 @@ const select = (selectedTab) => {
     tab.value = selectedTab;
 };
 
-onMounted(() => {
-    fetchUserData();
-    fetchOutfits();
+const fetchData = async (action) => {
+    if (authStore.user && authStore.user.id) {
+        await action(authStore.user.id);
+    }
+};
+
+onMounted(async () => {
+    await Promise.all([
+        fetchUserData(),
+        fetchOutfits(),
+        fetchData(followStore.followList),
+        fetchData(followStore.followerList),
+    ]).catch((error) => {
+        console.error('情報の取得に失敗しました。', error);
+    });
 });
 </script>
 
@@ -103,12 +117,19 @@ onMounted(() => {
                             </span>
                             投稿
                         </div>
-                        <div class="mr-6">
-                            <span class="font-extrabold">123</span>
+                        <router-link
+                            class="mr-6"
+                            :to="{ name: 'FollowerList' }"
+                        >
+                            <span class="font-extrabold">
+                                {{ followStore.followerCount }}
+                            </span>
                             フォロワー
-                        </div>
+                        </router-link>
                         <router-link class="mr-6" :to="{ name: 'FollowList' }">
-                            <span class="font-extrabold">456</span>
+                            <span class="font-extrabold">
+                                {{ followStore.followingCount }}
+                            </span>
                             フォロー
                         </router-link>
                     </div>
@@ -122,16 +143,24 @@ onMounted(() => {
             class="w-full flex items-center justify-around border-t border-t-gray-300 mt-8"
         >
             <div class="text-center p-3">
-                <div class="font-extrabold">4</div>
-                <div class="text-gray-400 font-semibold -mt-1.5">posts</div>
+                <div class="font-extrabold">
+                    {{ outfits.length }}
+                </div>
+                <div class="text-gray-400 font-semibold -mt-1.5">投稿</div>
             </div>
-            <div class="text-center p-3">
-                <div class="font-extrabold">43</div>
-                <div class="text-gray-400 font-semibold -mt-1.5">followers</div>
-            </div>
+            <router-link class="text-center p-3" :to="{ name: 'FollowerList' }">
+                <div class="font-extrabold">
+                    {{ followStore.followerCount }}
+                </div>
+                <div class="text-gray-400 font-semibold -mt-1.5">
+                    フォロワー
+                </div>
+            </router-link>
             <router-link class="text-center p-3" :to="{ name: 'FollowList' }">
-                <div class="font-extrabold">55</div>
-                <div class="text-gray-400 font-semibold -mt-1.5">following</div>
+                <div class="font-extrabold">
+                    {{ followStore.followingCount }}
+                </div>
+                <div class="text-gray-400 font-semibold -mt-1.5">フォロー</div>
             </router-link>
         </div>
 

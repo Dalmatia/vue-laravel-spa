@@ -89,7 +89,8 @@ onMounted(() => {
             v-if="
                 authStore.user &&
                 route.path !== '/' &&
-                route.path !== `/user/${authStore.user.id}/follow_list`
+                route.path !== `/user/${authStore.user.id}/follow_list` &&
+                route.path !== `/user/${authStore.user.id}/follower_list`
             "
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"

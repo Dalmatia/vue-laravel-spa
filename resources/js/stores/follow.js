@@ -6,6 +6,8 @@ export const useFollowStore = defineStore('follow', {
         status: {},
         followUsers: [],
         followerUsers: [],
+        followingCount: 0,
+        followerCount: 0,
     }),
     getters: {
         followStatus: (state) => (userId) => state.status[userId],
@@ -65,6 +67,7 @@ export const useFollowStore = defineStore('follow', {
                     `/api/users/${userId}/follow_list`
                 );
                 this.followUsers = response.data.follow_list;
+                this.followingCount = response.data.following_count;
                 const followIds = this.followUsers.map((user) => user.id);
                 await this.fetchFollowStatus(followIds); // フォローリスト取得後にフォロー状態を取得
             } catch (error) {
@@ -77,6 +80,9 @@ export const useFollowStore = defineStore('follow', {
                     `/api/users/${userId}/follower_list`
                 );
                 this.followerUsers = response.data.follower_list;
+                this.followerCount = response.data.follower_count;
+                const followerIds = this.followerUsers.map((user) => user.id);
+                await this.fetchFollowStatus(followerIds);
             } catch (error) {
                 console.log(error);
             }

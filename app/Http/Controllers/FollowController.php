@@ -59,12 +59,14 @@ class FollowController extends Controller
     public function follow_list(User $user)
     {
         $follow_list = $user->following()->get();
-        return response()->json(['follow_list' => $follow_list]);
+        $following_count = $user->following()->count();
+        return response()->json(['follow_list' => $follow_list, 'following_count' => $following_count]);
     }
 
     public function follower_list(User $user)
     {
         $follower_list = $user->followers()->get();
-        return response()->json(['follow_list' => $follower_list]);;
+        $follower_count = $user->followers()->count();
+        return response()->json(['follower_list' => $follower_list, 'follower_count' => $follower_count]);;
     }
 }
