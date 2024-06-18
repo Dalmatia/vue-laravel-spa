@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFollowStore } from '../stores/follow';
 
@@ -30,12 +30,13 @@ const deleteFollow = async (userId) => {
     }
 };
 
+// フォローデータを取得する
 const fetchFollowData = async () => {
     if (authStore.user && authStore.user.id) {
         userId.value = authStore.user.id;
         await followStore.followerList(userId.value);
         await followStore.fetchFollowStatus(
-            followStore.followUsers.map((user) => user.id)
+            followStore.followerUsers.map((user) => user.id)
         );
     }
 };
@@ -49,17 +50,13 @@ watch(
     },
     { immediate: true }
 );
-
-onMounted(async () => {
-    await fetchFollowData();
-});
 </script>
 
 <template>
-    <div class="max-w-6xl mx-auto w-[100vw] md:w-[84.5vw]">
+    <div class="max-w-6xl mx-auto w-[100vw] md:w-[84.5vw] xl:w-[70vw]">
         <section class="min-h-[100dvh] flex-col flex">
             <main class="bg-white flex-col flex relative grow order-4">
-                <div class="py-2 px-4">
+                <div class="py-2 px-4 md:pt-14 md:pl-20 lg:px-4">
                     <div
                         class="overflow-x-hidden overflow-y-hidden h-8 rounded-r-lg rounded-l-lg relative"
                     >
@@ -83,7 +80,7 @@ onMounted(async () => {
                 </div>
 
                 <div
-                    class="rounded-xl block grow shrink min-h-[200px] overflow-y-scroll relative"
+                    class="rounded-xl block grow shrink min-h-[200px] overflow-y-scroll relative md:pl-20 lg:pl-0"
                 >
                     <div class="h-auto overflow-auto block">
                         <div
@@ -221,7 +218,7 @@ onMounted(async () => {
                         class="h-auto px-0 py-0 mx-0 my-0 text-[100%] flex-col box-border flex shrink-0 items-stretch z-[11] relative ml-0 align-baseline"
                     >
                         <header
-                            class="bg-white flex flex-col flex-wrap text-[16px] font-semibold left-0 fixed right-0 top-0 z-[1] border-b border-solid"
+                            class="bg-white flex flex-col flex-wrap text-[16px] font-semibold left-0 md:left-20 xl:left-64 fixed right-0 top-0 z-[1] border-b border-solid md:pl-0 xl:pl-0"
                         >
                             <div
                                 class="items-center box-border flex flex-row h-[45px] justify-between px-[16px] py-0 w-full"
