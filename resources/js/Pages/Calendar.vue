@@ -1,10 +1,36 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import dayjs from 'dayjs';
 import ja from 'dayjs/locale/ja';
 
-let currentDate = ref(dayjs().locale(ja));
+import { useAuthStore } from '../stores/auth';
+import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
 
+let currentDate = ref(dayjs().locale(ja));
+let currentOutfit = ref(null);
+let openOverlay = ref(false);
+const authStore = useAuthStore();
+const outfits = ref([]);
+
+// ユーザーが投稿したコーディネートの取得
+const fetchOutfits = async () => {
+    try {
+        await authStore.fetchUserData();
+        const response = await axios.get(`/api/users/${authStore.user.id}`);
+        outfits.value = response.data.outfits;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// コーディネートの詳細ページのオーバーレイを開く関数
+const openOutfitOverlay = (date) => {
+    const outfit = outfits.value.find((outfit) => outfit.outfit_date === date);
+    currentOutfit.value = outfit;
+    openOverlay.value = true;
+};
+
+// 月の開始日を取得する関数
 const getStartDate = () => {
     let date = dayjs(currentDate.value);
     date = date.startOf('month');
@@ -12,6 +38,7 @@ const getStartDate = () => {
     return date.subtract(youbiNum, 'days');
 };
 
+// 月の終了日を取得する関数
 const getEndDate = () => {
     let date = dayjs(currentDate.value);
     date = date.endOf('month');
@@ -19,19 +46,22 @@ const getEndDate = () => {
     return date.add(6 - youbiNum, 'days');
 };
 
+// カレンダーの生成
 const getCalendar = () => {
     let startDate = getStartDate();
     const endDate = getEndDate();
     const weekNumber = Math.ceil(endDate.diff(startDate, 'days') / 7);
 
     let calendars = [];
-    let calendarDate = getStartDate();
+    let calendarDate = startDate;
     for (let week = 0; week < weekNumber; week++) {
         let weekRow = [];
         for (let day = 0; day < 7; day++) {
             weekRow.push({
                 day: calendarDate.get('date'),
                 month: calendarDate.format('YYYY-MM'),
+                fullDate: calendarDate.format('YYYY-MM-DD'),
+                outfit: getOutfitImage(calendarDate.format('YYYY-MM-DD')),
             });
             calendarDate = calendarDate.add(1, 'days');
         }
@@ -40,45 +70,59 @@ const getCalendar = () => {
     return calendars;
 };
 
+// コーディネート日の画像を取得する関数
+const getOutfitImage = (date) => {
+    const outfit = outfits.value.find((outfit) => outfit.outfit_date === date);
+    return outfit ? outfit.file : '';
+};
+
+// 次の月に移動する関数
 const nextMonth = () => {
     currentDate.value = dayjs(currentDate.value).add(1, 'month');
 };
+
+// 前の月に移動する関数
 const prevMonth = () => {
     currentDate.value = dayjs(currentDate.value).subtract(1, 'month');
 };
 
-// onMounted(() => {
-//     console.log(getCalendar());
-// });
-
+// カレンダーを計算する計算プロパティ
 const calendars = computed(() => {
     return getCalendar();
 });
 
+// 表示する日付を計算する計算プロパティ
 const displayDate = computed(() => {
     return currentDate.value.format('YYYY[年]M[月]');
 });
 
+// 曜日を取得する関数
 const dayOfWeek = (dayIndex) => {
     const week = ['日', '月', '火', '水', '木', '金', '土'];
     return week[dayIndex];
 };
 
+// 現在の月を計算する計算プロパティ
 const currentMonth = computed(() => {
     return currentDate.value.format('YYYY-MM');
 });
 
-// const getImagePath = (day) => {
-//     // 日付に基づいて画像のパスを生成するロジックをここに追加
-//     // 例: return `/images/${day}.jpg`;
-//     return '';
-// };
+onMounted(() => {
+    fetchOutfits();
+    window.addEventListener('outfit-created', fetchOutfits);
+    window.addEventListener('outfit-updated', fetchOutfits);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('outfit-created', fetchOutfits);
+    window.removeEventListener('outfit-updated', fetchOutfits);
+});
 </script>
 
 <template>
     <div id="content">
         <div
-            class="max-w-[900px] lg:ml-0 lg:pl-0 md:ml-[30px] md:pl-[74px] px-4"
+            class="max-w-6xl mx-auto lg:mx-auto md:ml-14 w-[100vw] md:w-[84.5vw] xl:w-[70vw]"
         >
             <div class="flex flex-wrap justify-between p-3">
                 <h2 class="text-xl">
@@ -124,18 +168,26 @@ const currentMonth = computed(() => {
                     :key="index"
                 >
                     {{ day.day }}
-                    <a href="/">
+                    <a
+                        v-if="day.outfit"
+                        @click="openOutfitOverlay(day.fullDate)"
+                    >
                         <img
-                            class="block h-[85%] w-auto md:h-auto md:w-full"
-                            src="https://picsum.photos/id/600/480/?random"
+                            class="w-auto h-auto my-auto mx-auto md:w-20 md:h-24 lg:w-20 lg:h-24"
+                            :src="day.outfit"
                         />
                     </a>
-                    <!-- <img :src="getImagePath(day.day)" alt="日付の画像" /> -->
                 </div>
             </div>
         </div>
         <div class="pb-20 md:pb-5"></div>
     </div>
+    <ShowOutfitOverlay
+        v-if="openOverlay"
+        :outfit="currentOutfit"
+        @delete-selected="deleteOutfit($event)"
+        @close-overlay="openOverlay = false"
+    />
 </template>
 
 <style>

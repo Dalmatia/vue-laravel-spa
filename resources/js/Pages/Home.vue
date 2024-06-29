@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFollowStore } from '../stores/follow';
 
@@ -16,7 +16,7 @@ let openOverlay = ref(false);
 
 const outfits = ref([]);
 const authStore = useAuthStore();
-const user = authStore.user.id;
+const user = computed(() => (authStore.user ? authStore.user.id : null));
 const followStore = useFollowStore();
 
 // 投稿したコーディネートの表示
@@ -29,7 +29,7 @@ const fetchOutfits = async () => {
         const follows = outfits.value.map((outfit) => outfit.user.id);
         await followStore.fetchFollowStatus(follows);
     } catch (error) {
-        console.error(error);
+        console.error('コーディネート一覧の取得に失敗しました。', error);
     }
 };
 
@@ -59,7 +59,6 @@ const openOutfitOverlay = (outfit) => {
 const followUser = async (userId) => {
     try {
         await followStore.pushFollow(userId);
-        // フォロー状態を更新するために必要ならfetchOutfitsを再度呼び出す
         followStore.status[userId] = true;
     } catch (error) {
         console.error(error);
