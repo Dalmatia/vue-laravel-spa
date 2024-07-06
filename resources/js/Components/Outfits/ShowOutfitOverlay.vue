@@ -105,7 +105,7 @@ const fetchItem = async () => {
     }
 };
 
-// 登録・更新時のアイテム情報取得
+// 登録・更新時のコーディネート情報取得
 const fetchOutfit = async () => {
     try {
         const response = await axios.get(`/api/outfit/${outfit.value.id}`);
@@ -122,7 +122,11 @@ const fetchOutfit = async () => {
 // フォロー状態のチェック
 const followStatus = async () => {
     if (outfit.value && outfit.value.user_id) {
-        await followStore.followStatusCheck(outfit.value.user.id);
+        try {
+            await followStore.followStatusCheck(outfit.value.user.id);
+        } catch (error) {
+            console.error(`フォロー状態の取得に失敗しました。:`, error);
+        }
     }
 };
 
@@ -132,7 +136,7 @@ const follow = async (userId) => {
         await followStore.pushFollow(userId);
         followStore.status[userId] = true;
     } catch (error) {
-        console.error(error);
+        console.error(`フォローに失敗しました。:`, error);
     }
 };
 
@@ -142,7 +146,7 @@ const deleteFollow = async (userId) => {
         await followStore.deleteFollow(userId);
         followStore.status[userId] = false;
     } catch (error) {
-        console.error(error);
+        console.error(`フォローの解除に失敗しました。:`, error);
     }
 };
 
@@ -198,7 +202,11 @@ onUnmounted(() => {
                             </div>
                             <div
                                 class="ml-3 mt-2"
-                                v-if="authStore.user.id !== outfit.user_id"
+                                v-if="
+                                    authStore.user.id &&
+                                    outfit.user_id &&
+                                    authStore.user.id !== outfit.user_id
+                                "
                             >
                                 <div class="w-[110px]">
                                     <button

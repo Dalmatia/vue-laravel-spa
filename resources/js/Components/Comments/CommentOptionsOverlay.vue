@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, toRefs, ref } from 'vue';
 
-import EditCommentOverlay from '../Pages/EditCommentOverlay.vue';
+import EditCommentOverlay from '../../Components/Comments/EditCommentOverlay.vue';
 
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ selectComment: String, id: Number });

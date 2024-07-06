@@ -1,12 +1,12 @@
 <script setup>
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { useAuthStore } from '../stores/auth';
+import { useAuthStore } from '../../stores/auth';
 import axios from 'axios';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
-import CommentOptionsOverlay from '../Pages/CommentOptionsOverlay.vue';
+import CommentOptionsOverlay from '../Comments/CommentOptionsOverlay.vue';
 
 const user = useAuthStore().user;
 const props = defineProps(['outfit']);

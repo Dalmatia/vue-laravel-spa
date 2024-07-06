@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, toRefs } from 'vue';
-import CommentsPage from '../Pages/CommentsPage.vue';
+import CommentsPage from '../Components/Comments/CommentsPage.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
