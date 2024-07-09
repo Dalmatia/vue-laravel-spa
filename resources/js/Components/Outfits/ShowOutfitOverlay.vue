@@ -7,6 +7,8 @@ import { useFollowStore } from '../../stores/follow';
 
 import LikesSection from '../LikesSection.vue';
 import ShowOutfitOptionsOverlay from './ShowOutfitOptionsOverlay.vue';
+import FollowButton from '../FollowButton.vue';
+import ItemList from './ItemList.vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
@@ -20,85 +22,46 @@ let id = ref(null);
 const props = defineProps(['outfit']);
 const outfit = ref(props.outfit);
 const postsByUser = outfit.value.user.name;
-const tops = ref({});
-const outer = ref({});
-const bottoms = ref({});
-const shoes = ref({});
-const season = ref(null);
+const outfitItems = ref([]);
 
-const tops_category = ref(null);
-const tops_color = ref(null);
-const outer_category = ref(null);
-const outer_color = ref(null);
-const bottoms_category = ref(null);
-const bottoms_color = ref(null);
-const shoes_category = ref(null);
-const shoes_color = ref(null);
 // 選択したシーズン情報の取得
+const season = ref(null);
 const selectData = getEnumStore();
 
 defineEmits(['closeOverlay', 'addComment', 'updateLike', 'deleteSelected']);
 
-const fetchItem = async () => {
+// 投稿時に選択したアイテムIDから情報取得
+const fetchItemData = async (itemId) => {
+    const response = await axios.get(`/api/items/${itemId}`);
+    const itemData = response.data;
+
+    return {
+        data: itemData,
+        category: selectData.getSubCategoryName(itemData.sub_category),
+        color: selectData.getColor(itemData.color),
+    };
+};
+
+// コーディネートに使用したアイテム情報取得
+const fetchItems = async () => {
     try {
-        const fetchItemData = async (itemId, item, category, color) => {
-            const response = await axios.get(`/api/items/${itemId}`);
-            const itemData = response.data;
+        const itemTypes = [
+            { label: 'トップス', id: outfit.value.tops },
+            { label: 'アウター', id: outfit.value.outer },
+            { label: 'ボトムス', id: outfit.value.bottoms },
+            { label: 'シューズ', id: outfit.value.shoes },
+        ];
 
-            item.value = itemData;
-            category.value = selectData.getSubCategoryName(
-                itemData.sub_category
-            );
-            color.value = selectData.getColor(itemData.color);
-        };
+        const fetchPromises = itemTypes.map(async (itemType) => {
+            if (itemType.id) {
+                const item = await fetchItemData(itemType.id);
+                return { label: itemType.label, ...item };
+            }
+            return null;
+        });
 
-        const fetchPromises = [];
-
-        if (outfit.value.tops) {
-            fetchPromises.push(
-                fetchItemData(
-                    outfit.value.tops,
-                    tops,
-                    tops_category,
-                    tops_color
-                )
-            );
-        }
-
-        if (outfit.value.outer) {
-            fetchPromises.push(
-                fetchItemData(
-                    outfit.value.outer,
-                    outer,
-                    outer_category,
-                    outer_color
-                )
-            );
-        }
-
-        if (outfit.value.bottoms) {
-            fetchPromises.push(
-                fetchItemData(
-                    outfit.value.bottoms,
-                    bottoms,
-                    bottoms_category,
-                    bottoms_color
-                )
-            );
-        }
-
-        if (outfit.value.shoes) {
-            fetchPromises.push(
-                fetchItemData(
-                    outfit.value.shoes,
-                    shoes,
-                    shoes_category,
-                    shoes_color
-                )
-            );
-        }
-
-        await Promise.all(fetchPromises);
+        const items = await Promise.all(fetchPromises);
+        outfitItems.value = items.filter((item) => item !== null);
         season.value = selectData.getSeason(outfit.value.season);
     } catch (error) {
         console.error('データの取得に失敗しました:', error);
@@ -111,9 +74,8 @@ const fetchOutfit = async () => {
         const response = await axios.get(`/api/outfit/${outfit.value.id}`);
 
         // EditOutfitOverlay.vueのOutfitUpdateメソッドで変更された場合、データを反映
-        const updatedOutfit = response.data;
-        outfit.value = updatedOutfit;
-        fetchItem();
+        outfit.value = response.data;
+        await fetchItems();
     } catch (error) {
         console.error(error);
     }
@@ -208,40 +170,13 @@ onUnmounted(() => {
                                     authStore.user.id !== outfit.user_id
                                 "
                             >
-                                <div class="w-[110px]">
-                                    <button
-                                        class="bg-blue-500 text-white lg:border lg:border-blue-700 lg:bg-gradient-to-b lg:from-blue-500 lg:to-blue-600 lg:hover:opacity-70 block text-center rounded-[4px] leading-[1] lg:rounded-[2px] w-full"
-                                        type="button"
-                                        @click="follow(outfit.user_id)"
-                                        v-if="
-                                            !followStore.followStatus(
-                                                outfit.user_id
-                                            )
-                                        "
-                                    >
-                                        <span
-                                            class="block pb-3 pt-[10px] font-bold tracking-[0.03em]"
-                                        >
-                                            フォローする
-                                        </span>
-                                    </button>
-                                    <button
-                                        class="bg-blue-500 text-white lg:border lg:border-blue-700 lg:bg-gradient-to-b lg:from-blue-500 lg:to-blue-600 lg:hover:opacity-70 block text-center rounded-[4px] leading-[1] lg:rounded-[2px] w-full"
-                                        type="button"
-                                        @click="deleteFollow(outfit.user_id)"
-                                        v-if="
-                                            followStore.followStatus(
-                                                outfit.user_id
-                                            )
-                                        "
-                                    >
-                                        <span
-                                            class="block pb-3 pt-[10px] font-bold tracking-[0.03em]"
-                                        >
-                                            フォロー中
-                                        </span>
-                                    </button>
-                                </div>
+                                <FollowButton
+                                    :is-following="
+                                        followStore.followStatus(outfit.user_id)
+                                    "
+                                    @follow="follow(outfit.user_id)"
+                                    @unfollow="deleteFollow(outfit.user_id)"
+                                />
                             </div>
                         </div>
                         <div class="ml-auto mt-2">
@@ -265,11 +200,11 @@ onUnmounted(() => {
 
             <!-- メインセクション -->
             <section
-                class="lg:mx-auto lg:grid lg:w-[990px] lg:grid-cols-[558px_1fr] lg:gap-x-5 lg:pt-5 lg:grid-areas-[main_sub,main-bottom_sub]"
+                class="lg:mx-auto lg:grid lg:w-[990px] lg:grid-cols-[558px_1fr] lg:gap-x-5 lg:pt-5"
             >
                 <!-- コーディネート・お気に入りやコメント等表示部分 -->
                 <section
-                    class="border-y border-gray-300 lg:h-fit lg:overflow-hidden lg:rounded-t-[3px] lg:border lg:place-items-center lg:grid-in-[main]"
+                    class="border-y border-gray-300 lg:h-fit lg:overflow-hidden lg:rounded-t-[3px] lg:border lg:place-items-center"
                 >
                     <!-- コーディネート画像表示部分 -->
                     <article class="relative">
@@ -447,210 +382,7 @@ onUnmounted(() => {
                                     >
                                         着用アイテム
                                     </h2>
-                                    <ul
-                                        class="flex flex-wrap px-[6px] lg:flex-col lg:gap-6 lg:px-0"
-                                    >
-                                        <li
-                                            class="group w-1/3 px-[10px] lg:flex lg:w-full lg:flex-col lg:gap-6 lg:px-0"
-                                            v-if="outfit.tops"
-                                        >
-                                            <div class="lg:flex">
-                                                <a
-                                                    class="flex justify-center border border-gray-300 lg:h-[120px] lg:w-[100px] lg:shrink-0 lg:overflow-hidden lg:rounded-[3px] lg:border-none lg:hover:opacity-70"
-                                                    href=""
-                                                >
-                                                    <span class="item_style">
-                                                        <img
-                                                            :src="tops.file"
-                                                            class="item_image"
-                                                        />
-                                                    </span>
-                                                </a>
-                                                <div
-                                                    class="min-w-0 lg:grow lg:pl-[18px] lg:pr-[23px]"
-                                                >
-                                                    <p
-                                                        class="truncate pt-1 text-[10px] leading-[1.4] lg:mt-[-3px] lg:pt-0 lg:text-[15px] lg:font-bold lg:leading-[1.6] lg:tracking-wide"
-                                                    >
-                                                        <span
-                                                            class="hidden lg:inline"
-                                                        >
-                                                            トップス
-                                                        </span>
-                                                    </p>
-                                                    <p
-                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
-                                                    >
-                                                        <a
-                                                            href=""
-                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
-                                                        >
-                                                            {{ tops_category }}
-                                                            ({{ tops_color }})
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="hidden lg:block lg:group-last:hidden"
-                                            >
-                                                <div
-                                                    class="bg-gray-300 h-[1px]"
-                                                ></div>
-                                            </div>
-                                        </li>
-                                        <li
-                                            class="group w-1/3 px-[10px] lg:flex lg:w-full lg:flex-col lg:gap-6 lg:px-0"
-                                            v-if="outfit.outer"
-                                        >
-                                            <div class="lg:flex">
-                                                <a
-                                                    class="flex justify-center border border-gray-300 lg:h-[120px] lg:w-[100px] lg:shrink-0 lg:overflow-hidden lg:rounded-[3px] lg:border-none lg:hover:opacity-70"
-                                                    href=""
-                                                >
-                                                    <span class="item_style">
-                                                        <img
-                                                            :src="outer.file"
-                                                            class="item_image"
-                                                        />
-                                                    </span>
-                                                </a>
-                                                <div
-                                                    class="min-w-0 lg:grow lg:pl-[18px] lg:pr-[23px]"
-                                                >
-                                                    <p
-                                                        class="truncate pt-1 text-[10px] leading-[1.4] lg:mt-[-3px] lg:pt-0 lg:text-[15px] lg:font-bold lg:leading-[1.6] lg:tracking-wide"
-                                                    >
-                                                        <span
-                                                            class="hidden lg:inline"
-                                                        >
-                                                            アウター
-                                                        </span>
-                                                    </p>
-                                                    <p
-                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
-                                                    >
-                                                        <a
-                                                            href=""
-                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
-                                                        >
-                                                            {{ outer_category }}
-                                                            ({{ outer_color }})
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="hidden lg:block lg:group-last:hidden"
-                                            >
-                                                <div
-                                                    class="bg-gray-300 h-[1px]"
-                                                ></div>
-                                            </div>
-                                        </li>
-                                        <li
-                                            class="group w-1/3 px-[10px] lg:flex lg:w-full lg:flex-col lg:gap-6 lg:px-0"
-                                            v-if="outfit.bottoms"
-                                        >
-                                            <div class="lg:flex">
-                                                <a
-                                                    class="flex justify-center border border-gray-300 lg:h-[120px] lg:w-[100px] lg:shrink-0 lg:overflow-hidden lg:rounded-[3px] lg:border-none lg:hover:opacity-70"
-                                                    href=""
-                                                >
-                                                    <span class="item_style">
-                                                        <img
-                                                            :src="bottoms.file"
-                                                            class="item_image"
-                                                        />
-                                                    </span>
-                                                </a>
-                                                <div
-                                                    class="min-w-0 lg:grow lg:pl-[18px] lg:pr-[23px]"
-                                                >
-                                                    <p
-                                                        class="truncate pt-1 text-[10px] leading-[1.4] lg:mt-[-3px] lg:pt-0 lg:text-[15px] lg:font-bold lg:leading-[1.6] lg:tracking-wide"
-                                                    >
-                                                        <span
-                                                            class="hidden lg:inline"
-                                                        >
-                                                            ボトムス
-                                                        </span>
-                                                    </p>
-                                                    <p
-                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
-                                                    >
-                                                        <a
-                                                            href=""
-                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
-                                                        >
-                                                            {{
-                                                                bottoms_category
-                                                            }}
-                                                            ({{
-                                                                bottoms_color
-                                                            }})
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="hidden lg:block lg:group-last:hidden"
-                                            >
-                                                <div
-                                                    class="bg-gray-300 h-[1px]"
-                                                ></div>
-                                            </div>
-                                        </li>
-                                        <li
-                                            class="group w-1/3 px-[10px] lg:flex lg:w-full lg:flex-col lg:gap-6 lg:px-0"
-                                            v-if="outfit.shoes"
-                                        >
-                                            <div class="lg:flex">
-                                                <a
-                                                    class="flex justify-center border border-gray-300 lg:h-[120px] lg:w-[100px] lg:shrink-0 lg:overflow-hidden lg:rounded-[3px] lg:border-none lg:hover:opacity-70"
-                                                    href=""
-                                                >
-                                                    <span class="item_style">
-                                                        <img
-                                                            :src="shoes.file"
-                                                            class="item_image"
-                                                        />
-                                                    </span>
-                                                </a>
-                                                <div
-                                                    class="min-w-0 lg:grow lg:pl-[18px] lg:pr-[23px]"
-                                                >
-                                                    <p
-                                                        class="truncate pt-1 text-[10px] leading-[1.4] lg:mt-[-3px] lg:pt-0 lg:text-[15px] lg:font-bold lg:leading-[1.6] lg:tracking-wide"
-                                                    >
-                                                        <span
-                                                            class="hidden lg:inline"
-                                                        >
-                                                            シューズ
-                                                        </span>
-                                                    </p>
-                                                    <p
-                                                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
-                                                    >
-                                                        <a
-                                                            href=""
-                                                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
-                                                        >
-                                                            {{ shoes_category }}
-                                                            ({{ shoes_color }})
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="hidden lg:block lg:group-last:hidden"
-                                            >
-                                                <div
-                                                    class="bg-gray-300 h-[1px]"
-                                                ></div>
-                                            </div>
-                                        </li>
-                                    </ul>
+                                    <ItemList :items="outfitItems" />
                                 </div>
                             </div>
                         </section>
