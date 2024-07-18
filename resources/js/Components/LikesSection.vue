@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, toRefs } from 'vue';
+import { computed, onMounted, onUnmounted, ref, toRefs } from 'vue';
 import CommentsPage from '../Components/Comments/CommentsPage.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
@@ -7,12 +7,14 @@ import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue';
 import SendOutline from 'vue-material-design-icons/SendOutline.vue';
 import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue';
+import axios from 'axios';
 
 const props = defineProps(['outfit']);
 const { outfit } = toRefs(props);
 const emit = defineEmits(['like']);
 const status = ref(false);
 const count = ref(0);
+const comments = ref(0);
 let openOverlay = ref(false);
 
 const first_check = () => {
@@ -76,8 +78,21 @@ const openCommentOverlay = () => {
     openOverlay.value = true;
 };
 
+const fetchComments = async () => {
+    const response = await axios.get('/api/comments', {
+        params: { outfit_id: outfit.value.id },
+    });
+    comments.value = response.data.comments;
+};
+
 onMounted(() => {
     first_check();
+    fetchComments();
+    window.addEventListener('comment-posted', fetchComments);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('comment-posted', fetchComments);
 });
 </script>
 
@@ -112,7 +127,9 @@ onMounted(() => {
                     <span id="icon-comment" class="text-[21px]">
                         <CommentOutline class="cursor-pointer" />
                     </span>
-                    <span class="text-[15px] font-bold">(0)</span>
+                    <span class="text-[15px] font-bold">
+                        ({{ comments.length }})
+                    </span>
                 </span>
             </button>
         </div>

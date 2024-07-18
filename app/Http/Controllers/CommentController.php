@@ -17,7 +17,7 @@ class CommentController extends Controller
         $outfit_id = $request->input('outfit_id');
 
         // すべてのコメントを取得し、最新のものが最初に来るようにします
-        $comments = Comment::where('outfit_id', $outfit_id)->latest()->get();
+        $comments = Comment::where('outfit_id', $outfit_id)->oldest()->get();
 
         // JSON形式でコメントを返します
         return response()->json(['comments' => $comments]);

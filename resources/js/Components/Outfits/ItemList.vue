@@ -29,14 +29,21 @@ const props = defineProps({
                         <span class="hidden lg:inline">{{ item.label }}</span>
                     </p>
                     <p
+                        v-if="item.category && item.color"
                         class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
                     >
                         <a
                             :href="`/items/${item.data.id}`"
-                            class="hidden xl:inline xl:text-blue-500 xl:hover:underline"
+                            class="hidden lg:inline lg:text-blue-500 xl:hover:underline"
                         >
                             {{ item.category }} ({{ item.color }})
                         </a>
+                    </p>
+                    <p
+                        v-else
+                        class="text-gray-400 truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                    >
+                        読み込み中...
                     </p>
                 </div>
             </div>

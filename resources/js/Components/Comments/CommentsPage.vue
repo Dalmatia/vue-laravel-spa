@@ -95,6 +95,7 @@ const addComment = () => {
         .then((response) => {
             comment.value = '';
             console.log(response);
+            window.dispatchEvent(new Event('comment-posted'));
             fetchUserDataAndComments();
         })
         .catch(function (error) {

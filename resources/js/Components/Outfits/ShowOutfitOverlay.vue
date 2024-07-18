@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '../../stores/auth';
 import { getEnumStore } from '../../stores/enum';
@@ -9,37 +9,44 @@ import LikesSection from '../LikesSection.vue';
 import ShowOutfitOptionsOverlay from './ShowOutfitOptionsOverlay.vue';
 import FollowButton from '../FollowButton.vue';
 import ItemList from './ItemList.vue';
+import CommentsPage from '../Comments/CommentsPage.vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
-const authStore = useAuthStore();
-const followStore = useFollowStore();
-
 let deleteType = ref(null);
 let id = ref(null);
+let commentOverlay = ref(false);
 
+const user = useAuthStore().user;
+const followStore = useFollowStore();
 const props = defineProps(['outfit']);
 const outfit = ref(props.outfit);
 const postsByUser = outfit.value.user.name;
 const outfitItems = ref([]);
+const comments = ref([]);
 
 // 選択したシーズン情報の取得
-const season = ref(null);
+const season = computed(() => selectData.getSeason(outfit.value.season));
 const selectData = getEnumStore();
 
 defineEmits(['closeOverlay', 'addComment', 'updateLike', 'deleteSelected']);
 
 // 投稿時に選択したアイテムIDから情報取得
 const fetchItemData = async (itemId) => {
-    const response = await axios.get(`/api/items/${itemId}`);
-    const itemData = response.data;
+    try {
+        const response = await axios.get(`/api/items/${itemId}`);
+        const itemData = response.data;
 
-    return {
-        data: itemData,
-        category: selectData.getSubCategoryName(itemData.sub_category),
-        color: selectData.getColor(itemData.color),
-    };
+        return {
+            data: itemData,
+            category: selectData.getSubCategoryName(itemData.sub_category),
+            color: selectData.getColor(itemData.color),
+        };
+    } catch (error) {
+        console.error('アイテムデータの取得に失敗しました:', error);
+        return null;
+    }
 };
 
 // コーディネートに使用したアイテム情報取得
@@ -52,17 +59,15 @@ const fetchItems = async () => {
             { label: 'シューズ', id: outfit.value.shoes },
         ];
 
-        const fetchPromises = itemTypes.map(async (itemType) => {
-            if (itemType.id) {
-                const item = await fetchItemData(itemType.id);
-                return { label: itemType.label, ...item };
-            }
-            return null;
-        });
+        const fetchPromises = itemTypes
+            .filter((itemType) => itemType.id)
+            .map(async (itemType) => {
+                const itemData = await fetchItemData(itemType.id);
+                return { label: itemType.label, ...itemData };
+            });
 
         const items = await Promise.all(fetchPromises);
-        outfitItems.value = items.filter((item) => item !== null);
-        season.value = selectData.getSeason(outfit.value.season);
+        outfitItems.value = items;
     } catch (error) {
         console.error('データの取得に失敗しました:', error);
     }
@@ -112,15 +117,47 @@ const deleteFollow = async (userId) => {
     }
 };
 
+// コメントを取得
+const fetchComments = async () => {
+    try {
+        const commentsResponse = await axios.get('/api/comments', {
+            params: { outfit_id: outfit.value.id },
+        });
+        comments.value = commentsResponse.data.comments;
+
+        const userIds = [
+            ...new Set(comments.value.map((comment) => comment.user_id)),
+        ];
+        const userResponses = await Promise.all(
+            userIds.map((id) => axios.get(`/api/users/${id}`))
+        );
+        const users = userResponses.map((response) => response.data.user);
+
+        comments.value.forEach((comment) => {
+            comment.user = users.find((user) => user.id === comment.user_id);
+        });
+    } catch (error) {
+        console.error(`コメントの取得に失敗しました: ${error}`);
+    }
+};
+
+// ...もっと見るをクリックした時にコメントモーダルを開く
+const openCommentOverlay = () => {
+    commentOverlay.value = true;
+};
+
 onMounted(() => {
     fetchOutfit();
     // EditOutfitOverlay.vueのoutfitUpdateメソッドで定義したイベントの購読
     window.addEventListener('outfit-updated', fetchOutfit);
     followStatus();
+    fetchComments();
+    window.addEventListener('comment-posted', fetchComments);
 });
 
 onUnmounted(() => {
     window.removeEventListener('outfit-updated', fetchOutfit);
+    window.removeEventListener('comment-posted', fetchComments);
 });
 </script>
 
@@ -165,9 +202,9 @@ onUnmounted(() => {
                             <div
                                 class="ml-3 mt-2"
                                 v-if="
-                                    authStore.user.id &&
+                                    user.id &&
                                     outfit.user_id &&
-                                    authStore.user.id !== outfit.user_id
+                                    user.id !== outfit.user_id
                                 "
                             >
                                 <FollowButton
@@ -181,7 +218,7 @@ onUnmounted(() => {
                         </div>
                         <div class="ml-auto mt-2">
                             <button
-                                v-if="authStore.user.id === outfit.user_id"
+                                v-if="user.id === outfit.user_id"
                                 @click="
                                     deleteType = 'Outfit';
                                     id = outfit.id;
@@ -253,11 +290,25 @@ onUnmounted(() => {
                             <div class="pb-[30px]">
                                 <div
                                     class="flex flex-col gap-4 pt-[17px] lg:pt-2"
+                                    v-if="comments.length > 0"
                                 >
-                                    <div>
+                                    <div
+                                        v-for="comment in comments.slice(0, 2)"
+                                        :key="comment.id"
+                                        :class="{
+                                            'flex-row-reverse':
+                                                comment.user_id ===
+                                                outfit.user_id,
+                                        }"
+                                    >
                                         <div class="flex flex-col gap-4">
                                             <div
-                                                class="flex w-full gap-4 lg:gap-[15px] flex-row-reverse"
+                                                class="flex w-full gap-4 lg:gap-[15px]"
+                                                :class="{
+                                                    'flex-row-reverse':
+                                                        comment.user_id ===
+                                                        outfit.user_id,
+                                                }"
                                             >
                                                 <a
                                                     class="flex h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-300 hover:opacity-70"
@@ -276,22 +327,34 @@ onUnmounted(() => {
                                                     class="pt-[3px] lg:pt-[6px]"
                                                 >
                                                     <div
-                                                        class="flex flex-row-reverse"
+                                                        class="flex"
+                                                        :class="{
+                                                            'flex-row-reverse':
+                                                                comment.user_id ===
+                                                                outfit.user_id,
+                                                        }"
                                                     >
                                                         <p
-                                                            class="line-clamp-3 max-w-[272px] text-[12px] leading-[1.4] lg:max-w-[420px] lg:tracking-[0.03em]"
+                                                            class="line-clamp-3 max-w-[272px] text-[12px] leading-[1.4] lg:max-w-[420px] lg:tracking-[0.03em] lg:text-[14px]"
+                                                            v-if="
+                                                                comment.user &&
+                                                                comment.user
+                                                                    .name
+                                                            "
                                                         >
-                                                            <span
-                                                                class="lg:text-[14px]"
-                                                            >
-                                                                {{
-                                                                    postsByUser
-                                                                }}
-                                                            </span>
+                                                            {{
+                                                                comment.user
+                                                                    .name
+                                                            }}
                                                         </p>
                                                     </div>
                                                     <div
-                                                        class="flex items-end gap-[10px] lg:mt-[5px] flex-row-reverse"
+                                                        class="flex items-end gap-[10px] lg:mt-[5px]"
+                                                        :class="{
+                                                            'flex-row-reverse':
+                                                                comment.user_id ===
+                                                                outfit.user_id,
+                                                        }"
                                                     >
                                                         <div
                                                             class="max-w-[262px] flex-1 rounded-b-[6px] bg-gray-500 px-[15px] py-2 lg:max-w-[362px] lg:border lg:border-gray-300 lg:bg-gray-50 rounded-tl-[6px]"
@@ -302,51 +365,9 @@ onUnmounted(() => {
                                                             <p
                                                                 class="whitespace-pre-wrap text-[15px] leading-[1.4] text-black lg:text-[13px] lg:leading-[1.6] lg:tracking-[0.03em] lg:text-black-400"
                                                             >
-                                                                これはコメントです。
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="flex w-full gap-4 lg:gap-[15px]"
-                                            >
-                                                <a
-                                                    href="/"
-                                                    class="flex h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-300 hover:opacity-70"
-                                                >
-                                                    <span
-                                                        class="box-border inline-block overflow-hidden bg-none opacity-100 border-0 m-0 p-0 max-w-full"
-                                                    >
-                                                        <img
-                                                            class="rounded-full w-[38px] h-[38px]"
-                                                            src="https://picsum.photos/id/54/800/820"
-                                                        />
-                                                    </span>
-                                                </a>
-                                                <div
-                                                    class="pt-[3px] lg:pt-[6px]"
-                                                >
-                                                    <div class="flex">
-                                                        <p
-                                                            class="line-clamp-3 max-w-[272px] text-[12px] leading-[1.4] lg:max-w-[420px] lg:tracking-[0.03em]"
-                                                        >
-                                                            <span
-                                                                class="lg:text-[14px]"
-                                                                >名無し3</span
-                                                            >
-                                                        </p>
-                                                    </div>
-                                                    <div
-                                                        class="flex items-end gap-[10px] lg:mt-[5px]"
-                                                    >
-                                                        <div
-                                                            class="max-w-[262px] flex-1 rounded-b-[6px] bg-gray-500 px-[15px] py-2 lg:max-w-[362px] lg:border lg:border-gray-300 lg:bg-gray-50 rounded-tr-[6px]"
-                                                        >
-                                                            <p
-                                                                class="whitespace-pre-wrap text-[15px] leading-[1.4] text-black lg:text-[13px] lg:leading-[1.6] lg:tracking-[0.03em] lg:text-black-400"
-                                                            >
-                                                                素晴らしい!!
+                                                                {{
+                                                                    comment.text
+                                                                }}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -354,7 +375,22 @@ onUnmounted(() => {
                                             </div>
                                         </div>
                                     </div>
+                                    <button
+                                        type="button"
+                                        class="block text-[14px] leading-[1.8] text-blue-500 xl:pt-1 xl:leading-[1.6]"
+                                        @click="openCommentOverlay()"
+                                    >
+                                        ...もっと見る
+                                    </button>
                                 </div>
+                                <!-- コメントが存在しない場合の表示 -->
+                                <template v-else>
+                                    <p
+                                        class="mt-10 text-[14px] text-gray-600 text-center"
+                                    >
+                                        コメントはまだありません。
+                                    </p>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -429,6 +465,11 @@ onUnmounted(() => {
             </section>
             <!-- ここまでメインセクション -->
         </div>
+        <CommentsPage
+            v-if="commentOverlay"
+            :outfit="outfit"
+            @close-overlay="commentOverlay = false"
+        />
     </div>
     <ShowOutfitOptionsOverlay
         v-if="deleteType"
