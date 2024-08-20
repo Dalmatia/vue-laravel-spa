@@ -7,7 +7,6 @@ import Magnify from 'vue-material-design-icons/Magnify.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import HomeOutline from 'vue-material-design-icons/HomeOutline.vue';
 import Calendar from 'vue-material-design-icons/Calendar.vue';
-import SendOutline from 'vue-material-design-icons/SendOutline.vue';
 import Plus from 'vue-material-design-icons/Plus.vue';
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
@@ -90,7 +89,8 @@ onMounted(() => {
                 authStore.user &&
                 route.path !== '/' &&
                 route.path !== `/user/${authStore.user.id}/follow_list` &&
-                route.path !== `/user/${authStore.user.id}/follower_list`
+                route.path !== `/user/${authStore.user.id}/follower_list` &&
+                route.path !== '/search'
             "
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
@@ -124,7 +124,9 @@ onMounted(() => {
                 <router-link :to="{ name: 'Home' }">
                     <MenuItem iconString="Home" class="mb-4" />
                 </router-link>
-                <MenuItem iconString="Search" class="mb-4" />
+                <router-link :to="{ name: 'Search' }">
+                    <MenuItem iconString="Search" class="mb-4" />
+                </router-link>
                 <router-link :to="{ name: 'Calendar' }" v-if="authStore.user">
                     <MenuItem iconString="Calendar" class="mb-4" />
                 </router-link>
@@ -262,8 +264,8 @@ onMounted(() => {
                     class="cursor-pointer"
                 />
             </router-link>
-            <router-link :to="{ name: 'Calendar' }">
-                <Calendar
+            <router-link :to="{ name: 'Search' }">
+                <Magnify
                     fillColor="#000000"
                     :size="33"
                     class="cursor-pointer"
@@ -275,11 +277,13 @@ onMounted(() => {
                 :size="33"
                 class="cursor-pointer"
             />
-            <SendOutline
-                fillColor="#000000"
-                :size="33"
-                class="cursor-pointer"
-            />
+            <router-link :to="{ name: 'Calendar' }">
+                <Calendar
+                    fillColor="#000000"
+                    :size="33"
+                    class="cursor-pointer"
+                />
+            </router-link>
             <router-link :to="{ name: 'Login' }" v-if="!authStore.user">
                 <AccountOutline
                     fillColor="#000000"

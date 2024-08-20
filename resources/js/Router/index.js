@@ -11,6 +11,7 @@ const Calendar = () => import('../Pages/Calendar.vue');
 const Likes = () => import('../Pages/LikesPage.vue');
 const FollowList = () => import('../Pages/FollowList.vue');
 const FollowerList = () => import('../Pages/FollowerList.vue');
+const Search = () => import('../Pages/Search.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -80,6 +81,11 @@ const router = createRouter({
             name: 'FollowerList',
             component: FollowerList,
             meta: { requiresAuth: true },
+        },
+        {
+            path: '/search',
+            name: 'Search',
+            component: Search,
         },
     ],
 });
