@@ -12,12 +12,21 @@ import Close from 'vue-material-design-icons/Close.vue';
 let openFilter = ref(false);
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
-
 const outfits = ref([]);
 const authStore = useAuthStore();
 const user = computed(() => (authStore.user ? authStore.user.id : null));
 const followStore = useFollowStore();
+
+// 検索する項目毎のデータの取得
+const mainCategories = ref([]);
+const subCategories = ref([]);
+const colors = ref([]);
 const seasons = ref([]);
+
+const selectedMainCategory = ref('');
+const selectedSubCategory = ref('');
+const selectedColor = ref('');
+const selectedSeason = ref('');
 
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
@@ -38,24 +47,30 @@ const openOutfitOverlay = (outfit) => {
     openOverlay.value = true;
 };
 
-const getSeason = async () => {
+const getEnums = async () => {
     try {
         const response = await axios.get('/api/enums');
+        mainCategories.value = response.data.mainCategories;
+        subCategories.value = response.data.subCategories;
+        colors.value = response.data.colors;
         seasons.value = response.data.seasons;
     } catch (error) {
         console.error('Enum データの取得に失敗しました', error);
     }
 };
 
-onMounted(() => {
-    fetchOutfits();
-    getSeason();
+onMounted(async () => {
+    try {
+        await Promise.all([fetchOutfits(), getEnums()]);
+    } catch (error) {
+        console.error('データの取得に失敗しました。', error);
+    }
 });
 </script>
 
 <template>
     <div
-        class="box-border mx-auto max-w-6xl min-h-fit md:pl-[96px] lg:px-7 relative w-full"
+        class="box-border mx-auto max-w-6xl min-h-fit md:pl-[88px] lg:px-7 w-full"
     >
         <!-- デスクトップ用レイアウト -->
         <div class="hidden md:block">
@@ -72,126 +87,123 @@ onMounted(() => {
                         class="flex items-center p-0 bg-transparent border-none cursor-pointer"
                         @click="openFilter = !openFilter"
                     >
-                        <div class="items-center flex justify-end">
-                            <Filter id="filter" v-if="!openFilter" :size="27" />
-                            <Close id="close_filter" v-else :size="27" />
+                        <div
+                            class="flex items-center p-0 bg-transparent border-none cursor-pointer"
+                        >
+                            <Filter v-if="!openFilter" :size="27" />
+                            <Close v-else :size="27" />
                         </div>
                     </button>
                 </div>
             </header>
 
             <!-- 絞り込み検索ドロップダウンメニュー -->
-            <div class="absolute w-full m-0 p-0 border-0 z-40 bg-white">
-                <form action="/search/" v-if="openFilter">
+            <div class="relative" v-if="openFilter">
+                <form action="/search/" class="absolute z-40 bg-white w-full">
                     <table class="w-full mb-10 border-separate">
-                        <tbody
-                            class="m-0 border-0 text-[100%] align-baseline table-row-group"
-                        >
-                            <tr
-                                class="m-0 p-0 border-0 text-[100%] align-baseline table-row"
-                            >
+                        <tbody>
+                            <tr>
                                 <td
-                                    class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                    class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white"
                                 >
                                     メインカテゴリー
                                 </td>
                                 <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2] relative text-left font-normal align-middle m-0 border-0 text-[100%] table-cell"
+                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                 >
-                                    <div
-                                        class="flex items-center justify-between text-left m-0 p-0 border-0 text-[100%] align-baseline"
+                                    <select
+                                        v-model="selectedMainCategory"
+                                        class="w-full"
                                     >
-                                        <a
-                                            class="flex items-center !text-sm cursor-pointer m-0 p-0 border-0 align-baseline bg-transparent"
-                                        >
+                                        <option value="">
                                             メインカテゴリーを選択
-                                        </a>
-                                        <input
-                                            type="hidden"
-                                            class="leading-normal m-0 align-middle p-[1px] !hidden !overflow-clip"
-                                        />
-                                    </div>
+                                        </option>
+                                        <option
+                                            v-for="(
+                                                label, value
+                                            ) in mainCategories"
+                                            :key="value"
+                                            :value="value"
+                                        >
+                                            {{ label }}
+                                        </option>
+                                    </select>
                                 </td>
                             </tr>
-                            <tr
-                                class="m-0 p-0 border-0 text-[100%] align-baseline table-row"
-                            >
+                            <tr>
                                 <td
                                     class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
                                 >
                                     サブカテゴリー
                                 </td>
                                 <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2] relative text-left font-normal align-middle m-0 border-0 text-[100%] table-cell"
+                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                 >
-                                    <div
-                                        class="flex items-center justify-between text-left m-0 p-0 border-0 text-[100%] align-baseline"
+                                    <select
+                                        v-model="selectedSubCategory"
+                                        class="w-full"
                                     >
-                                        <a
-                                            href=""
-                                            class="flex items-center !text-sm cursor-pointer m-0 p-0 border-0 align-baseline bg-transparent"
-                                        >
+                                        <option value="">
                                             サブカテゴリーを選択
-                                        </a>
-                                        <input
-                                            type="hidden"
-                                            class="leading-normal m-0 align-middle p-[1px] !hidden !overflow-clip"
-                                        />
-                                    </div>
+                                        </option>
+                                        <option
+                                            v-for="(
+                                                label, value
+                                            ) in subCategories"
+                                            :key="value"
+                                            :value="value"
+                                        >
+                                            {{ label }}
+                                        </option>
+                                    </select>
                                 </td>
                             </tr>
-                            <tr
-                                class="m-0 p-0 border-0 text-[100%] align-baseline table-row"
-                            >
+                            <tr>
                                 <td
                                     class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
                                 >
                                     カラー
                                 </td>
                                 <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2] relative text-left font-normal align-middle m-0 border-0 text-[100%] table-cell"
+                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                 >
-                                    <div
-                                        class="flex items-center justify-between text-left m-0 p-0 border-0 text-[100%] align-baseline"
+                                    <select
+                                        v-model="selectedColor"
+                                        class="w-full"
                                     >
-                                        <a
-                                            href=""
-                                            class="flex items-center !text-sm cursor-pointer m-0 p-0 border-0 align-baseline bg-transparent"
+                                        <option value="">カラーを選択</option>
+                                        <option
+                                            v-for="(label, value) in colors"
+                                            :key="value"
+                                            :value="value"
                                         >
-                                            カラーを選択
-                                        </a>
-                                        <input
-                                            type="hidden"
-                                            class="leading-normal m-0 align-middle p-[1px] !hidden !overflow-clip"
-                                        />
-                                    </div>
+                                            {{ label }}
+                                        </option>
+                                    </select>
                                 </td>
                             </tr>
-                            <tr
-                                class="m-0 p-0 border-0 text-[100%] align-baseline table-row"
-                            >
+                            <tr>
                                 <td
                                     class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
                                 >
                                     シーズン
                                 </td>
                                 <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2] relative text-left font-normal align-middle m-0 border-0 text-[100%] table-cell"
+                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                 >
-                                    <div
-                                        class="flex items-center justify-between text-left m-0 p-0 border-0 text-[100%] align-baseline"
+                                    <select
+                                        v-model="selectedSeason"
+                                        class="w-full"
                                     >
-                                        <a
-                                            href=""
-                                            class="flex items-center !text-sm cursor-pointer m-0 p-0 border-0 align-baseline bg-transparent"
+                                        <option value="">シーズンを選択</option>
+                                        <option
+                                            v-for="(label, value) in seasons"
+                                            :key="value"
+                                            :value="value"
                                         >
-                                            シーズンを選択
-                                        </a>
-                                        <input
-                                            type="hidden"
-                                            class="leading-normal m-0 align-middle p-[1px] !hidden !overflow-clip"
-                                        />
-                                    </div>
+                                            {{ label }}
+                                        </option>
+                                    </select>
                                 </td>
                             </tr>
                         </tbody>
@@ -226,20 +238,16 @@ onMounted(() => {
                         class="pt-[10px] pr-[6px] pb-[5px] pl-[6px] w-full"
                     >
                         <div
-                            class="relative float-left border-[1px] border-[#ddd] border-solid rounded-[3px] md:mt-[18px] md:mr-0 md:mb-0 md:ml-[18px] bg-white"
+                            class="relative float-left border-[1px] border-[#ddd] border-solid rounded-[3px] bg-white"
                         >
                             <p
                                 class="relative w-full h-auto overflow-hidden bg-[#f6f7f8]"
+                                @click="openOutfitOverlay(outfit)"
                             >
-                                <a
-                                    @click="openOutfitOverlay(outfit)"
-                                    class="block"
-                                >
-                                    <img
-                                        :src="outfit.file"
-                                        class="w-full h-auto opacity-100 cursor-pointer"
-                                    />
-                                </a>
+                                <img
+                                    :src="outfit.file"
+                                    class="w-full h-auto cursor-pointer"
+                                />
                             </p>
                             <div
                                 id="user_profile"
@@ -249,21 +257,16 @@ onMounted(() => {
                                     id="profile_image"
                                     class="relative float-left w-[22px] md:w-[40px]"
                                 >
-                                    <p
-                                        id="image"
-                                        class="text-[0px] leading-[1] tracking-[0] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
-                                    >
-                                        <a href="">
-                                            <img
-                                                src="https://picsum.photos/id/32/32/32"
-                                                class="opacity-100 rounded-[50%] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
-                                            />
-                                        </a>
-                                    </p>
+                                    <a href="">
+                                        <img
+                                            src="https://picsum.photos/id/32/32/32"
+                                            class="rounded-full w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
+                                        />
+                                    </a>
                                 </div>
                                 <div
                                     id="username"
-                                    class="w-auto float-right pt-[2px] pr-0 pb-0 pl-0"
+                                    class="w-auto float-right pt-[2px]"
                                 >
                                     <p
                                         class="text-[10px] md:text-[13.5px] font-bold"
