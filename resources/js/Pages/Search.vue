@@ -74,157 +74,186 @@ onMounted(async () => {
     >
         <!-- デスクトップ用レイアウト -->
         <div class="hidden md:block">
-            <h1 class="text-center mb-5">コーディネート検索</h1>
-            <header class="flex justify-between items-center border-t">
-                <div class="flex items-center justify-between w-full px-4 h-11">
-                    <button
-                        class="flex items-center p-0 bg-transparent border-none cursor-pointer"
-                    >
-                        <Sort :size="27" />
-                    </button>
-
-                    <button
-                        class="flex items-center p-0 bg-transparent border-none cursor-pointer"
-                        @click="openFilter = !openFilter"
-                    >
+            <nav
+                class="flex flex-col box-border items-stretch sticky top-0 z-50 bg-white"
+            >
+                <div class="relative z-11 flex flex-col h-auto">
+                    <header class="relative z-11 flex flex-col h-auto">
+                        <h1 class="text-center mb-5 text-lg font-semibold">
+                            コーディネート検索
+                        </h1>
                         <div
-                            class="flex items-center p-0 bg-transparent border-none cursor-pointer"
+                            class="flex justify-between items-center border-t border-gray-200"
                         >
-                            <Filter v-if="!openFilter" :size="27" />
-                            <Close v-else :size="27" />
-                        </div>
-                    </button>
-                </div>
-            </header>
+                            <div
+                                class="flex items-center justify-between w-full px-4 h-11"
+                            >
+                                <button
+                                    class="bg-transparent border-none cursor-pointer"
+                                >
+                                    <Sort :size="27" />
+                                </button>
 
-            <!-- 絞り込み検索ドロップダウンメニュー -->
-            <div class="relative" v-if="openFilter">
-                <form action="/search/" class="absolute z-40 bg-white w-full">
-                    <table class="w-full mb-10 border-separate">
-                        <tbody>
-                            <tr>
-                                <td
-                                    class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white"
+                                <button
+                                    class="p-0 bg-transparent border-none cursor-pointer"
+                                    @click="openFilter = !openFilter"
                                 >
-                                    メインカテゴリー
-                                </td>
-                                <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
-                                >
-                                    <select
-                                        v-model="selectedMainCategory"
-                                        class="w-full"
+                                    <div
+                                        class="p-0 bg-transparent border-none cursor-pointer"
                                     >
-                                        <option value="">
-                                            メインカテゴリーを選択
-                                        </option>
-                                        <option
-                                            v-for="(
-                                                label, value
-                                            ) in mainCategories"
-                                            :key="value"
-                                            :value="value"
-                                        >
-                                            {{ label }}
-                                        </option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td
-                                    class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                        <Filter v-if="!openFilter" :size="27" />
+                                        <Close v-else :size="27" />
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 絞り込み検索ドロップダウンメニュー -->
+                        <div
+                            class="absolute top-full left-0 z-40 w-full bg-white"
+                            v-if="openFilter"
+                        >
+                            <form action="/search/" class="w-full p-4">
+                                <table class="w-full mb-10 border-separate">
+                                    <tbody>
+                                        <tr>
+                                            <td
+                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white"
+                                            >
+                                                メインカテゴリー
+                                            </td>
+                                            <td
+                                                class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
+                                            >
+                                                <select
+                                                    v-model="
+                                                        selectedMainCategory
+                                                    "
+                                                    class="w-full"
+                                                >
+                                                    <option value="">
+                                                        メインカテゴリーを選択
+                                                    </option>
+                                                    <option
+                                                        v-for="(
+                                                            label, value
+                                                        ) in mainCategories"
+                                                        :key="value"
+                                                        :value="value"
+                                                    >
+                                                        {{ label }}
+                                                    </option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td
+                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                            >
+                                                サブカテゴリー
+                                            </td>
+                                            <td
+                                                class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
+                                            >
+                                                <select
+                                                    v-model="
+                                                        selectedSubCategory
+                                                    "
+                                                    class="w-full"
+                                                >
+                                                    <option value="">
+                                                        サブカテゴリーを選択
+                                                    </option>
+                                                    <option
+                                                        v-for="(
+                                                            label, value
+                                                        ) in subCategories"
+                                                        :key="value"
+                                                        :value="value"
+                                                    >
+                                                        {{ label }}
+                                                    </option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td
+                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                            >
+                                                カラー
+                                            </td>
+                                            <td
+                                                class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
+                                            >
+                                                <select
+                                                    v-model="selectedColor"
+                                                    class="w-full"
+                                                >
+                                                    <option value="">
+                                                        カラーを選択
+                                                    </option>
+                                                    <option
+                                                        v-for="(
+                                                            label, value
+                                                        ) in colors"
+                                                        :key="value"
+                                                        :value="value"
+                                                    >
+                                                        {{ label }}
+                                                    </option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td
+                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                            >
+                                                シーズン
+                                            </td>
+                                            <td
+                                                class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
+                                            >
+                                                <select
+                                                    v-model="selectedSeason"
+                                                    class="w-full"
+                                                >
+                                                    <option value="">
+                                                        シーズンを選択
+                                                    </option>
+                                                    <option
+                                                        v-for="(
+                                                            label, value
+                                                        ) in seasons"
+                                                        :key="value"
+                                                        :value="value"
+                                                    >
+                                                        {{ label }}
+                                                    </option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div
+                                    class="flex justify-center items-center mx-auto mb-7 w-full max-w-[750px] h-[50px] space-x-4"
                                 >
-                                    サブカテゴリー
-                                </td>
-                                <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
-                                >
-                                    <select
-                                        v-model="selectedSubCategory"
-                                        class="w-full"
-                                    >
-                                        <option value="">
-                                            サブカテゴリーを選択
-                                        </option>
-                                        <option
-                                            v-for="(
-                                                label, value
-                                            ) in subCategories"
-                                            :key="value"
-                                            :value="value"
-                                        >
-                                            {{ label }}
-                                        </option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td
-                                    class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
-                                >
-                                    カラー
-                                </td>
-                                <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
-                                >
-                                    <select
-                                        v-model="selectedColor"
-                                        class="w-full"
-                                    >
-                                        <option value="">カラーを選択</option>
-                                        <option
-                                            v-for="(label, value) in colors"
-                                            :key="value"
-                                            :value="value"
-                                        >
-                                            {{ label }}
-                                        </option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td
-                                    class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
-                                >
-                                    シーズン
-                                </td>
-                                <td
-                                    class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
-                                >
-                                    <select
-                                        v-model="selectedSeason"
-                                        class="w-full"
-                                    >
-                                        <option value="">シーズンを選択</option>
-                                        <option
-                                            v-for="(label, value) in seasons"
-                                            :key="value"
-                                            :value="value"
-                                        >
-                                            {{ label }}
-                                        </option>
-                                    </select>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div
-                        class="flex justify-center items-center mx-auto mb-7 w-full max-w-[750px] h-[50px] space-x-4"
-                    >
-                        <input
-                            type="button"
-                            class="float-left text-[#999999] bg-white border border-solid border-[#cccccc] ml-0 w-[210px] h-[50px] text-sm mb-5 font-bold block box-border rounded-sm cursor-pointer leading-normal m-0 align-middle p-[1px]"
-                            value="指定した条件をクリア"
-                        />
-                        <input
-                            type="submit"
-                            class="w-[210px] h-[50px] text-sm ml-[15px] float-left mb-5 border-0 text-white font-bold bg-black block box-border rounded-sm cursor-pointer leading-normal m-0 align-middle p-[1px]"
-                            value="この条件で絞り込む"
-                        />
-                    </div>
-                </form>
-            </div>
-            <!-- ドロップダウンメニューここまで -->
+                                    <input
+                                        type="button"
+                                        class="float-left text-[#999999] bg-white border border-solid border-[#cccccc] ml-0 w-[210px] h-[50px] text-sm mb-5 font-bold block box-border rounded-sm cursor-pointer leading-normal m-0 align-middle p-[1px]"
+                                        value="指定した条件をクリア"
+                                    />
+                                    <input
+                                        type="submit"
+                                        class="w-[210px] h-[50px] text-sm ml-[15px] float-left mb-5 border-0 text-white font-bold bg-black block box-border rounded-sm cursor-pointer leading-normal m-0 align-middle p-[1px]"
+                                        value="この条件で絞り込む"
+                                    />
+                                </div>
+                            </form>
+                        </div>
+                        <!-- ドロップダウンメニューここまで -->
+                    </header>
+                </div>
+            </nav>
 
             <!-- コーディネート表示部分 -->
             <div id="outfit" class="relative z-[1]">
