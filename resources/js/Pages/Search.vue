@@ -8,6 +8,7 @@ import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
 import Sort from 'vue-material-design-icons/SortVariant.vue';
 import Filter from 'vue-material-design-icons/Tune.vue';
 import Close from 'vue-material-design-icons/Close.vue';
+import axios from 'axios';
 
 let openFilter = ref(false);
 let currentOutfit = ref(null);
@@ -23,17 +24,20 @@ const subCategories = ref([]);
 const colors = ref([]);
 const seasons = ref([]);
 
-const selectedMainCategory = ref('');
-const selectedSubCategory = ref('');
-const selectedColor = ref('');
-const selectedSeason = ref('');
+const filters = ref({
+    mainCategory: '',
+    subCategory: '',
+    color: '',
+    season: '',
+});
 
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
     try {
-        const response = await axios.get('/api/home');
+        const response = await axios.get('/api/outfits', {
+            params: filters.value,
+        });
         outfits.value = response.data.outfits;
-
         // 各ユーザーのフォロー状態をチェック
         const follows = outfits.value.map((outfit) => outfit.user.id);
         await followStore.fetchFollowStatus(follows);
@@ -57,6 +61,22 @@ const getEnums = async () => {
     } catch (error) {
         console.error('Enum データの取得に失敗しました', error);
     }
+};
+
+const filterByCategory = () => {
+    fetchOutfits();
+    openFilter.value = false;
+};
+
+// 指定した条件をクリアする
+const clearFilters = () => {
+    filters.value = {
+        mainCategory: '',
+        subCategory: '',
+        color: '',
+        season: '',
+    };
+    filterByCategory();
 };
 
 onMounted(async () => {
@@ -113,7 +133,7 @@ onMounted(async () => {
                             class="absolute top-full left-0 z-40 w-full bg-white"
                             v-if="openFilter"
                         >
-                            <form action="/search/" class="w-full p-4">
+                            <form class="w-full p-4">
                                 <table class="w-full mb-10 border-separate">
                                     <tbody>
                                         <tr>
@@ -127,7 +147,7 @@ onMounted(async () => {
                                             >
                                                 <select
                                                     v-model="
-                                                        selectedMainCategory
+                                                        filters.mainCategory
                                                     "
                                                     class="w-full"
                                                 >
@@ -157,7 +177,7 @@ onMounted(async () => {
                                             >
                                                 <select
                                                     v-model="
-                                                        selectedSubCategory
+                                                        filters.subCategory
                                                     "
                                                     class="w-full"
                                                 >
@@ -186,7 +206,7 @@ onMounted(async () => {
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
                                                 <select
-                                                    v-model="selectedColor"
+                                                    v-model="filters.color"
                                                     class="w-full"
                                                 >
                                                     <option value="">
@@ -214,7 +234,7 @@ onMounted(async () => {
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
                                                 <select
-                                                    v-model="selectedSeason"
+                                                    v-model="filters.season"
                                                     class="w-full"
                                                 >
                                                     <option value="">
@@ -237,16 +257,20 @@ onMounted(async () => {
                                 <div
                                     class="flex justify-center items-center mx-auto mb-7 w-full max-w-[750px] h-[50px] space-x-4"
                                 >
-                                    <input
+                                    <button
                                         type="button"
                                         class="float-left text-[#999999] bg-white border border-solid border-[#cccccc] ml-0 w-[210px] h-[50px] text-sm mb-5 font-bold block box-border rounded-sm cursor-pointer leading-normal m-0 align-middle p-[1px]"
-                                        value="指定した条件をクリア"
-                                    />
-                                    <input
-                                        type="submit"
+                                        @click="clearFilters()"
+                                    >
+                                        指定した条件をクリア
+                                    </button>
+                                    <button
+                                        type="button"
                                         class="w-[210px] h-[50px] text-sm ml-[15px] float-left mb-5 border-0 text-white font-bold bg-black block box-border rounded-sm cursor-pointer leading-normal m-0 align-middle p-[1px]"
-                                        value="この条件で絞り込む"
-                                    />
+                                        @click="filterByCategory()"
+                                    >
+                                        この条件で絞り込む
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -275,7 +299,7 @@ onMounted(async () => {
                             >
                                 <img
                                     :src="outfit.file"
-                                    class="w-full h-auto cursor-pointer"
+                                    class="lg:w-[203px] lg:h-[304px] md:w-[156px] md:h-[234px] cursor-pointer"
                                 />
                             </p>
                             <div
@@ -312,6 +336,9 @@ onMounted(async () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div v-if="outfits.length === 0">
+                        <p>該当するコーディネートが見つかりませんでした。</p>
                     </div>
                 </div>
             </div>

@@ -42,4 +42,9 @@ class Outfit extends Model
     {
         return $this->hasMany(Comment::class)->orderBy('created_at', 'desc');
     }
+
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'outfits_items', 'outfit_id', 'item_id');
+    }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\FileService;
 use Illuminate\Support\Facades\Validator;
@@ -85,9 +87,38 @@ class OutfitController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Outfit::with('items')->orderBy('outfit_date', 'desc');
+
+        // フィルター条件がある場合に適用
+        if ($request->filled('main_category')) {
+            $query->whereHas('items', function ($q) use ($request) {
+                $q->where('main_category', $request->input('main_category'));
+            });
+        }
+
+        if ($request->filled('sub_category')) {
+            $query->whereHas('items', function ($q) use ($request) {
+                $q->where('sub_category', $request->input('sub_category'))->orWhereNull('sub_category');
+            });
+        }
+
+        if ($request->filled('color')) {
+            $query->whereHas('items', function ($q) use ($request) {
+                $q->where('color', $request->input('color'));
+            });
+        }
+
+        if ($request->filled('season')) {
+            $query->whereHas('items', function ($q) use ($request) {
+                $q->where('season', $request->input('season'))->orWhereNull('season');
+            });
+        }
+
+        $outfits = $query->get();
+
+        return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
     }
 
     /**

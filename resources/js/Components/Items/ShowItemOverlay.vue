@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, onBeforeMount } from 'vue';
+import { onMounted, ref, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth.js';
 import { getEnumStore } from '../../stores/enum.js';
 
@@ -58,14 +58,13 @@ const fetchSelectData = () => {
     season.value = selection.getSeason(item.value.season);
 };
 
-onMounted(() => {
-    fetchUserData();
-    fetchItemData();
+onMounted(async () => {
+    await Promise.all([fetchUserData(), fetchItemData()]);
     // EditItemOverlay.vueのitemUpdateメソッドで定義したイベントの購読
     window.addEventListener('item-updated', fetchItemData);
 });
 
-onBeforeMount(() => {
+onUnmounted(() => {
     window.removeEventListener('item-updated', fetchItemData);
 });
 </script>
