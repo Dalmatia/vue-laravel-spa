@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use App\Services\FileService;
 use Illuminate\Support\Facades\Validator;
@@ -66,21 +67,36 @@ class OutfitController extends Controller
             $outfit->season =  ($request->season !== 'null') ? $request->season : null;
         }
 
+        // tops, outer, bottoms, shoes の値を保存
+        $itemIds = [];
+
+        // 各アイテムの ID を outfit にも保存しつつ、itemIds 配列に追加
         if ($request->filled('tops')) {
             $outfit->tops = ($request->tops !== 'null') ? $request->tops : null;
+            $itemIds[] = $outfit->tops; // itemIds に追加
         }
 
         if ($request->filled('outer')) {
             $outfit->outer = ($request->outer !== 'null') ? $request->outer : null;
+            $itemIds[] = $outfit->outer;
         }
 
         if ($request->filled('bottoms')) {
             $outfit->bottoms = ($request->bottoms !== 'null') ? $request->bottoms : null;
+            $itemIds[] = $outfit->bottoms;
         }
 
         if ($request->filled('shoes')) {
             $outfit->shoes = ($request->shoes !== 'null') ? $request->shoes : null;
+            $itemIds[] = $outfit->shoes;
         }
+
+        // 重複したアイテムIDを除去し、null値をフィルタリング
+        $itemIds = array_unique(array_filter($itemIds, fn($value) => !is_null($value)));
+
+        // Outfit を保存してからアイテムを関連付け
+        $outfit->save();
+        $outfit->items()->sync($itemIds);
 
         return $outfit;
     }
@@ -89,37 +105,43 @@ class OutfitController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Outfit::with('items')->orderBy('outfit_date', 'desc');
+        $query = Outfit::query();
 
-        // フィルター条件がある場合に適用
-        if ($request->filled('main_category')) {
-            $query->whereHas('items', function ($q) use ($request) {
-                $q->where('main_category', $request->input('main_category'));
+        // フィルタリング条件を取得
+        $mainCategory = $request->query('mainCategory');
+        $subCategory = $request->query('subCategory');
+        $color = $request->query('color');
+        $season = $request->query('season');
+
+        // フィルタリング条件に応じてクエリを構築
+        if ($mainCategory) {
+            $query->whereHas('items', function ($query) use ($mainCategory) {
+                $query->where('main_category', $mainCategory);
             });
         }
 
-        if ($request->filled('sub_category')) {
-            $query->whereHas('items', function ($q) use ($request) {
-                $q->where('sub_category', $request->input('sub_category'))->orWhereNull('sub_category');
+        if ($subCategory) {
+            $query->whereHas('items', function ($query) use ($subCategory) {
+                $query->where('sub_category', $subCategory);
             });
         }
 
-        if ($request->filled('color')) {
-            $query->whereHas('items', function ($q) use ($request) {
-                $q->where('color', $request->input('color'));
+        if ($color) {
+            $query->whereHas('items', function ($query) use ($color) {
+                $query->where('color', $color);
             });
         }
 
-        if ($request->filled('season')) {
-            $query->whereHas('items', function ($q) use ($request) {
-                $q->where('season', $request->input('season'))->orWhereNull('season');
-            });
+        if ($season) {
+            $query->where('season', $season);
         }
 
-        $outfits = $query->get();
+        // コーディネートを取得し、ユーザー情報も取得
+        $outfits = $query->orderBy('outfit_date', 'desc')->get();
 
         return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -154,10 +176,7 @@ class OutfitController extends Controller
         // コーディネートのシーズンを選択
         $outfit->season = $request->input('season');
         // 着用したアイテムをItemテーブルから選択
-        $outfit->tops = $request->input('tops');
-        $outfit->outer = $request->input('outer');
-        $outfit->bottoms = $request->input('bottoms');
-        $outfit->shoes = $request->input('shoes');
+        $outfit = $this->createOrUpdateOutfit($outfit, $request);
         $outfit->save();
 
         return response()->json($outfit, 200);

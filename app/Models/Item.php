@@ -28,6 +28,6 @@ class Item extends Model
 
     public function outfits()
     {
-        return $this->belongsToMany(Outfit::class, 'outfits_items', 'item_id', 'outfit_id');
+        return $this->belongsToMany(Outfit::class, 'outfits_items');
     }
 }
