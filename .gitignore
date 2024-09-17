@@ -20,3 +20,6 @@ yarn-error.log
 /.vscode
 dailyoutfit.drawio.png
 /public/file
+/public/user
+/public/item
+/public/outfit

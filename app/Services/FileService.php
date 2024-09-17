@@ -16,6 +16,16 @@ class FileService
       }
     }
 
+    // 保存するディレクトリをタイプごとに分ける
+    $directory = '/file/';  // デフォルトのディレクトリ
+    if ($type === "user") {
+      $directory = '/user/';
+    } elseif ($type === "item") {
+      $directory = '/item/';
+    } elseif ($type === "outfit") {
+      $directory = '/outfit/';
+    }
+
     $file = null;
     if ($type === "user") {
       $file = Image::make($request->file('file'))->resize(400, 400);
@@ -26,8 +36,8 @@ class FileService
     $ext = $request->file('file');
     $extension = $ext->getClientOriginalExtension();
     $name = time() . '.' . $extension;
-    $file->save(public_path() . '/file/' . $name);
-    $model->file = '/file/' . $name;
+    $file->save(public_path() . $directory . $name);
+    $model->file = $directory . $name;
 
     return $model;
   }
