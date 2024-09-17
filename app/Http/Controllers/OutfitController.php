@@ -108,37 +108,28 @@ class OutfitController extends Controller
         $query = Outfit::query();
 
         // フィルタリング条件を取得
-        $mainCategory = $request->query('mainCategory');
-        $subCategory = $request->query('subCategory');
-        $color = $request->query('color');
-        $season = $request->query('season');
+        $filters = [
+            'main_category' => $request->query('mainCategory'),
+            'sub_category' => $request->query('subCategory'),
+            'color' => $request->query('color'),
+            'season' => $request->query('season')
+        ];
 
         // フィルタリング条件に応じてクエリを構築
-        if ($mainCategory) {
-            $query->whereHas('items', function ($query) use ($mainCategory) {
-                $query->where('main_category', $mainCategory);
-            });
+        foreach ($filters as $filter => $value) {
+            if ($value) {
+                if ($filter === 'season') {
+                    $query->where($filter, $value);
+                } else {
+                    $query->whereHas('items', function ($query) use ($filter, $value) {
+                        $query->where($filter, $value);
+                    });
+                }
+            }
         }
-
-        if ($subCategory) {
-            $query->whereHas('items', function ($query) use ($subCategory) {
-                $query->where('sub_category', $subCategory);
-            });
-        }
-
-        if ($color) {
-            $query->whereHas('items', function ($query) use ($color) {
-                $query->where('color', $color);
-            });
-        }
-
-        if ($season) {
-            $query->where('season', $season);
-        }
-
-        // コーディネートを取得し、ユーザー情報も取得
         $outfits = $query->orderBy('outfit_date', 'desc')->get();
 
+        // コーディネートを取得し、ユーザー情報も取得
         return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
     }
 
