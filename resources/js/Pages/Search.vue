@@ -348,36 +348,34 @@ onMounted(async () => {
         <div class="block md:hidden">
             <!-- ヘッダー部分 -->
             <nav class="relative flex-col items-stretch box-border">
-                <div class="relative flex-col items-stretch box-border">
-                    <header
-                        class="bg-white flex flex-col flex-wrap text-[16px] font-semibold left-0 md:left-20 xl:left-64 fixed right-0 top-0 z-[1] border-b border-solid md:pl-0 xl:pl-0"
+                <header
+                    class="bg-white flex flex-wrap text-[16px] font-semibold left-0 md:left-20 xl:left-64 fixed right-0 top-0 z-[1] border-b border-solid md:pl-0 xl:pl-0"
+                >
+                    <div
+                        class="fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
                     >
-                        <div
-                            class="fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
-                        >
-                            <div class="items-center flex basis-8 flex-row">
-                                <button
-                                    class="p-0 bg-transparent border-none cursor-pointer flex items-center"
-                                    type="button"
-                                >
-                                    <Sort :size="27" />
-                                </button>
-                            </div>
-                            <h1 class="text-center">コーディネート検索</h1>
-                            <div class="flex items-center">
-                                <button
-                                    class="p-0 bg-transparent border-none cursor-pointer flex items-center"
-                                    type="button"
-                                    @click="openFilter = !openFilter"
-                                >
-                                    <Filter v-if="!openFilter" :size="27" />
-
-                                    <Close v-if="openFilter" :size="27" />
-                                </button>
-                            </div>
+                        <div class="items-center flex basis-8 flex-row">
+                            <button
+                                class="p-0 bg-transparent border-none cursor-pointer flex items-center"
+                                type="button"
+                            >
+                                <Sort :size="27" />
+                            </button>
                         </div>
-                    </header>
-                </div>
+                        <h1 class="text-center">コーディネート検索</h1>
+                        <div class="flex items-center">
+                            <button
+                                class="p-0 bg-transparent border-none cursor-pointer flex items-center"
+                                type="button"
+                                @click="openFilter = !openFilter"
+                            >
+                                <Filter v-if="!openFilter" :size="27" />
+
+                                <Close v-if="openFilter" :size="27" />
+                            </button>
+                        </div>
+                    </div>
+                </header>
             </nav>
             <!-- ヘッダーここまで -->
 
@@ -387,13 +385,12 @@ onMounted(async () => {
                 v-if="openFilter"
             >
                 <ul
-                    class="w-[200%] list-none m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
+                    class="w-full list-none m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
                 >
                     <li
-                        class="pb-[115px] float-left w-[50%] transition-none block bg-white text-left m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent"
+                        class="pb-[115px] transition-none block bg-white text-left m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent"
                     >
                         <form
-                            action="/search/"
                             class="m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
                         >
                             <div
@@ -413,15 +410,23 @@ onMounted(async () => {
                                             >
                                                 メインカテゴリー
                                             </span>
-                                            <span
-                                                class="w-full box-border text-xs leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
+                                            <select
+                                                v-model="filters.mainCategory"
+                                                class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
-                                                指定なし
-                                            </span>
-                                            <input
-                                                type="hidden"
-                                                class="leading-normal m-0 align-middle !hidden !overflow-clip appearance-none cursor-default"
-                                            />
+                                                <option value="">
+                                                    指定なし
+                                                </option>
+                                                <option
+                                                    v-for="(
+                                                        label, value
+                                                    ) in mainCategories"
+                                                    :key="value"
+                                                    :value="value"
+                                                >
+                                                    {{ label }}
+                                                </option>
+                                            </select>
                                         </div>
                                     </li>
                                     <li
@@ -435,15 +440,23 @@ onMounted(async () => {
                                             >
                                                 サブカテゴリー
                                             </span>
-                                            <span
-                                                class="w-full box-border text-xs leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
+                                            <select
+                                                v-model="filters.subCategory"
+                                                class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
-                                                指定なし
-                                            </span>
-                                            <input
-                                                type="hidden"
-                                                class="leading-normal m-0 align-middle !hidden !overflow-clip appearance-none cursor-default"
-                                            />
+                                                <option value="">
+                                                    指定なし
+                                                </option>
+                                                <option
+                                                    v-for="(
+                                                        label, value
+                                                    ) in subCategories"
+                                                    :key="value"
+                                                    :value="value"
+                                                >
+                                                    {{ label }}
+                                                </option>
+                                            </select>
                                         </div>
                                     </li>
                                     <li
@@ -457,15 +470,23 @@ onMounted(async () => {
                                             >
                                                 カラー
                                             </span>
-                                            <span
-                                                class="w-full box-border text-xs leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
+                                            <select
+                                                v-model="filters.color"
+                                                class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
-                                                指定なし
-                                            </span>
-                                            <input
-                                                type="hidden"
-                                                class="leading-normal m-0 align-middle !hidden !overflow-clip appearance-none cursor-default"
-                                            />
+                                                <option value="">
+                                                    指定なし
+                                                </option>
+                                                <option
+                                                    v-for="(
+                                                        label, value
+                                                    ) in colors"
+                                                    :key="value"
+                                                    :value="value"
+                                                >
+                                                    {{ label }}
+                                                </option>
+                                            </select>
                                         </div>
                                     </li>
                                     <li
@@ -479,21 +500,30 @@ onMounted(async () => {
                                             >
                                                 シーズン
                                             </span>
-                                            <span
-                                                class="w-full box-border text-xs leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
+                                            <select
+                                                v-model="filters.season"
+                                                class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
-                                                指定なし
-                                            </span>
-                                            <input
-                                                type="hidden"
-                                                class="leading-normal m-0 align-middle !hidden !overflow-clip appearance-none cursor-default"
-                                            />
+                                                <option value="">
+                                                    指定なし
+                                                </option>
+                                                <option
+                                                    v-for="(
+                                                        label, value
+                                                    ) in seasons"
+                                                    :key="value"
+                                                    :value="value"
+                                                >
+                                                    {{ label }}
+                                                </option>
+                                            </select>
                                         </div>
                                     </li>
                                 </ul>
                                 <div class="py-0 px-5 mt-[25px] text-left">
                                     <div
                                         class="bg-white rounded border border-solid border-[#cccccc] box-border text-[#333333] cursor-pointer block text-sm font-bold h-[45px] leading-[44px] my-0 mx-auto p-0 text-center w-full"
+                                        @click="clearFilters()"
                                     >
                                         指定した条件をクリア
                                     </div>
@@ -504,6 +534,7 @@ onMounted(async () => {
                             >
                                 <button
                                     class="m-0 p-0 w-full bg-black rounded border border-solid border-transparent box-border text-white cursor-pointer block text-sm font-bold h-[45px] leading-[44px] text-center overflow-visible"
+                                    @click="filterByCategory()"
                                 >
                                     この条件で絞り込む
                                 </button>
@@ -515,10 +546,17 @@ onMounted(async () => {
             <!-- ドロップダウンメニューここまで -->
 
             <!-- コーディネート表示部分 -->
-            <div id="outfit" class="relative z-[1]">
+            <div id="outfit" class="z-[1]">
                 <div
+                    v-if="outfits.length === 0"
+                    class="flex justify-center items-center w-full h-32"
+                >
+                    <p>該当するコーディネートが見つかりませんでした。</p>
+                </div>
+                <div
+                    v-else
                     id="outfit_list"
-                    class="container grid grid-cols-3 md:grid-cols-4 pt-0 pr-0 pb-[20px] pl-0"
+                    class="grid grid-cols-3 pt-0 pr-0 pb-20 pl-0"
                 >
                     <div
                         v-for="outfit in outfits"
@@ -527,40 +565,28 @@ onMounted(async () => {
                     >
                         <div
                             class="relative float-left border-[1px] border-[#ddd] border-solid rounded-[3px] md:mt-[18px] md:mr-0 md:mb-0 md:ml-[18px] bg-white"
-                            @click="openOutfitOverlay(outfit)"
                         >
                             <p
-                                class="relative w-full h-auto overflow-hidden bg-[#f6f7f8]"
+                                class="relative w-full h-auto overflow-hidden box-border border-0"
+                                @click="openOutfitOverlay(outfit)"
                             >
-                                <a
-                                    @click="openOutfitOverlay(outfit)"
-                                    class="block"
-                                >
-                                    <img
-                                        :src="outfit.file"
-                                        class="w-full h-auto opacity-100 cursor-pointer"
-                                    />
-                                </a>
+                                <img
+                                    :src="outfit.file"
+                                    class="object-cover w-full aspect-[1/1.3]"
+                                />
                             </p>
                             <div
                                 id="user_profile"
-                                class="border-t-0 pt-[9px] pr-[10px] pb-[9px] pl-[10px]"
+                                class="flex items-center px-0 py-2 border-t border-gray-300"
                             >
                                 <div
                                     id="profile_image"
-                                    class="relative float-left w-[22px] md:w-[40px]"
+                                    class="relative float-left w-[22px] mr-1"
                                 >
-                                    <p
-                                        id="image"
-                                        class="text-[0px] leading-[1] tracking-[0] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
-                                    >
-                                        <a href="">
-                                            <img
-                                                src="https://picsum.photos/id/32/32/32"
-                                                class="opacity-100 rounded-[50%] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
-                                            />
-                                        </a>
-                                    </p>
+                                    <img
+                                        src="https://picsum.photos/id/32/32/32"
+                                        class="opacity-100 rounded-[50%] w-[22px] h-[22px]"
+                                    />
                                 </div>
                                 <div
                                     id="username"
