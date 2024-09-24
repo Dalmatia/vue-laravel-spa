@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFollowStore } from '../stores/follow';
 
@@ -85,6 +85,14 @@ onMounted(async () => {
     } catch (error) {
         console.error('データの取得に失敗しました。', error);
     }
+
+    window.addEventListener('outfit-created', fetchOutfits);
+    window.addEventListener('outfit-updated', fetchOutfits);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('outfit-created', fetchOutfits);
+    window.removeEventListener('outfit-updated', fetchOutfits);
 });
 </script>
 
@@ -95,7 +103,7 @@ onMounted(async () => {
         <!-- デスクトップ用レイアウト -->
         <div class="hidden md:block">
             <nav
-                class="flex flex-col box-border items-stretch sticky top-0 z-50 bg-white"
+                class="flex flex-col box-border items-stretch sticky top-0 z-40 bg-white"
             >
                 <div class="relative z-11 flex flex-col h-auto">
                     <header class="relative z-11 flex flex-col h-auto">

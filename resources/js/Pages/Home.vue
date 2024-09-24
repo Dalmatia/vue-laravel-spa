@@ -44,6 +44,7 @@ const deleteOutfit = (object) => {
                 console.log(response);
                 openOverlay.value = false;
                 fetchOutfits();
+                window.dispatchEvent(new Event('outfit-deleted'));
             })
             .catch((error) => {
                 console.error(error);
