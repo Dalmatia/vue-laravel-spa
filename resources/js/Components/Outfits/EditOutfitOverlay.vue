@@ -1,5 +1,5 @@
 <script setup>
-import { defineEmits, defineProps, ref, onMounted } from 'vue';
+import { defineEmits, defineProps, ref, onMounted, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ import SelectItemsOverlay from './SelectItemsOverlay.vue';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editOutfit: Object, required: true });
-const editForm = ref(props.editOutfit);
+const editForm = ref({ ...props.editOutfit });
 const tops = ref({});
 const outer = ref({});
 const bottoms = ref({});
@@ -140,24 +140,21 @@ const selectNewImage = () => {
 // ファイルアップロード
 const getUploadedImage = (e) => {
     editForm.value.file = e.target.files[0];
-    let extension = editForm.value.file.name.substring(
-        editForm.value.file.name.lastIndexOf('.') + 1
-    );
 
-    console.log(extension);
-    if (extension == 'png' || extension == 'jpg' || extension == 'jpeg') {
-        isValidFile.value = true;
-    } else {
+    const validTypes = ['image/png', 'image/jpeg'];
+    if (!validTypes.includes(editForm.value.file.type)) {
         isValidFile.value = false;
         return;
     }
 
     fileDisplay.value = URL.createObjectURL(e.target.files[0]);
-    setTimeout(() => {
+    const img = new Image();
+    img.onload = () => {
         document
             .getElementById('TextAreaSection')
             .scrollIntoView({ behavior: 'smooth' });
-    }, 300);
+    };
+    img.src = fileDisplay.value;
 };
 
 const getSeason = async () => {
@@ -199,6 +196,16 @@ const handleItemSelected = (selectedItem) => {
 const toggleAccordion = () => {
     isOpen.value = !isOpen.value;
 };
+
+// 内容が変更されなかった時にeditFormを初期化
+watch(
+    () => props.editOutfit,
+    (newEditOutfit) => {
+        editForm.value = { ...newEditOutfit };
+        fetchItem(); // アイテムの再取得
+    },
+    { immediate: true } // 初回マウント時にも実行
+);
 
 onMounted(() => {
     fetchItem();
