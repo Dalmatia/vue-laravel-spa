@@ -123,9 +123,9 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             メインカテゴリー
                         </div>
-                        <option>
+                        <span>
                             {{ main_category }}
-                        </option>
+                        </span>
                     </div>
 
                     <!-- サブカテゴリー表示 -->
@@ -133,9 +133,9 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             サブカテゴリー
                         </div>
-                        <option>
+                        <span>
                             {{ sub_category }}
-                        </option>
+                        </span>
                     </div>
 
                     <!-- カラー選択 -->
@@ -143,9 +143,9 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー
                         </div>
-                        <option>
+                        <span>
                             {{ color }}
-                        </option>
+                        </span>
                     </div>
 
                     <!-- 季節表示 -->
@@ -153,9 +153,9 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
-                        <option>
+                        <span>
                             {{ season }}
-                        </option>
+                        </span>
                     </div>
 
                     <div class="flex w-full max-h-[200px] bg-white border-b">

@@ -7,7 +7,7 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editItem: Object, required: true });
-const editForm = ref(props.editItem);
+const editForm = ref({ ...props.editItem });
 
 const mainCategories = ref([]);
 const subCategories = ref([]);
@@ -25,24 +25,34 @@ let error = ref({
     memo: null,
 });
 
+// エラー処理を共通化
+const setErrors = (responseErrors) => {
+    error.value.file = responseErrors.file || null;
+    error.value.main_category = responseErrors.main_category || '';
+    error.value.sub_category = responseErrors.sub_category || '';
+    error.value.color = responseErrors.color || '';
+    error.value.season = responseErrors.season || '';
+    error.value.memo = responseErrors.memo || null;
+};
+
 // アイテムの編集機能
 const itemUpdate = async () => {
-    error.value.file = null;
-    error.value.main_category = '';
-    error.value.sub_category = '';
-    error.value.color = '';
-    error.value.season = '';
-    error.value.memo = null;
+    error.value = {
+        file: null,
+        main_category: '',
+        sub_category: '',
+        color: '',
+        season: '',
+        memo: null,
+    };
 
     const formData = new FormData();
     if (editForm.value.file) {
         formData.append('file', editForm.value.file);
     }
-    formData.append('main_category', editForm.value.main_category);
-    formData.append('sub_category', editForm.value.sub_category);
-    formData.append('color', editForm.value.color);
-    formData.append('season', editForm.value.season);
-    formData.append('memo', editForm.value.memo);
+    Object.entries(editForm.value).forEach(([key, value]) => {
+        if (key !== 'file') formData.append(key, value);
+    });
 
     try {
         const response = await axios.post(
@@ -56,25 +66,14 @@ const itemUpdate = async () => {
                 },
             }
         );
-        console.log(response);
         if (response.status === 200) {
             emit('closeOverlay');
             window.dispatchEvent(new Event('item-updated'));
         }
     } catch (errors) {
         console.error('エラーが発生しました:', errors);
-
         if (errors.response) {
-            const responseErrors = errors.response.data.errors;
-
-            if (responseErrors) {
-                error.value.file = responseErrors.file;
-                error.value.main_category = responseErrors.main_category;
-                error.value.sub_category = responseErrors.sub_category;
-                error.value.color = responseErrors.color;
-                error.value.season = responseErrors.season;
-                error.value.memo = responseErrors.memo;
-            }
+            setErrors(errors.response.data.errors);
         }
     }
 };
@@ -89,39 +88,64 @@ const selectNewImage = () => {
 // ファイルアップロード
 const getUploadedImage = (e) => {
     editForm.value.file = e.target.files[0];
-    let extension = editForm.value.file.name.substring(
-        editForm.value.file.name.lastIndexOf('.') + 1
-    );
-
-    console.log(extension);
-    if (extension == 'png' || extension == 'jpg' || extension == 'jpeg') {
-        isValidFile.value = true;
-    } else {
+    const validTypes = ['image/png', 'image/jpeg'];
+    if (!validTypes.includes(editForm.value.file.type)) {
         isValidFile.value = false;
         return;
     }
 
     fileDisplay.value = URL.createObjectURL(e.target.files[0]);
-    setTimeout(() => {
+    const img = new Image();
+    img.onload = () => {
         document
             .getElementById('TextAreaSection')
             .scrollIntoView({ behavior: 'smooth' });
-    }, 300);
+    };
+    img.src = fileDisplay.value;
 };
 
+// メインカテゴリーなどの情報取得
+const fetchEnums = async () => {
+    try {
+        const response = await axios.get('/api/enums');
+        mainCategories.value = response.data.mainCategories;
+        subCategories.value = response.data.subCategories;
+        colors.value = response.data.colors;
+        seasons.value = response.data.seasons;
+    } catch (error) {
+        console.error('Enum データの取得に失敗しました', error);
+    }
+};
+
+// 内容が変更されなかった時にeditFormを初期化
+watch(
+    () => props.editItem,
+    (newEditItem) => {
+        editForm.value = { ...newEditItem };
+    },
+    { immediate: true } // 初回マウント時にも実行
+);
+
+watch(
+    () => editForm.value.sub_category,
+    (newValue) => {
+        if (newValue === '') {
+            editForm.value.sub_category = null;
+        }
+    }
+);
+
+watch(
+    () => editForm.value.season,
+    (newValue) => {
+        if (newValue === '') {
+            editForm.value.season = null;
+        }
+    }
+);
+
 onMounted(() => {
-    // メインカテゴリーなどの情報取得
-    axios
-        .get('/api/enums')
-        .then((response) => {
-            mainCategories.value = response.data.mainCategories;
-            subCategories.value = response.data.subCategories;
-            colors.value = response.data.colors;
-            seasons.value = response.data.seasons;
-        })
-        .catch((error) => {
-            console.error('Enum データの取得に失敗しました', error);
-        });
+    fetchEnums();
 });
 
 watch(editForm, (newValue) => {
@@ -221,8 +245,8 @@ watch(editForm, (newValue) => {
                     />
                 </div>
 
-                <!-- メインカテゴリー表示 -->
-                <div id="TextAreaSection" class="max-w-[720px] w-full relative">
+                <div id="EachItemSection" class="max-w-[720px] w-full relative">
+                    <!-- メインカテゴリー表示 -->
                     <div
                         v-if="error && error.main_category"
                         class="text-red-500 text-center p-2 font-extrabold"
@@ -233,8 +257,8 @@ watch(editForm, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             メインカテゴリー
                         </div>
-                        <select v-model="editForm.main_category">
-                            <option value="" selected>選択してください</option>
+                        <select v-model="editForm.main_category" required>
+                            <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in mainCategories"
                                 :key="value"
@@ -257,7 +281,7 @@ watch(editForm, (newValue) => {
                             サブカテゴリー
                         </div>
                         <select v-model="editForm.sub_category">
-                            <option value="" disabled>選択してください</option>
+                            <option :value="null">指定なし</option>
                             <option
                                 v-for="(label, value) in subCategories"
                                 :key="value"
@@ -279,7 +303,7 @@ watch(editForm, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー選択
                         </div>
-                        <select v-model="editForm.color">
+                        <select v-model="editForm.color" required>
                             <option value="" disabled>選択してください</option>
                             <option
                                 v-for="(label, value) in colors"
@@ -297,7 +321,7 @@ watch(editForm, (newValue) => {
                             シーズン
                         </div>
                         <select v-model="editForm.season">
-                            <option value="" disabled>選択してください</option>
+                            <option :value="null">指定なし</option>
                             <option
                                 v-for="(label, value) in seasons"
                                 :key="value"

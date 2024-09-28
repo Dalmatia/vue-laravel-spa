@@ -1,6 +1,6 @@
 <script setup>
 import axios from 'axios';
-import { toRefs, ref, onMounted } from 'vue';
+import { toRefs, ref, onMounted, onUnmounted } from 'vue';
 
 import EditItemOverlay from '@/Components/Items/EditItemOverlay.vue';
 
@@ -9,6 +9,7 @@ const props = defineProps({ deleteType: String, id: Number });
 const { deleteType, id } = toRefs(props);
 const item = ref(null);
 let openEdit = ref(false);
+let successMessage = ref(false);
 
 // アイテム情報取得
 const fetchItems = async () => {
@@ -24,8 +25,25 @@ const openEditItemOverlay = () => {
     openEdit.value = true;
 };
 
+// 投稿が更新された時にオーバーレイを閉じ、更新完了メッセージを表示
+const closeOverlay = () => {
+    openEdit.value = false;
+    successMessage.value = true;
+};
+
+// 更新完了メッセージを閉じる
+const closeSuccessMessage = () => {
+    successMessage.value = false;
+    emit('close');
+};
+
 onMounted(() => {
     fetchItems();
+    window.addEventListener('item-updated', closeOverlay);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('item-updated', closeOverlay);
 });
 </script>
 
@@ -33,6 +51,7 @@ onMounted(() => {
     <div
         id="ShowPostOptionsOverlay"
         class="fixed flex items-center z-50 top-0 left-0 w-full h-screen bg-[#000000] bg-opacity-60 p-3"
+        v-if="!successMessage"
     >
         <div
             class="max-w-sm w-full mx-auto mt-10 bg-white rounded-xl text-center"
@@ -54,6 +73,23 @@ onMounted(() => {
             </div>
         </div>
     </div>
+
+    <!-- 更新完了メッセージの表示 -->
+    <div
+        v-if="successMessage"
+        class="fixed flex items-center justify-center z-50 top-0 left-0 w-full h-screen bg-[#000000] bg-opacity-60"
+    >
+        <div class="bg-white p-5 rounded-lg text-center">
+            <p class="text-lg font-bold mb-4">アイテム情報が更新されました！</p>
+            <button
+                class="bg-blue-500 text-white px-4 py-2 rounded"
+                @click="closeSuccessMessage()"
+            >
+                OK
+            </button>
+        </div>
+    </div>
+
     <EditItemOverlay
         v-if="openEdit"
         :editItem="item"

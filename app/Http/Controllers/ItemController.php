@@ -93,9 +93,10 @@ class ItemController extends Controller
             return abort(403);
         }
 
-        // ファイルが更新された場合のみバリデーションを無効にする
-        if ($request->hasFile('file')) {
-            $this->validateRequest($request);
+        // ファイルや必須項目が送信された場合のみバリデーションを実行
+        $validator = $this->validateRequest($request);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $item = $this->createOrUpdateItem($item, $request);
@@ -131,7 +132,6 @@ class ItemController extends Controller
     private function validateRequest(Request $request)
     {
         $rules = [
-            'file' => 'required|mimes:jpg,jpeg,png',
             'main_category' => 'required',
             'sub_category' => 'nullable',
             'color' => 'required',
@@ -139,19 +139,17 @@ class ItemController extends Controller
             'memo' => 'nullable',
         ];
 
+        // ファイルがアップロードされている場合のみバリデーションを追加
+        if ($request->hasFile('file')) {
+            $rules['file'] = 'mimes:jpg,jpeg,png';
+        }
+
         $customMessages = [
             'file' => '登録アイテムを選択してください。',
             'file.mimes' => 'ファイル形式は jpg、jpeg、png のいずれかを選択してください。',
             'main_category' => 'メインカテゴリーを選択してください。',
             'color' => 'カラーを選択してください。'
         ];
-
-        // 必須フィールドが空でない場合は、必須バリデーションを適用する
-        if ($request->filled('file') || $request->filled('main_category') || $request->filled('color')) {
-            $rules['file'] = 'required|mimes:jpg,jpeg,png';
-            $rules['main_category'] = 'required';
-            $rules['color'] = 'required';
-        }
 
         return Validator::make($request->all(), $rules, $customMessages);
     }
