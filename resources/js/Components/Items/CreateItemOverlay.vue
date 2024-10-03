@@ -216,7 +216,7 @@ watch(form, (newValue) => {
                     </div>
                     <img
                         v-if="fileDisplay && isValidFile === true"
-                        class="h-full min-w-[200px] p-4 mx-auto"
+                        class="h-full w-full object-contain mx-auto p-4"
                         :src="fileDisplay"
                     />
                 </div>

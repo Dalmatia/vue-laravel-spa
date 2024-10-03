@@ -82,8 +82,9 @@ onUnmounted(() => {
         </button>
 
         <div
-            class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl"
+            class="max-w-6xl h-[calc(100%-100px)] md:h-auto lg:h-[85%] mx-auto mt-10 bg-white rounded-xl"
         >
+            <!-- ヘッダー部分 -->
             <div
                 class="flex items-center justify-between w-full rounded-t-xl p-3 border-b border-b-gray-300"
             >
@@ -108,24 +109,26 @@ onUnmounted(() => {
             <div
                 class="w-full md:flex h-[calc(100%-55px)] rounded-xl overflow-auto"
             >
+                <!-- アイテム画像表示部分 -->
                 <div
-                    class="flex items-center bg-gray-100 w-full h-full overflow-hidden"
+                    class="flex items-center bg-gray-100 w-full md:w-1/2 h-fit md:h-auto overflow-hidden"
                 >
                     <img
-                        class="h-full min-w-[200px] p-4 mx-auto"
+                        class="h-full w-full object-contain mx-auto p-4"
                         :src="item.file"
                     />
                 </div>
 
                 <!-- メインカテゴリー表示 -->
-                <div id="TextAreaSection" class="max-w-[720px] w-full relative">
+                <div
+                    id="TextAreaSection"
+                    class="md:w-1/2 w-full p-4 overflow-y-auto"
+                >
                     <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
                             メインカテゴリー
                         </div>
-                        <span>
-                            {{ main_category }}
-                        </span>
+                        <span>{{ main_category }}</span>
                     </div>
 
                     <!-- サブカテゴリー表示 -->
@@ -133,9 +136,7 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             サブカテゴリー
                         </div>
-                        <span>
-                            {{ sub_category }}
-                        </span>
+                        <span>{{ sub_category }}</span>
                     </div>
 
                     <!-- カラー選択 -->
@@ -143,9 +144,7 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー
                         </div>
-                        <span>
-                            {{ color }}
-                        </span>
+                        <span>{{ color }}</span>
                     </div>
 
                     <!-- 季節表示 -->
@@ -153,11 +152,10 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
-                        <span>
-                            {{ season }}
-                        </span>
+                        <span>{{ season }}</span>
                     </div>
 
+                    <!-- メモ表示 -->
                     <div class="flex w-full max-h-[200px] bg-white border-b">
                         <textarea
                             ref="textarea"

@@ -185,8 +185,9 @@ watch(editForm, (newValue) => {
         </button>
 
         <div
-            class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl"
+            class="max-w-6xl h-[calc(100%-100px)] md:h-auto lg:h-[85%] mx-auto mt-10 bg-white rounded-xl"
         >
+            <!-- ヘッダー部分 -->
             <div
                 class="flex items-center justify-between w-full rounded-t-xl p-3 border-b border-b-gray-300"
             >
@@ -208,8 +209,9 @@ watch(editForm, (newValue) => {
             <div
                 class="w-full md:flex h-[calc(100%-55px)] rounded-xl overflow-auto"
             >
+                <!-- アイテム画像編集部分 -->
                 <div
-                    class="flex items-center bg-gray-100 w-full h-full overflow-hidden"
+                    class="flex items-center bg-gray-100 w-full md:w-1/2 h-full md:h-auto overflow-hidden"
                     @click="selectNewImage"
                     style="position: relative; text-align: center"
                 >
@@ -240,12 +242,15 @@ watch(editForm, (newValue) => {
                         </div>
                     </div>
                     <img
-                        class="h-full min-w-[200px] p-4 mx-auto"
+                        class="h-full w-full object-contain mx-auto p-4"
                         :src="fileDisplay || editForm.file"
                     />
                 </div>
 
-                <div id="EachItemSection" class="max-w-[720px] w-full relative">
+                <div
+                    id="TextAreaSection"
+                    class="md:w-1/2 w-full p-4 overflow-y-auto"
+                >
                     <!-- メインカテゴリー表示 -->
                     <div
                         v-if="error && error.main_category"
@@ -332,6 +337,7 @@ watch(editForm, (newValue) => {
                         </select>
                     </div>
 
+                    <!-- メモ表示部分 -->
                     <div
                         v-if="error && error.memo"
                         class="text-red-500 p-2 font-extrabold"
