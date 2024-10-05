@@ -132,6 +132,7 @@ class ItemController extends Controller
     private function validateRequest(Request $request)
     {
         $rules = [
+            'file' => 'required',
             'main_category' => 'required',
             'sub_category' => 'nullable',
             'color' => 'required',

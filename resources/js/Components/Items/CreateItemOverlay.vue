@@ -12,9 +12,9 @@ const emit = defineEmits(['close']);
 const form = reactive({
     file: null,
     main_category: '',
-    sub_category: '',
+    sub_category: null,
     color: '',
-    season: '',
+    season: null,
     memo: null,
 });
 
@@ -36,12 +36,9 @@ let error = ref({
 
 // クローゼットアイテム登録
 const createItemFunc = async () => {
-    error.value.file = null;
-    error.value.main_category = '';
-    error.value.sub_category = '';
-    error.value.color = '';
-    error.value.season = '';
-    error.value.memo = null;
+    // サブカテゴリーとシーズンが空文字ならnullに変換
+    form.sub_category = form.sub_category === '' ? null : form.sub_category;
+    form.season = form.season === '' ? null : form.season;
 
     try {
         const response = await axios.post('/api/items', form, {
@@ -112,9 +109,9 @@ const getEnums = async () => {
 const closeOverlay = () => {
     form.file = null;
     form.main_category = '';
-    form.sub_category = '';
+    form.sub_category = null;
     form.color = '';
-    form.season = '';
+    form.season = null;
     form.memo = null;
     fileDisplay.value = '';
     emit('close');
@@ -125,8 +122,9 @@ onMounted(() => {
     getEnums();
 });
 
-watch(form, (newValue) => {
-    if (newValue.main_category !== form.main_category) {
+watch(
+    () => form.main_category,
+    (newValue) => {
         axios
             .get('/api/enums')
             .then((response) => {
@@ -136,17 +134,7 @@ watch(form, (newValue) => {
                 console.error('Enum データの取得に失敗しました', error);
             });
     }
-    if (newValue.sub_category !== form.sub_category) {
-        axios
-            .get('/api/enums')
-            .then((response) => {
-                seasons.value = response.data.seasons;
-            })
-            .catch((error) => {
-                console.error('Enum データの取得に失敗しました', error);
-            });
-    }
-});
+);
 </script>
 
 <template>
@@ -260,7 +248,7 @@ watch(form, (newValue) => {
                             サブカテゴリー
                         </div>
                         <select v-model="form.sub_category">
-                            <option value="" disabled>選択してください</option>
+                            <option :value="null">選択してください</option>
                             <option
                                 v-for="(label, value) in subCategories"
                                 :key="value"
@@ -301,15 +289,12 @@ watch(form, (newValue) => {
                     >
                         {{ error.season[0] }}
                     </div>
-                    <div
-                        v-if="form.sub_category"
-                        class="flex items-center justify-between border-b p-3"
-                    >
+                    <div class="flex items-center justify-between border-b p-3">
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
                         <select v-model="form.season">
-                            <option value="" disabled>選択してください</option>
+                            <option :value="null">選択してください</option>
                             <option
                                 v-for="(label, value) in seasons"
                                 :key="value"
