@@ -1,17 +1,16 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import { useAuthStore } from '../../stores/auth';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
-import Calendar from 'vue-material-design-icons/Calendar.vue';
-import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import axios from 'axios';
 import SelectItemsOverlay from './SelectItemsOverlay.vue';
 
-// const user = usePage().props.auth.user;
+const authUser = useAuthStore().user.name;
 
 const emit = defineEmits(['close']);
 
@@ -234,12 +233,15 @@ onMounted(() => {
                     </div>
                     <img
                         v-if="fileDisplay && isValidFile === true"
-                        class="h-full min-w-[200px] p-4 mx-auto"
+                        class="h-full w-full object-contain p-4 max-h-[75vh]"
                         :src="fileDisplay"
                     />
                 </div>
 
-                <div id="TextAreaSection" class="max-w-[720px] w-full relative">
+                <div
+                    id="TextAreaSection"
+                    class="max-w-[720px] w-full relative overflow-y-auto"
+                >
                     <div class="flex items-center justify-between p-3">
                         <div class="flex items-center">
                             <img
@@ -247,7 +249,7 @@ onMounted(() => {
                                 src="https://picsum.photos/id/50/300/320"
                             />
                             <div class="ml-4 font-extrabold text-[15px]">
-                                名無しさん
+                                {{ authUser }}
                             </div>
                         </div>
                     </div>
@@ -324,7 +326,6 @@ onMounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             着用アイテム
                         </div>
-                        <!-- <ChevronDown :size="27" /> -->
                         <button class="flex items-center space-x-3">
                             <svg
                                 class="w-3 transition-all duration-200 transform"
@@ -353,81 +354,77 @@ onMounted(() => {
                             'max-h-0': !isOpen,
                         }"
                     >
-                        <div
-                            class="min-h-fit p-2 grid grid-cols-2 xl:grid-cols-4 gap-4"
-                        >
+                        <div class="min-h-fit p-2 grid grid-cols-2 gap-4">
                             <!-- トップス選択 -->
-                            <div class="h-full p-2">
-                                <div @click="openModal('tops')">
-                                    <button
-                                        v-if="!form.tops"
-                                        class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                        @click="openModal('tops')"
-                                    >
-                                        トップス
-                                    </button>
-                                    <img
-                                        v-if="form.tops"
-                                        class="w-48"
-                                        :src="form.topsImage"
-                                    />
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('tops')"
+                            >
+                                <div
+                                    v-if="!form.tops"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    トップス
                                 </div>
+                                <img
+                                    v-if="form.tops"
+                                    class="w-full h-full object-contain"
+                                    :src="form.topsImage"
+                                />
                             </div>
 
                             <!-- アウター選択 -->
-                            <div>
-                                <div class="h-full p-2">
-                                    <div @click="openModal('outer')">
-                                        <button
-                                            v-if="!form.outer"
-                                            class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                            @click="openModal('outer')"
-                                        >
-                                            アウター
-                                        </button>
-                                        <img
-                                            v-if="form.outer"
-                                            class="w-48"
-                                            :src="form.outerImage"
-                                        />
-                                    </div>
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('outer')"
+                            >
+                                <div
+                                    v-if="!form.outer"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    アウター
                                 </div>
+                                <img
+                                    v-if="form.outer"
+                                    class="w-full h-full object-contain"
+                                    :src="form.outerImage"
+                                />
                             </div>
 
                             <!-- ボトムス選択 -->
-                            <div class="h-full p-2">
-                                <div @click="openModal('bottoms')">
-                                    <button
-                                        v-if="!form.bottoms"
-                                        class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                        @click="openModal('bottoms')"
-                                    >
-                                        ボトムス
-                                    </button>
-                                    <img
-                                        v-if="form.bottoms"
-                                        class="w-48"
-                                        :src="form.bottomsImage"
-                                    />
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('bottoms')"
+                            >
+                                <div
+                                    v-if="!form.bottoms"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    ボトムス
                                 </div>
+                                <img
+                                    v-if="form.bottoms"
+                                    class="w-full h-full object-contain"
+                                    :src="form.bottomsImage"
+                                />
                             </div>
 
                             <!-- シューズ選択 -->
-                            <div class="h-full p-2">
-                                <div @click="openModal('shoes')">
-                                    <button
-                                        v-if="!form.shoes"
-                                        class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                        @click="openModal('shoes')"
-                                    >
-                                        シューズ
-                                    </button>
-                                    <img
-                                        v-if="form.shoes"
-                                        class="w-48"
-                                        :src="form.shoesImage"
-                                    />
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('shoes')"
+                            >
+                                <div
+                                    v-if="!form.shoes"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    シューズ
                                 </div>
+                                <img
+                                    v-if="form.shoes"
+                                    class="w-full h-full object-contain"
+                                    :src="form.shoesImage"
+                                />
                             </div>
                         </div>
                     </div>
@@ -437,12 +434,6 @@ onMounted(() => {
                         @onItemSelected="handleItemSelected"
                         @close="showItemSelectionModal = false"
                     />
-
-                    <!-- <div class="text-gray-500 mt-3 p-3 text-sm">
-                        Your reel will be shared with your followers in their
-                        feeds and can be seen on your profile. It may also
-                        appear in places such as Reels, where anyone can see it.
-                    </div> -->
                 </div>
             </div>
         </div>

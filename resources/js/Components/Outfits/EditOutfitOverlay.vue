@@ -2,12 +2,14 @@
 import { defineEmits, defineProps, ref, onMounted, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import axios from 'axios';
+import { useAuthStore } from '../../stores/auth';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 
 import SelectItemsOverlay from './SelectItemsOverlay.vue';
 
+const authUser = useAuthStore().user.name;
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editOutfit: Object, required: true });
 const editForm = ref({ ...props.editOutfit });
@@ -207,9 +209,8 @@ watch(
     { immediate: true } // 初回マウント時にも実行
 );
 
-onMounted(() => {
-    fetchItem();
-    getSeason();
+onMounted(async () => {
+    await Promise.all([fetchItem(), getSeason()]);
 });
 </script>
 
@@ -250,14 +251,12 @@ onMounted(() => {
                 class="w-full md:flex h-[calc(100%-55px)] rounded-xl overflow-auto"
             >
                 <div
-                    class="flex items-center bg-gray-100 w-full h-full overflow-hidden"
+                    class="flex items-center bg-gray-100 w-full h-full overflow-hidden relative text-center"
                     @click="selectNewImage()"
-                    style="position: relative; text-align: center"
                 >
                     <div
                         v-if="!fileDisplay"
-                        class="flex flex-col items-center mx-auto"
-                        style="position: absolute; top: 3%; left: 6%"
+                        class="flex flex-col items-center mx-auto absolute top-[3%] left-[6%]"
                     >
                         <input
                             id="file"
@@ -279,12 +278,15 @@ onMounted(() => {
                         </div>
                     </div>
                     <img
-                        class="h-full min-w-[200px] p-4 mx-auto"
+                        class="h-full w-full object-contain p-4 max-h-[75vh]"
                         :src="fileDisplay || editForm.file"
                     />
                 </div>
 
-                <div id="TextAreaSection" class="max-w-[720px] w-full relative">
+                <div
+                    id="TextAreaSection"
+                    class="max-w-[720px] w-full relative overflow-y-auto"
+                >
                     <div class="flex items-center justify-between p-3">
                         <div class="flex items-center">
                             <img
@@ -292,7 +294,7 @@ onMounted(() => {
                                 src="https://picsum.photos/id/50/300/320"
                             />
                             <div class="ml-4 font-extrabold text-[15px]">
-                                名無しさん
+                                {{ authUser }}
                             </div>
                         </div>
                     </div>
@@ -398,101 +400,97 @@ onMounted(() => {
                             'max-h-0': !isOpen,
                         }"
                     >
-                        <div
-                            class="min-h-fit p-2 grid grid-cols-2 xl:grid-cols-4 gap-4"
-                        >
+                        <div class="min-h-fit p-2 grid grid-cols-2 gap-4">
                             <!-- トップス選択 -->
-                            <div class="h-full p-2">
-                                <div @click="openModal('tops')">
-                                    <button
-                                        v-if="!editForm.tops"
-                                        class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                        @click="openModal('tops')"
-                                    >
-                                        トップス
-                                    </button>
-                                    <img
-                                        v-if="!editForm.topsImage"
-                                        class="w-48"
-                                        :src="tops.file"
-                                    />
-                                    <img
-                                        v-else
-                                        class="w-48"
-                                        :src="editForm.topsImage"
-                                    />
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('tops')"
+                            >
+                                <div
+                                    v-if="!editForm.tops"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    トップス
                                 </div>
+                                <img
+                                    v-if="!editForm.topsImage"
+                                    class="w-full h-full object-contain"
+                                    :src="tops.file"
+                                />
+                                <img
+                                    v-else
+                                    class="w-full h-full object-contain"
+                                    :src="editForm.topsImage"
+                                />
                             </div>
 
                             <!-- アウター選択 -->
-                            <div>
-                                <div class="h-full p-2">
-                                    <div @click="openModal('outer')">
-                                        <button
-                                            v-if="!editForm.outer"
-                                            class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                            @click="openModal('outer')"
-                                        >
-                                            アウター
-                                        </button>
-                                        <img
-                                            v-if="!editForm.outerImage"
-                                            class="w-48"
-                                            :src="outer.file"
-                                        />
-                                        <img
-                                            v-else
-                                            class="w-48"
-                                            :src="editForm.outerImage"
-                                        />
-                                    </div>
-                                </div>
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('outer')"
+                            >
+                                <button
+                                    v-if="!editForm.outer"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    アウター
+                                </button>
+                                <img
+                                    v-if="!editForm.outerImage"
+                                    class="w-full h-full object-contain"
+                                    :src="outer.file"
+                                />
+                                <img
+                                    v-else
+                                    class="w-full h-full object-contain"
+                                    :src="editForm.outerImage"
+                                />
                             </div>
 
                             <!-- ボトムス選択 -->
-                            <div class="h-full p-2">
-                                <div @click="openModal('bottoms')">
-                                    <button
-                                        v-if="!editForm.bottoms"
-                                        class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                        @click="openModal('bottoms')"
-                                    >
-                                        ボトムス
-                                    </button>
-                                    <img
-                                        v-if="!editForm.bottomsImage"
-                                        class="w-48"
-                                        :src="bottoms.file"
-                                    />
-                                    <img
-                                        v-else
-                                        class="w-48"
-                                        :src="editForm.bottomsImage"
-                                    />
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('bottoms')"
+                            >
+                                <div
+                                    v-if="!editForm.bottoms"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    ボトムス
                                 </div>
+                                <img
+                                    v-if="!editForm.bottomsImage"
+                                    class="w-full h-full object-contain"
+                                    :src="bottoms.file"
+                                />
+                                <img
+                                    v-else
+                                    class="w-full h-full object-contain"
+                                    :src="editForm.bottomsImage"
+                                />
                             </div>
 
                             <!-- シューズ選択 -->
-                            <div class="h-full p-2">
-                                <div @click="openModal('shoes')">
-                                    <button
-                                        v-if="!editForm.shoes"
-                                        class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                        @click="openModal('shoes')"
-                                    >
-                                        シューズ
-                                    </button>
-                                    <img
-                                        v-if="!editForm.shoesImage"
-                                        class="w-48"
-                                        :src="shoes.file"
-                                    />
-                                    <img
-                                        v-else
-                                        class="w-48"
-                                        :src="editForm.shoesImage"
-                                    />
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal('shoes')"
+                            >
+                                <div
+                                    v-if="!editForm.shoes"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    シューズ
                                 </div>
+                                <img
+                                    v-if="!editForm.shoesImage"
+                                    class="w-full h-full object-contain"
+                                    :src="shoes.file"
+                                />
+                                <img
+                                    v-else
+                                    class="w-full h-full object-contain"
+                                    :src="editForm.shoesImage"
+                                />
                             </div>
                         </div>
                     </div>
