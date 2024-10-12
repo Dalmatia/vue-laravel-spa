@@ -176,21 +176,37 @@ const openModal = (itemType) => {
 };
 
 const handleItemSelected = (selectedItem) => {
-    // モーダルで選択されたアイテムのIDをformに設定
-    if (selectedItemType.value === 'tops') {
-        editForm.value.tops = selectedItem.id;
-        editForm.value.topsImage = selectedItem.file;
-    } else if (selectedItemType.value === 'outer') {
-        editForm.value.outer = selectedItem.id;
-        editForm.value.outerImage = selectedItem.file;
-    } else if (selectedItemType.value === 'bottoms') {
-        editForm.value.bottoms = selectedItem.id;
-        editForm.value.bottomsImage = selectedItem.file;
-    } else if (selectedItemType.value === 'shoes') {
-        editForm.value.shoes = selectedItem.id;
-        editForm.value.shoesImage = selectedItem.file;
+    // nullの場合、該当するアイテムをnullで初期化
+    if (selectedItem === null) {
+        if (selectedItemType.value === 'tops') {
+            editForm.value.tops = null;
+            editForm.value.topsImage = null;
+        } else if (selectedItemType.value === 'outer') {
+            editForm.value.outer = null;
+            editForm.value.outerImage = null;
+        } else if (selectedItemType.value === 'bottoms') {
+            editForm.value.bottoms = null;
+            editForm.value.bottomsImage = null;
+        } else if (selectedItemType.value === 'shoes') {
+            editForm.value.shoes = null;
+            editForm.value.shoesImage = null;
+        }
+    } else {
+        // モーダルで選択されたアイテムのIDをformに設定
+        if (selectedItemType.value === 'tops') {
+            editForm.value.tops = selectedItem.id;
+            editForm.value.topsImage = selectedItem.file;
+        } else if (selectedItemType.value === 'outer') {
+            editForm.value.outer = selectedItem.id;
+            editForm.value.outerImage = selectedItem.file;
+        } else if (selectedItemType.value === 'bottoms') {
+            editForm.value.bottoms = selectedItem.id;
+            editForm.value.bottomsImage = selectedItem.file;
+        } else if (selectedItemType.value === 'shoes') {
+            editForm.value.shoes = selectedItem.id;
+            editForm.value.shoesImage = selectedItem.file;
+        }
     }
-
     // モーダルを閉じる
     showItemSelectionModal.value = false;
 };
@@ -407,20 +423,20 @@ onMounted(async () => {
                                 @click="openModal('tops')"
                             >
                                 <div
-                                    v-if="!editForm.tops"
+                                    v-if="editForm.tops === null"
                                     class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
                                 >
                                     トップス
                                 </div>
                                 <img
-                                    v-if="!editForm.topsImage"
-                                    class="w-full h-full object-contain"
-                                    :src="tops.file"
-                                />
-                                <img
-                                    v-else
+                                    v-else-if="editForm.topsImage"
                                     class="w-full h-full object-contain"
                                     :src="editForm.topsImage"
+                                />
+                                <img
+                                    v-else-if="tops.file"
+                                    class="w-full h-full object-contain"
+                                    :src="tops.file"
                                 />
                             </div>
 
@@ -430,20 +446,20 @@ onMounted(async () => {
                                 @click="openModal('outer')"
                             >
                                 <button
-                                    v-if="!editForm.outer"
+                                    v-if="editForm.outer === null"
                                     class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
                                 >
                                     アウター
                                 </button>
                                 <img
-                                    v-if="!editForm.outerImage"
-                                    class="w-full h-full object-contain"
-                                    :src="outer.file"
-                                />
-                                <img
-                                    v-else
+                                    v-else-if="editForm.outerImage"
                                     class="w-full h-full object-contain"
                                     :src="editForm.outerImage"
+                                />
+                                <img
+                                    v-else-if="outer.file"
+                                    class="w-full h-full object-contain"
+                                    :src="outer.file"
                                 />
                             </div>
 
@@ -453,20 +469,20 @@ onMounted(async () => {
                                 @click="openModal('bottoms')"
                             >
                                 <div
-                                    v-if="!editForm.bottoms"
+                                    v-if="editForm.bottoms === null"
                                     class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
                                 >
                                     ボトムス
                                 </div>
                                 <img
-                                    v-if="!editForm.bottomsImage"
-                                    class="w-full h-full object-contain"
-                                    :src="bottoms.file"
-                                />
-                                <img
-                                    v-else
+                                    v-else-if="editForm.bottomsImage"
                                     class="w-full h-full object-contain"
                                     :src="editForm.bottomsImage"
+                                />
+                                <img
+                                    v-else-if="bottoms.file"
+                                    class="w-full h-full object-contain"
+                                    :src="bottoms.file"
                                 />
                             </div>
 
@@ -476,20 +492,20 @@ onMounted(async () => {
                                 @click="openModal('shoes')"
                             >
                                 <div
-                                    v-if="!editForm.shoes"
+                                    v-if="editForm.shoes === null"
                                     class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
                                 >
                                     シューズ
                                 </div>
                                 <img
-                                    v-if="!editForm.shoesImage"
-                                    class="w-full h-full object-contain"
-                                    :src="shoes.file"
-                                />
-                                <img
-                                    v-else
+                                    v-else-if="editForm.shoesImage"
                                     class="w-full h-full object-contain"
                                     :src="editForm.shoesImage"
+                                />
+                                <img
+                                    v-else-if="shoes.file"
+                                    class="w-full h-full object-contain"
+                                    :src="shoes.file"
                                 />
                             </div>
                         </div>

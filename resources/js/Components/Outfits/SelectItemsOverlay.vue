@@ -22,6 +22,12 @@ const selectItem = (item) => {
     // console.log(item);
 };
 
+// 「選択しない」ボタンがクリックされた場合にnullを送信
+const selectNone = () => {
+    emit('onItemSelected', null);
+    emit('close'); // モーダルを閉じる
+};
+
 onMounted(() => {
     fetchItems();
 });
@@ -38,11 +44,23 @@ onMounted(() => {
             class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl"
         >
             <div class="w-full md:flex h-full overflow-auto rounded-xl">
+                <!-- アイテムがない場合のメッセージ -->
                 <div
-                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5"
+                    v-if="items.length === 0"
+                    class="flex items-center justify-center h-full w-full"
                 >
-                    <!-- アイテム選択コンテンツ -->
-                    <!-- アイテム一覧などを表示 -->
+                    <p
+                        class="text-black text-base sm:text-lg md:text-xl lg:text-2xl text-center"
+                    >
+                        アイテムが登録されていません！
+                    </p>
+                </div>
+
+                <!-- アイテム一覧などを表示 -->
+                <div
+                    v-else
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5 w-full"
+                >
                     <div
                         v-for="item in items"
                         :key="item.id"
@@ -61,6 +79,22 @@ onMounted(() => {
                         >
                             選択
                         </button>
+                    </div>
+
+                    <!-- 「選択しない」ボタン -->
+                    <div
+                        class="flex flex-col items-center justify-center cursor-pointer relative"
+                    >
+                        <div
+                            class="container border border-gray-400 h-44 lg:h-[270px] w-full p-2 flex items-center justify-center"
+                            @click="selectNone()"
+                        >
+                            <button
+                                class="mt-1 text-blue-500 hover:text-gray-900 font-extrabold"
+                            >
+                                選択しない
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

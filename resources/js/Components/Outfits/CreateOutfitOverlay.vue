@@ -125,21 +125,37 @@ const openModal = (itemType) => {
 };
 
 const handleItemSelected = (selectedItem) => {
-    // モーダルで選択されたアイテムのIDをformに設定
-    if (selectedItemType.value === 'tops') {
-        form.tops = selectedItem.id;
-        form.topsImage = selectedItem.file;
-    } else if (selectedItemType.value === 'outer') {
-        form.outer = selectedItem.id;
-        form.outerImage = selectedItem.file;
-    } else if (selectedItemType.value === 'bottoms') {
-        form.bottoms = selectedItem.id;
-        form.bottomsImage = selectedItem.file;
-    } else if (selectedItemType.value === 'shoes') {
-        form.shoes = selectedItem.id;
-        form.shoesImage = selectedItem.file;
+    // nullの場合、該当するアイテムをnullで初期化
+    if (selectedItem === null) {
+        if (selectedItemType.value === 'tops') {
+            form.tops = null;
+            form.topsImage = null;
+        } else if (selectedItemType.value === 'outer') {
+            form.outer = null;
+            form.outerImage = null;
+        } else if (selectedItemType.value === 'bottoms') {
+            form.bottoms = null;
+            form.bottomsImage = null;
+        } else if (selectedItemType.value === 'shoes') {
+            form.shoes = null;
+            form.shoesImage = null;
+        }
+    } else {
+        // 選択されたアイテムを設定
+        if (selectedItemType.value === 'tops') {
+            form.tops = selectedItem.id;
+            form.topsImage = selectedItem.file;
+        } else if (selectedItemType.value === 'outer') {
+            form.outer = selectedItem.id;
+            form.outerImage = selectedItem.file;
+        } else if (selectedItemType.value === 'bottoms') {
+            form.bottoms = selectedItem.id;
+            form.bottomsImage = selectedItem.file;
+        } else if (selectedItemType.value === 'shoes') {
+            form.shoes = selectedItem.id;
+            form.shoesImage = selectedItem.file;
+        }
     }
-
     // モーダルを閉じる
     showItemSelectionModal.value = false;
 };
