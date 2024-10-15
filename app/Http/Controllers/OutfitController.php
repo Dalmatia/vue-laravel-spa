@@ -65,27 +65,23 @@ class OutfitController extends Controller
         if ($request->hasFile('file')) {
             $outfit = $this->fileService->updateFile($outfit, $request, 'outfit');
         }
-        $outfit->description = $request->filled('description') ? $request->description : null;
+        $description = $request->filled('description') ? $request->description : null;
+        $outfit->description = $description === 'null' ? null : $description;
         $outfit->outfit_date = $request->input('outfit_date');
         $season = $request->filled('season') ? $request->season : null;
         $outfit->season = $season === 'null' ? null : $season;
 
         // アイテムIDを収集
-        $itemIds = [];
+        $itemIds = collect(['tops', 'outer', 'bottoms', 'shoes'])
+            ->map(fn($item) => $request->filled($item) && $request->$item !== 'null' ? $request->$item : null)
+            ->filter()
+            ->unique()
+            ->toArray();
 
         foreach (['tops', 'outer', 'bottoms', 'shoes'] as $item) {
-            if ($request->filled($item) && $request->$item !== 'null') {
-                $itemIds[] = $request->$item;
-                $outfit->$item = $request->$item; // アイテムのプロパティを更新
-            } else {
-                $outfit->$item = null; // nullが選択された場合はプロパティをnullに設定
-            }
+            $outfit->$item = $request->filled($item) && $request->$item !== 'null' ? $request->$item : null;
         }
 
-        // 重複したアイテムIDを除去し、null値をフィルタリング
-        $itemIds = array_unique(array_filter($itemIds, fn($value) => !is_null($value)));
-
-        // Outfitを保存してからアイテムを関連付け
         $outfit->save();
         $outfit->items()->sync($itemIds);
 
