@@ -4,22 +4,32 @@ import { onMounted, ref } from 'vue';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close', 'onItemSelected']);
+const props = defineProps({ itemType: Number });
+
 const items = ref([]);
+const isLoading = ref(true);
+const hasError = ref(false);
 
 // 登録アイテムの表示
 const fetchItems = async () => {
     try {
         const response = await axios.get('/api/items');
-        items.value = response.data.items;
+        items.value = response.data.items.filter(
+            (item) => item.main_category === props.itemType
+        );
     } catch (error) {
         console.error(error);
+        hasError.value = true;
+    } finally {
+        setTimeout(() => {
+            isLoading.value = false;
+        }, 300);
     }
 };
 
 const selectItem = (item) => {
     // 選択されたアイテムのIDを親コンポーネントに伝える
     emit('onItemSelected', item);
-    // console.log(item);
 };
 
 // 「選択しない」ボタンがクリックされた場合にnullを送信
@@ -41,19 +51,33 @@ onMounted(() => {
             <Close :size="27" fillColor="#FFFFFF" />
         </button>
         <div
-            class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl"
+            class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl p-5"
         >
-            <div class="w-full md:flex h-full overflow-auto rounded-xl">
+            <div
+                class="w-full h-full overflow-auto rounded-xl flex justify-center items-center"
+            >
+                <div v-if="isLoading" class="flex flex-col items-center">
+                    <svg
+                        class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    ></svg>
+                    <span class="text-lg font-bold mt-2">読み込み中...</span>
+                </div>
+
+                <div
+                    v-else-if="hasError"
+                    class="text-center text-lg text-red-500 font-bold"
+                >
+                    アイテムの取得に失敗しました。再度お試しください。
+                </div>
+
                 <!-- アイテムがない場合のメッセージ -->
                 <div
-                    v-if="items.length === 0"
-                    class="flex items-center justify-center h-full w-full"
+                    v-else-if="items.length === 0"
+                    class="text-center text-lg font-bold"
                 >
-                    <p
-                        class="text-black text-base sm:text-lg md:text-xl lg:text-2xl text-center"
-                    >
-                        アイテムが登録されていません！
-                    </p>
+                    アイテムが登録されていません！
                 </div>
 
                 <!-- アイテム一覧などを表示 -->

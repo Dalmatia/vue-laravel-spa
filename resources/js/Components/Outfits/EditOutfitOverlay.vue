@@ -17,8 +17,14 @@ const tops = ref({});
 const outer = ref({});
 const bottoms = ref({});
 const shoes = ref({});
-
 const seasons = ref([]);
+// コーディネートに使用したアイテムのカテゴリー
+const itemTypes = {
+    1: { key: 'outer', imgKey: 'outerImage' },
+    2: { key: 'tops', imgKey: 'topsImage' },
+    3: { key: 'bottoms', imgKey: 'bottomsImage' },
+    4: { key: 'shoes', imgKey: 'shoesImage' },
+};
 
 let isValidFile = ref(null);
 let fileDisplay = ref('');
@@ -32,7 +38,6 @@ let error = ref({
     bottoms: '',
     shoes: '',
 });
-
 let showItemSelectionModal = ref(false);
 let selectedItemType = ref(null);
 let isOpen = ref(true);
@@ -73,14 +78,8 @@ const fetchItem = async () => {
 
 // コーディネートの編集機能
 const outfitUpdate = async () => {
-    error.value.file = null;
-    error.value.description = null;
-    error.value.outfit_date = null;
-    error.value.season = null;
-    error.value.tops = null;
-    error.value.outer = null;
-    error.value.bottoms = null;
-    error.value.shoes = null;
+    Object.keys(error.value).forEach((key) => (error.value[key] = null));
+    editForm.season = editForm.season === '' ? null : editForm.season;
 
     const formData = new FormData();
     if (editForm.value.file) {
@@ -113,21 +112,8 @@ const outfitUpdate = async () => {
             window.dispatchEvent(new Event('outfit-updated'));
         }
     } catch (errors) {
-        console.error('エラーが発生しました:', errors);
-
-        if (errors.response) {
-            const responseErrors = errors.response.data.errors;
-
-            if (responseErrors) {
-                error.value.file = responseErrors.file;
-                error.value.description = responseErrors.description;
-                error.value.outfit_date = responseErrors.outfit_date;
-                error.value.season = responseErrors.season;
-                error.value.tops = responseErrors.tops;
-                error.value.outer = responseErrors.outer;
-                error.value.bottoms = responseErrors.bottoms;
-                error.value.shoes = responseErrors.shoes;
-            }
+        if (errors.response && errors.response.data.errors) {
+            Object.assign(error.value, errors.response.data.errors);
         }
     }
 };
@@ -142,21 +128,17 @@ const selectNewImage = () => {
 // ファイルアップロード
 const getUploadedImage = (e) => {
     editForm.value.file = e.target.files[0];
+    const extension = editForm.value.file.name.split('.').pop().toLowerCase(); // ファイル拡張子を小文字で取得
 
-    const validTypes = ['image/png', 'image/jpeg'];
-    if (!validTypes.includes(editForm.value.file.type)) {
-        isValidFile.value = false;
-        return;
-    }
+    isValidFile.value = ['png', 'jpg', 'jpeg'].includes(extension);
+    if (!isValidFile.value) return;
 
-    fileDisplay.value = URL.createObjectURL(e.target.files[0]);
-    const img = new Image();
-    img.onload = () => {
+    fileDisplay.value = URL.createObjectURL(editForm.value.file);
+    setTimeout(() => {
         document
             .getElementById('TextAreaSection')
             .scrollIntoView({ behavior: 'smooth' });
-    };
-    img.src = fileDisplay.value;
+    }, 300);
 };
 
 const getSeason = async () => {
@@ -169,43 +151,20 @@ const getSeason = async () => {
 };
 
 const openModal = (itemType) => {
-    // itemTypeを設定
+    // コーディネートに使用したアイテムのカテゴリーを設定
     selectedItemType.value = itemType;
     // アイテム選択モーダルを表示
     showItemSelectionModal.value = true;
 };
 
+// コーディネートに使用したアイテムを選択する
 const handleItemSelected = (selectedItem) => {
-    // nullの場合、該当するアイテムをnullで初期化
-    if (selectedItem === null) {
-        if (selectedItemType.value === 'tops') {
-            editForm.value.tops = null;
-            editForm.value.topsImage = null;
-        } else if (selectedItemType.value === 'outer') {
-            editForm.value.outer = null;
-            editForm.value.outerImage = null;
-        } else if (selectedItemType.value === 'bottoms') {
-            editForm.value.bottoms = null;
-            editForm.value.bottomsImage = null;
-        } else if (selectedItemType.value === 'shoes') {
-            editForm.value.shoes = null;
-            editForm.value.shoesImage = null;
-        }
-    } else {
-        // モーダルで選択されたアイテムのIDをformに設定
-        if (selectedItemType.value === 'tops') {
-            editForm.value.tops = selectedItem.id;
-            editForm.value.topsImage = selectedItem.file;
-        } else if (selectedItemType.value === 'outer') {
-            editForm.value.outer = selectedItem.id;
-            editForm.value.outerImage = selectedItem.file;
-        } else if (selectedItemType.value === 'bottoms') {
-            editForm.value.bottoms = selectedItem.id;
-            editForm.value.bottomsImage = selectedItem.file;
-        } else if (selectedItemType.value === 'shoes') {
-            editForm.value.shoes = selectedItem.id;
-            editForm.value.shoesImage = selectedItem.file;
-        }
+    const itemType = itemTypes[selectedItemType.value];
+    if (itemType) {
+        editForm.value[itemType.key] = selectedItem ? selectedItem.id : null;
+        editForm.value[itemType.imgKey] = selectedItem
+            ? selectedItem.file
+            : null;
     }
     // モーダルを閉じる
     showItemSelectionModal.value = false;
@@ -369,7 +328,7 @@ onMounted(async () => {
                             class="text-lg text-right font-extrabold text-gray-500 outline-none"
                             v-model="editForm.season"
                         >
-                            <option value="" disabled>選択してください</option>
+                            <option :value="null">選択してください</option>
                             <option
                                 v-for="(label, value) in seasons"
                                 :key="value"
@@ -417,33 +376,10 @@ onMounted(async () => {
                         }"
                     >
                         <div class="min-h-fit p-2 grid grid-cols-2 gap-4">
-                            <!-- トップス選択 -->
-                            <div
-                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
-                                @click="openModal('tops')"
-                            >
-                                <div
-                                    v-if="editForm.tops === null"
-                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
-                                >
-                                    トップス
-                                </div>
-                                <img
-                                    v-else-if="editForm.topsImage"
-                                    class="w-full h-full object-contain"
-                                    :src="editForm.topsImage"
-                                />
-                                <img
-                                    v-else-if="tops.file"
-                                    class="w-full h-full object-contain"
-                                    :src="tops.file"
-                                />
-                            </div>
-
                             <!-- アウター選択 -->
                             <div
                                 class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
-                                @click="openModal('outer')"
+                                @click="openModal(1)"
                             >
                                 <button
                                     v-if="editForm.outer === null"
@@ -463,10 +399,33 @@ onMounted(async () => {
                                 />
                             </div>
 
+                            <!-- トップス選択 -->
+                            <div
+                                class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
+                                @click="openModal(2)"
+                            >
+                                <div
+                                    v-if="editForm.tops === null"
+                                    class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
+                                >
+                                    トップス
+                                </div>
+                                <img
+                                    v-else-if="editForm.topsImage"
+                                    class="w-full h-full object-contain"
+                                    :src="editForm.topsImage"
+                                />
+                                <img
+                                    v-else-if="tops.file"
+                                    class="w-full h-full object-contain"
+                                    :src="tops.file"
+                                />
+                            </div>
+
                             <!-- ボトムス選択 -->
                             <div
                                 class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
-                                @click="openModal('bottoms')"
+                                @click="openModal(3)"
                             >
                                 <div
                                     v-if="editForm.bottoms === null"
@@ -489,7 +448,7 @@ onMounted(async () => {
                             <!-- シューズ選択 -->
                             <div
                                 class="container border border-gray-300 h-48 lg:h-56 w-full p-2"
-                                @click="openModal('shoes')"
+                                @click="openModal(4)"
                             >
                                 <div
                                     v-if="editForm.shoes === null"
@@ -513,6 +472,7 @@ onMounted(async () => {
 
                     <SelectItemsOverlay
                         v-if="showItemSelectionModal"
+                        :itemType="selectedItemType"
                         @onItemSelected="handleItemSelected"
                         @close="showItemSelectionModal = false"
                     />

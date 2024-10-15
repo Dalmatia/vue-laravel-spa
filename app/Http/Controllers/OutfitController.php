@@ -5,14 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
-use App\Models\Item;
 use Illuminate\Http\Request;
 use App\Services\FileService;
 use Illuminate\Support\Facades\Validator;
 
 class OutfitController extends Controller
 {
-    // FileServiceのインスタンス化
     private $fileService;
 
     public function __construct(FileService $fileService)
@@ -20,89 +18,80 @@ class OutfitController extends Controller
         $this->fileService = $fileService;
     }
 
-    private function validateRequest(Request $request)
+    private function validateRequest(Request $request, $outfitId = null)
     {
         $rules = [
-            'file' => 'required | mimes:jpg,jpeg,png',
+            'file' => 'required',
             'description' => 'nullable',
             'outfit_date' => 'required',
             'season' => 'nullable',
-            'tops' => 'nullable |exists:items,id',
-            'outer' => 'nullable |exists:items,id',
-            'bottoms' => 'nullable |exists:items,id',
-            'shoes' => 'nullable |exists:items,id'
+            'tops' => 'nullable',
+            'outer' => 'nullable',
+            'bottoms' => 'nullable',
+            'shoes' => 'nullable'
         ];
 
-        // 必須フィールドが空でない場合は、必須バリデーションを適用する
-        if ($request->filled('file')) {
-            $rules['file'] = 'required|mimes:jpg,jpeg,png';
+        // ファイルがアップロードされている場合のみバリデーションを追加
+        if ($request->hasFile('file')) {
+            $rules['file'] = 'mimes:jpg,jpeg,png';
         }
 
-        return Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules);
+        $this->validateUniqueOutfitDate($validator, $request, $outfitId); // バリデーションを別メソッドに分ける
+
+        return $validator;
     }
 
-    // /**
-    //  * アイテムのフィールドを更新
-    //  */
+    // 同じ日付の投稿が存在するか確認
+    private function validateUniqueOutfitDate($validator, Request $request, $outfitId)
+    {
+        $validator->after(function ($validator) use ($request, $outfitId) {
+            $existingOutfit = Outfit::where('outfit_date', $request->input('outfit_date'))
+                ->where('user_id', auth()->id())
+                ->when($outfitId, function ($query) use ($outfitId) {
+                    return $query->where('id', '!=', $outfitId);
+                })
+                ->exists();
+
+            if ($existingOutfit) {
+                $validator->errors()->add('outfit_date', '同じ日付に複数の投稿はできません。');
+            }
+        });
+    }
+
     private function createOrUpdateOutfit(Outfit $outfit, Request $request)
     {
         $outfit->user_id = auth()->user()->id;
-        // ファイルが選択されているかどうかをチェックし、選択されている場合のみ更新する
         if ($request->hasFile('file')) {
             $outfit = $this->fileService->updateFile($outfit, $request, 'outfit');
-        } elseif ($request->input('file') === null && $outfit->file !== null) {
-            // ファイルが選択されていない場合は以前のファイルを保持する
-            $outfit->file = $outfit->file;
         }
+        $outfit->description = $request->filled('description') ? $request->description : null;
+        $outfit->outfit_date = $request->input('outfit_date');
+        $season = $request->filled('season') ? $request->season : null;
+        $outfit->season = $season === 'null' ? null : $season;
 
-        if ($request->filled('description')) {
-            $outfit->description =  ($request->description !== 'null') ? $request->description : null;
-        }
-
-        if ($request->filled('outfit_date')) {
-            $outfit->outfit_date = $request->outfit_date;
-        }
-
-        if ($request->filled('season')) {
-            $outfit->season =  ($request->season !== 'null') ? $request->season : null;
-        }
-
-        // tops, outer, bottoms, shoes の値を保存
+        // アイテムIDを収集
         $itemIds = [];
 
-        // 各アイテムの ID を outfit にも保存しつつ、itemIds 配列に追加
-        if ($request->filled('tops')) {
-            $outfit->tops = ($request->tops !== 'null') ? $request->tops : null;
-            $itemIds[] = $outfit->tops; // itemIds に追加
-        }
-
-        if ($request->filled('outer')) {
-            $outfit->outer = ($request->outer !== 'null') ? $request->outer : null;
-            $itemIds[] = $outfit->outer;
-        }
-
-        if ($request->filled('bottoms')) {
-            $outfit->bottoms = ($request->bottoms !== 'null') ? $request->bottoms : null;
-            $itemIds[] = $outfit->bottoms;
-        }
-
-        if ($request->filled('shoes')) {
-            $outfit->shoes = ($request->shoes !== 'null') ? $request->shoes : null;
-            $itemIds[] = $outfit->shoes;
+        foreach (['tops', 'outer', 'bottoms', 'shoes'] as $item) {
+            if ($request->filled($item) && $request->$item !== 'null') {
+                $itemIds[] = $request->$item;
+                $outfit->$item = $request->$item; // アイテムのプロパティを更新
+            } else {
+                $outfit->$item = null; // nullが選択された場合はプロパティをnullに設定
+            }
         }
 
         // 重複したアイテムIDを除去し、null値をフィルタリング
         $itemIds = array_unique(array_filter($itemIds, fn($value) => !is_null($value)));
 
-        // Outfit を保存してからアイテムを関連付け
+        // Outfitを保存してからアイテムを関連付け
         $outfit->save();
         $outfit->items()->sync($itemIds);
 
         return $outfit;
     }
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index(Request $request)
     {
         $query = Outfit::query();
@@ -133,49 +122,18 @@ class OutfitController extends Controller
         return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validator = $this->validateRequest($request);
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $outfit = new Outfit();
-        $outfit->user_id = auth()->user()->id;
-        $outfit = (new FileService)->updateFile($outfit, $request, 'outfit');
-        $outfit->description = $request->input('description');
-
-        // コーディネートした日付を選択する
-        $outfit->outfit_date = $request->input('outfit_date');
-        // 指定された日付に既に投稿があるか確認
-        $validator->after(function ($validator) use ($outfit) {
-            if (Outfit::onDate($outfit->outfit_date)->where('user_id', $outfit->user_id)->exists()) {
-                $validator->errors()->add('outfit_date', '同じ日付に複数の投稿はできません。');
-            }
-        });
-
-        // バリデーションが失敗した場合（2回目のチェック）
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // コーディネートのシーズンを選択
-        $outfit->season = $request->input('season');
-        // 着用したアイテムをItemテーブルから選択
         $outfit = $this->createOrUpdateOutfit($outfit, $request);
-        $outfit->save();
-
         return response()->json($outfit, 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $outfit = Outfit::find($id);
@@ -185,62 +143,38 @@ class OutfitController extends Controller
         return response()->json($outfit, 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
-        $validator = $this->validateRequest($request);
+        $validator = $this->validateRequest($request, $id);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
         $outfit = Outfit::find($id);
+        if (!$outfit) {
+            return response()->json(['error' => 'コーディネートが見つかりません'], 404);
+        }
 
         if (auth()->user()->id !== $outfit->user_id) {
             return abort(403);
         }
 
-        // ファイルが更新された場合のみバリデーションを無効にする
-        if ($request->hasFile('file')) {
-            $this->validateRequest($request);
-        }
-        // コーディネートした日付を選択する
-        $outfit->outfit_date = $request->input('outfit_date');
-        // 指定された日付に既に投稿があるか確認
-        $validator->after(function ($validator) use ($outfit) {
-            if (Outfit::onDate($outfit->outfit_date)->where('user_id', $outfit->user_id)->where('id', '!=', $outfit->id)->exists()) {
-                $validator->errors()->add('outfit_date', '同じ日付に複数の投稿はできません。');
-            }
-        });
-
         $outfit = $this->createOrUpdateOutfit($outfit, $request);
-        $outfit->save();
-
         return response()->json($outfit, 200);
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $outfit = Outfit::find($id);
-
         if (!$outfit) {
             return response()->json(['error' => 'コーディネートが見つかりません'], 404);
         }
 
-        if (!empty($outfit->file)) {
-            $currentFile = public_path() . $outfit->file;
-
-            if (file_exists($currentFile)) {
-                if (!unlink($currentFile)) {
-                    return response()->json(['error' => 'ファイルの削除に失敗しました'], 500);
-                }
-            }
+        if ($outfit->file && file_exists(public_path($outfit->file))) {
+            unlink(public_path($outfit->file));
         }
 
         $outfit->delete();
-
         return response()->json(['message' => 'コーディネートを削除しました'], 200);
     }
 }
