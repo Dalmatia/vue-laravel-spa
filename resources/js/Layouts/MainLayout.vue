@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 
@@ -11,6 +11,10 @@ import Plus from 'vue-material-design-icons/Plus.vue';
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue';
+import BellOutline from 'vue-material-design-icons/BellOutline.vue';
+import Setting from 'vue-material-design-icons/Cog.vue';
+import Logout from 'vue-material-design-icons/Logout.vue';
+import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue';
 
 import MenuItem from '@/Components/MenuItem.vue';
 import CreateOutfitOverlay from '@/Components/Outfits/CreateOutfitOverlay.vue';
@@ -21,6 +25,8 @@ const authStore = useAuthStore();
 
 let showCreatePost = ref(false);
 let isLoading = ref(true);
+let isDropdownOpen = ref(false);
+const dropdown = ref(null);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -47,8 +53,23 @@ const logout = () => {
     handleUnauthorized();
 };
 
+const closeDropDown = (event) => {
+    if (
+        isDropdownOpen &&
+        dropdown.value &&
+        !dropdown.value.contains(event.target)
+    ) {
+        isDropdownOpen.value = false;
+    }
+};
+
 onMounted(() => {
     fetchUserData();
+    window.addEventListener('click', closeDropDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('click', closeDropDown);
 });
 </script>
 
@@ -66,20 +87,81 @@ onMounted(() => {
                     </h1>
                 </router-link>
 
-                <div class="flex items-center w-[50%]">
-                    <div
-                        class="flex items-center w-full bg-gray-100 rounded-lg"
-                    >
-                        <Magnify class="pl-4" fillColor="#8E8E8E" :size="27" />
-                        <input
-                            type="text"
-                            placeholder="検索する"
-                            class="bg-transparent w-full placeholder-[#8E8E8E] border-0 ring-0 focus:ring-0"
-                        />
-                    </div>
+                <div class="flex items-center justify-end w-full">
                     <router-link :to="{ name: 'Likes' }" class="pl-4 pr-3">
                         <HeartOutline fillColor="#000000" :size="27" />
                     </router-link>
+
+                    <!-- 通知アイコン -->
+                    <div class="pl-4 pr-3">
+                        <BellOutline fillColor="#000000" :size="27" />
+                    </div>
+
+                    <div
+                        class="relative items-center"
+                        ref="dropdown"
+                        v-if="authStore.user"
+                    >
+                        <div
+                            @click="isDropdownOpen = !isDropdownOpen"
+                            class="flex items-center cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-all duration-300"
+                        >
+                            <div
+                                class="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-300"
+                            >
+                                <img
+                                    :src="authStore.user.file"
+                                    alt="Profile"
+                                    class="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- ドロップダウンメニューの内容 -->
+                        <div
+                            v-if="isDropdownOpen"
+                            class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100"
+                        >
+                            <ul class="py-1">
+                                <li
+                                    class="px-4 py-2 hover:bg-gray-50 transition-colors duration-200"
+                                >
+                                    <router-link
+                                        :to="{
+                                            name: 'EditProfile',
+                                            params: { id: authStore.user.id },
+                                        }"
+                                        v-if="authStore.user"
+                                        class="flex items-center space-x-2 text-gray-700"
+                                    >
+                                        <AccountOutline class="w-5 h-5" />
+                                        <span>プロフィール</span>
+                                    </router-link>
+                                </li>
+                                <li
+                                    class="px-4 py-2 hover:bg-gray-50 transition-colors duration-200"
+                                >
+                                    <div
+                                        class="flex items-center space-x-2 text-gray-700"
+                                    >
+                                        <Setting class="w-5 h-5" />
+                                        <span>設定</span>
+                                    </div>
+                                </li>
+                                <li
+                                    class="px-4 py-2 hover:bg-gray-50 transition-colors duration-200"
+                                >
+                                    <a
+                                        @click.prevent="logout()"
+                                        class="flex items-center space-x-2 text-red-600 cursor-pointer"
+                                    >
+                                        <Logout class="w-5 h-5" />
+                                        <span>ログアウト</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,6 +170,7 @@ onMounted(() => {
             v-if="
                 authStore.user &&
                 route.path !== '/' &&
+                route.path !== `/user/${authStore.user.id}/editProfile` &&
                 route.path !== `/user/${authStore.user.id}/follow_list` &&
                 route.path !== `/user/${authStore.user.id}/follower_list` &&
                 route.path !== '/search'
@@ -194,7 +277,7 @@ onMounted(() => {
                         >
                             <img
                                 class="rounded-full z-10 w-[58px] h-[58px]"
-                                src="https://picsum.photos/id/50/300/320"
+                                :src="authStore.user.file"
                             />
                         </router-link>
                         <div class="pl-4">
@@ -285,7 +368,7 @@ onMounted(() => {
                 />
             </router-link>
             <router-link :to="{ name: 'Login' }" v-if="!authStore.user">
-                <AccountOutline
+                <AccountArrowRightOutline
                     fillColor="#000000"
                     :size="33"
                     class="cursor-pointer"
@@ -295,9 +378,10 @@ onMounted(() => {
                 :to="{ name: 'User', params: { id: authStore.user.id } }"
                 v-if="authStore.user"
             >
-                <img
-                    class="rounded-full w-[30px] cursor-pointer"
-                    src="https://picsum.photos/id/200/300/320"
+                <AccountOutline
+                    fillColor="#000000"
+                    :size="33"
+                    class="cursor-pointer"
                 />
             </router-link>
         </div>
@@ -308,5 +392,3 @@ onMounted(() => {
         @close="showCreatePost = false"
     />
 </template>
-
-<style></style>

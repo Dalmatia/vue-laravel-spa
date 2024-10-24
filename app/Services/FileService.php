@@ -33,11 +33,12 @@ class FileService
       $file = Image::make($request->file('file'));
     }
 
-    $ext = $request->file('file');
-    $extension = $ext->getClientOriginalExtension();
-    $name = time() . '.' . $extension;
-    $file->save(public_path() . $directory . $name);
-    $model->file = $directory . $name;
+    // 拡張子を取得
+    $extension = $request->file('file')->getClientOriginalExtension();
+    // ハッシュ化したファイル名を生成
+    $hashName = md5(time() . $request->file('file')->getClientOriginalName()) . '.' . $extension;
+    $file->save(public_path() . $directory . $hashName);
+    $model->file = $directory . $hashName;
 
     return $model;
   }

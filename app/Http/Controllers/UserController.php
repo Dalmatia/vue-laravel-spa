@@ -9,6 +9,7 @@ use App\Models\Outfit;
 use App\Models\User;
 use App\Services\FileService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -64,11 +65,30 @@ class UserController extends Controller
      */
     public function update(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:jpg,jpeg,png']);
-        $user = (new FileService)->updateFile(auth()->user(), $request, 'user');
+        $user = Auth::user();
+
+        $rule = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id, // 他のユーザーと重複しないように
+            'password' => 'nullable|min:8', // パスワードは必須ではなく、長さのチェック
+            'file' => 'nullable|mimes:jpg,jpeg,png|max:2048' // ファイルは必須ではなく、サイズの制限を追加
+        ]);
+
+        // プロフィール画像の更新
+        if ($request->hasFile('file')) {
+            // ファイル更新処理をサービス経由で実行
+            $user = (new FileService)->updateFile($user, $request, 'user');
+        }
+
+        $user->name = $rule['name'];
+        $user->email = $rule['email'];
+        // パスワードが入力された場合のみハッシュ化して保存
+        if (!empty($rule['password'])) {
+            $user->password = bcrypt($rule['password']);
+        }
         $user->save();
 
-        return redirect()->route('users.show', ['id' => auth()->user()->id]);
+        return response()->json(['message' => 'プロフィールを更新しました'], 200);
     }
 
     /**

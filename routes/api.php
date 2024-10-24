@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy']);
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
-    Route::post('/users', [UserController::class, 'update'])->name('users.update');
+    Route::post('/user/{id}/update', [UserController::class, 'update'])->name('users.update');
 
     // クローゼットアイテム関連
     Route::post('items', [ItemController::class, 'store']);
