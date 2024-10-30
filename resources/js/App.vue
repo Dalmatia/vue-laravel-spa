@@ -20,6 +20,10 @@ onMounted(() => {
     window.addEventListener('outfit-deleted', () => {
         showMessage('コーディネートを削除しました!');
     });
+
+    window.addEventListener('profile-updated', () => {
+        showMessage('プロフィールを更新しました!');
+    });
 });
 
 onUnmounted(() => {
@@ -29,6 +33,10 @@ onUnmounted(() => {
 
     window.removeEventListener('outfit-deleted', () => {
         showMessage('コーディネートを削除しました!');
+    });
+
+    window.removeEventListener('profile-updated', () => {
+        showMessage('プロフィールを更新しました!');
     });
 });
 </script>

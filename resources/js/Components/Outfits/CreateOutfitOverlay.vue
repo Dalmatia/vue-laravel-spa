@@ -10,7 +10,7 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import axios from 'axios';
 import SelectItemsOverlay from './SelectItemsOverlay.vue';
 
-const authUser = useAuthStore().user.name;
+const user = useAuthStore().user;
 const emit = defineEmits(['close']);
 const form = reactive({
     file: null,
@@ -215,10 +215,10 @@ onMounted(() => {
                         <div class="flex items-center">
                             <img
                                 class="rounded-full w-[38px] h-[38px]"
-                                src="https://picsum.photos/id/50/300/320"
+                                :src="user.file"
                             />
                             <div class="ml-4 font-extrabold text-[15px]">
-                                {{ authUser }}
+                                {{ user.name }}
                             </div>
                         </div>
                     </div>
@@ -232,6 +232,7 @@ onMounted(() => {
                     <div class="flex w-full max-h-[150px] bg-white border-b">
                         <textarea
                             ref="textarea"
+                            id="textarea"
                             v-model="form.description"
                             placeholder="何か書く(コーディネートのポイント等)"
                             rows="10"
@@ -251,6 +252,7 @@ onMounted(() => {
                         </div>
                         <VueDatePicker
                             v-model="form.outfit_date"
+                            uid="outfit_date"
                             teleport-center
                             locale="ja"
                             format="yyyy-MM-dd"
@@ -275,6 +277,7 @@ onMounted(() => {
                         </div>
                         <select
                             class="text-lg text-right font-extrabold text-gray-500 outline-none"
+                            id="season"
                             v-model="form.season"
                         >
                             <option :value="null">選択してください</option>

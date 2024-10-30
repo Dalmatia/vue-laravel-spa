@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\AllItemsCollection;
 use App\Http\Resources\AllOutfitsCollection;
-use App\Models\Item;
 use App\Models\Outfit;
 use App\Models\User;
 use App\Services\FileService;
@@ -71,8 +69,13 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id, // 他のユーザーと重複しないように
             'password' => 'nullable|min:8', // パスワードは必須ではなく、長さのチェック
-            'file' => 'nullable|mimes:jpg,jpeg,png|max:2048' // ファイルは必須ではなく、サイズの制限を追加
+            'file' => 'required' // ファイルは必須ではなく、サイズの制限を追加
         ]);
+
+        // ファイルがアップロードされている場合のみバリデーションを追加
+        if ($request->hasFile('file')) {
+            $rules['file'] = 'mimes:jpg,jpeg,png|max:2048';
+        }
 
         // プロフィール画像の更新
         if ($request->hasFile('file')) {

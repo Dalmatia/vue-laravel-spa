@@ -123,17 +123,16 @@ onUnmounted(() => {
                                 id="profile_image"
                                 class="relative float-left w-[22px] md:w-[40px]"
                             >
-                                <p
+                                <div
                                     id="image"
                                     class="text-[0px] leading-[1] tracking-[0] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
                                 >
-                                    <a href="">
-                                        <img
-                                            src="https://picsum.photos/id/32/32/32"
-                                            class="opacity-100 rounded-[50%] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
-                                        />
-                                    </a>
-                                </p>
+                                    <img
+                                        v-if="like.user && like.user.file"
+                                        :src="like.user.file"
+                                        class="opacity-100 rounded-[50%] w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
+                                    />
+                                </div>
                             </div>
                             <div
                                 id="username"

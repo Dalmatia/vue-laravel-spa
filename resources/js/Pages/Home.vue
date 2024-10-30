@@ -109,17 +109,20 @@ onUnmounted(() => {
                 <footer
                     class="flex items-center justify-between leading-none mt-3 md:p-4"
                 >
-                    <a
+                    <div
                         class="flex items-center no-underline hover:underline text-black"
-                        href="#"
                     >
-                        <img
-                            alt="Placeholder"
-                            class="block rounded-full"
-                            src="https://picsum.photos/id/32/32/32"
-                        />
+                        <div
+                            class="rounded-full w-8 h-8 overflow-hidden border-2"
+                        >
+                            <img
+                                alt="Placeholder"
+                                class="w-full h-full object-cover"
+                                :src="outfit.user.file"
+                            />
+                        </div>
                         <p class="ml-2 text-xs">{{ outfit.user.name }}</p>
-                    </a>
+                    </div>
                     <div class="col-md-3">
                         <div
                             class="follow"

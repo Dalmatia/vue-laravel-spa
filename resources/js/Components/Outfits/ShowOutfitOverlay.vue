@@ -18,11 +18,11 @@ let deleteType = ref(null);
 let id = ref(null);
 let commentOverlay = ref(false);
 
-const user = useAuthStore().user;
+const authUser = useAuthStore().user;
 const followStore = useFollowStore();
 const props = defineProps(['outfit']);
 const outfit = ref(props.outfit);
-const postsByUser = outfit.value.user.name;
+const postsByUser = outfit.value.user;
 const outfitItems = ref([]);
 const comments = ref([]);
 
@@ -146,12 +146,10 @@ const openCommentOverlay = () => {
     commentOverlay.value = true;
 };
 
-onMounted(() => {
-    fetchOutfit();
+onMounted(async () => {
+    await Promise.all([fetchOutfit(), followStatus(), fetchComments()]);
     // EditOutfitOverlay.vueのoutfitUpdateメソッドで定義したイベントの購読
     window.addEventListener('outfit-updated', fetchOutfit);
-    followStatus();
-    fetchComments();
     window.addEventListener('comment-posted', fetchComments);
 });
 
@@ -183,28 +181,26 @@ onUnmounted(() => {
                             <p
                                 class="h-12 w-12 overflow-hidden rounded-[50%] border border-gray-300 hover:opacity-70"
                             >
-                                <a href="">
-                                    <img
-                                        class="rounded-full h-12 w-12"
-                                        src="https://picsum.photos/id/54/800/820"
-                                    />
-                                </a>
+                                <img
+                                    class="rounded-full h-12 w-12"
+                                    :src="postsByUser.file"
+                                />
                             </p>
                             <div class="pl-[10px]">
                                 <div
                                     class="items-center pt-[2px] leading-[1.2] tracking-wider"
                                 >
                                     <p class="font-extrabold text-[15px]">
-                                        {{ postsByUser }}
+                                        {{ postsByUser.name }}
                                     </p>
                                 </div>
                             </div>
                             <div
                                 class="ml-3 mt-2"
                                 v-if="
-                                    user.id &&
+                                    authUser.id &&
                                     outfit.user_id &&
-                                    user.id !== outfit.user_id
+                                    authUser.id !== outfit.user_id
                                 "
                             >
                                 <FollowButton
@@ -218,7 +214,7 @@ onUnmounted(() => {
                         </div>
                         <div class="ml-auto mt-2">
                             <button
-                                v-if="user.id === outfit.user_id"
+                                v-if="authUser.id === outfit.user_id"
                                 @click="
                                     deleteType = 'Outfit';
                                     id = outfit.id;
@@ -267,7 +263,7 @@ onUnmounted(() => {
 
                     <!-- いいね!等の表示 -->
                     <div
-                        class="justify-between border-t border-gray-300 bg-white px-[23px] py-6"
+                        class="justify-between border-t border-gray-300 bg-white px-[23px] py-6 w-full"
                     >
                         <LikesSection
                             v-if="outfit"
@@ -277,13 +273,13 @@ onUnmounted(() => {
                     </div>
 
                     <!-- コメント欄 -->
-                    <div class="hidden lg:block">
+                    <div class="hidden lg:block w-full">
                         <div class="border-t border-gray-300 bg-white pt-5">
                             <div class="px-[23px]">
                                 <h2
                                     class="text-[16px] font-bold leading-[1] tracking-wide"
                                 >
-                                    {{ postsByUser }} さんへのコメント
+                                    {{ postsByUser.name }} さんへのコメント
                                 </h2>
                             </div>
 
@@ -310,7 +306,7 @@ onUnmounted(() => {
                                                         outfit.user_id,
                                                 }"
                                             >
-                                                <a
+                                                <div
                                                     class="flex h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-300 hover:opacity-70"
                                                 >
                                                     <span
@@ -318,10 +314,18 @@ onUnmounted(() => {
                                                     >
                                                         <img
                                                             class="rounded-full w-[38px] h-[38px]"
-                                                            src="https://picsum.photos/id/54/800/820"
+                                                            v-if="
+                                                                comment.user &&
+                                                                comment.user
+                                                                    .file
+                                                            "
+                                                            :src="
+                                                                comment.user
+                                                                    .file
+                                                            "
                                                         />
                                                     </span>
-                                                </a>
+                                                </div>
 
                                                 <div
                                                     class="pt-[3px] lg:pt-[6px]"
@@ -428,7 +432,7 @@ onUnmounted(() => {
                             <h1
                                 class="hidden text-[16px] font-bold leading-[1.5] lg:block"
                             >
-                                {{ postsByUser }}さんのコーディネート
+                                {{ postsByUser.name }}さんのコーディネート
                             </h1>
                             <div class="px-4 pt-[38px] lg:px-0 lg:pt-4">
                                 <div>

@@ -115,7 +115,7 @@ onUnmounted(() => {
                                 <router-link :to="{ name: 'User' }">
                                     <img
                                         class="rounded-full object-fit w-[32px] h-[32px] cursor-pointer"
-                                        src="https://picsum.photos/id/50/200/200"
+                                        :src="authStore.user.file"
                                     />
                                 </router-link>
                             </p>

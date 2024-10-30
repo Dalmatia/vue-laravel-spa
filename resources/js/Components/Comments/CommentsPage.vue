@@ -193,7 +193,8 @@ onUnmounted(() => {
                                             >
                                                 <img
                                                     class="rounded-full w-[38px] h-[38px]"
-                                                    src="https://picsum.photos/id/54/800/820"
+                                                    :src="comment.user.file"
+                                                    v-if="comment.user"
                                                 />
                                             </a>
 
@@ -263,12 +264,13 @@ onUnmounted(() => {
                 <div class="z-100 fixed bottom-0 flex w-full bg-white p-2">
                     <p class="flex w-full max-h-[200px]">
                         <img
-                            src="https://picsum.photos/id/32/32/32"
+                            :src="user.file"
                             alt=""
                             class="h-8 w-8 rounded-full border border-gray-300 mr-2"
                         />
                         <textarea
                             ref="textarea"
+                            name="comment"
                             :onInput="textareaInput"
                             v-model="comment"
                             placeholder="コメントする"

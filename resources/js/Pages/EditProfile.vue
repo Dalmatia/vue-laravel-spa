@@ -51,8 +51,10 @@ const updateProfile = async () => {
             }
         );
 
-        alert(response.data.message);
-        await fetchUserData(); // 更新後に再度ユーザー情報を取得
+        if (response.status === 200) {
+            window.dispatchEvent(new Event('profile-updated'));
+            await fetchUserData(); // 更新後に再度ユーザー情報を取得
+        }
     } catch (error) {
         console.error('プロフィール更新エラー:', error);
         alert('プロフィールの更新に失敗しました。');
@@ -93,6 +95,7 @@ onMounted(() => {
             <!-- 戻るボタン -->
             <button
                 class="duration-[0.2s] min-h-[36px] min-w-[36px] cursor-pointer flex items-center"
+                @click="$router.back()"
             >
                 <ArrowLeft
                     class="h-[20px] w-[20px] text-gray-900"
@@ -120,6 +123,7 @@ onMounted(() => {
                 <ArrowLeft
                     class="h-[24px] w-[24px] text-gray-900"
                     fillColor="#000000"
+                    @click="$router.back()"
                 />
                 <h2 class="text-xl font-bold text-black">プロフィールを編集</h2>
             </div>
@@ -159,11 +163,16 @@ onMounted(() => {
 
                 <!-- ユーザー名編集欄 -->
                 <div class="mt-8 px-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="username"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         名前:
                     </label>
                     <input
                         type="text"
+                        id="username"
+                        autocomplete="off"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         v-model="authStore.user.name"
                         placeholder="新しいユーザー名を入力"
@@ -172,11 +181,16 @@ onMounted(() => {
 
                 <!-- メールアドレス編集欄 -->
                 <div class="mt-4 px-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="email"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         メールアドレス:
                     </label>
                     <input
                         type="email"
+                        id="email"
+                        autocomplete="off"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         v-model="authStore.user.email"
                         placeholder="新しいメールアドレスを入力"
@@ -185,11 +199,15 @@ onMounted(() => {
 
                 <!-- パスワード編集欄 -->
                 <div class="mt-4 px-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="password"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         パスワード:
                     </label>
                     <input
                         type="password"
+                        id="password"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         v-model="newPassword"
                         placeholder="新しいパスワードを入力"

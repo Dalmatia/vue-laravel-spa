@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, toRefs, ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useFollowStore } from '../stores/follow.js';
 
@@ -14,17 +14,9 @@ import CreateItemOverlay from '@/Components/Items/CreateItemOverlay.vue';
 
 let showCreateItem = ref(false);
 
-const form = reactive({ file: null });
 const authStore = useAuthStore();
 const followStore = useFollowStore();
 const outfits = ref([]);
-
-const getUploadedImage = (e) => {
-    form.file = e.target.files[0];
-    axios.post(`/users`, form, {
-        preserveState: false,
-    });
-};
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -76,39 +68,38 @@ onMounted(async () => {
         class="max-w-[880px] lg:ml-0 md:ml-[80px] md:pl-20 px-4 w-[100vw] md:w-[84.5vw]"
     >
         <div class="flex items-center md:justify-between">
-            <label for="fileUser">
+            <div>
                 <img
                     class="rounded-full object-fit md:w-[200px] w-[100px] cursor-pointer"
-                    src="https://picsum.photos/id/50/200/200"
+                    :src="authStore.user.file"
                 />
-            </label>
-            <input
-                id="fileUser"
-                class="hidden"
-                type="file"
-                @input="getUploadedImage($event)"
-            />
+            </div>
 
-            <div class="ml-6 w-full">
+            <div class="ml-6 w-full" v-if="authStore.user">
                 <div class="flex items-center md:mb-8 mb-5">
-                    <div
-                        class="md:mr-6 mr-3 rounded-lg text-[22px]"
-                        v-if="authStore.user"
-                    >
+                    <div class="md:mr-6 mr-3 rounded-lg text-[22px]">
                         {{ authStore.user.name }}
                     </div>
-                    <button
+                    <router-link
+                        :to="{
+                            name: 'EditProfile',
+                            params: { id: authStore.user.id },
+                        }"
                         class="md:block hidden md:mr-6 p-1 px-4 rounded-lg text-[16px] font-extrabold bg-gray-100 hover:bg-gray-200"
                     >
                         プロフィール編集
-                    </button>
+                    </router-link>
                     <Cog :size="28" class="cursor-pointer" />
                 </div>
-                <button
+                <router-link
                     class="md:hidden mr-6 p-1 px-4 max-w-[260px] w-full rounded-lg text-[17px] font-extrabold bg-gray-100 hover:bg-gray-200"
+                    :to="{
+                        name: 'EditProfile',
+                        params: { id: authStore.user.id },
+                    }"
                 >
                     プロフィール編集
-                </button>
+                </router-link>
                 <div class="md:block hidden">
                     <div class="flex items-center text-[18px]">
                         <div class="mr-6">

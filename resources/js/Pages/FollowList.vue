@@ -110,25 +110,14 @@ watch(
                                                     <div
                                                         class="self-center block flex-none relative md:pl-20 lg:pl-0"
                                                     >
-                                                        <router-link
-                                                            :to="{
-                                                                name: 'User',
-                                                                params: {
-                                                                    id: authStore
-                                                                        .user
-                                                                        .id,
-                                                                },
-                                                            }"
-                                                            v-if="
-                                                                authStore.user
-                                                            "
+                                                        <div
                                                             class="h-[44px] w-[44px]"
                                                         >
                                                             <img
                                                                 class="w-full pt-0 mt-0 mb-0 h-full border-y-0 pb-0 border-x-0 object-cover pl-0 text-[100%] pr-0 ml-0 align-baseline mr-0 border-none cursor-pointer rounded-full"
-                                                                src="https://picsum.photos/id/200/44/44"
+                                                                :src="user.file"
                                                             />
-                                                        </router-link>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

@@ -318,12 +318,10 @@ onUnmounted(() => {
                                     id="profile_image"
                                     class="relative float-left w-[22px] md:w-[40px]"
                                 >
-                                    <a href="">
-                                        <img
-                                            src="https://picsum.photos/id/32/32/32"
-                                            class="rounded-full w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
-                                        />
-                                    </a>
+                                    <img
+                                        :src="outfit.user.file"
+                                        class="rounded-full w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
+                                    />
                                 </div>
                                 <div
                                     id="username"
@@ -542,7 +540,7 @@ onUnmounted(() => {
                             >
                                 <button
                                     class="m-0 p-0 w-full bg-black rounded border border-solid border-transparent box-border text-white cursor-pointer block text-sm font-bold h-[45px] leading-[44px] text-center overflow-visible"
-                                    @click="filterByCategory()"
+                                    @click.prevent="filterByCategory()"
                                 >
                                     この条件で絞り込む
                                 </button>
@@ -592,7 +590,7 @@ onUnmounted(() => {
                                     class="relative float-left w-[22px] mr-1"
                                 >
                                     <img
-                                        src="https://picsum.photos/id/32/32/32"
+                                        :src="outfit.user.file"
                                         class="opacity-100 rounded-[50%] w-[22px] h-[22px]"
                                     />
                                 </div>

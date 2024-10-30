@@ -1,5 +1,6 @@
 <script setup>
 import { toRefs } from 'vue';
+import { useAuthStore } from '../stores/auth';
 
 import HomeOutline from 'vue-material-design-icons/HomeOutline.vue';
 import Magnify from 'vue-material-design-icons/Magnify.vue';
@@ -14,6 +15,7 @@ import Login from 'vue-material-design-icons/Login.vue';
 const props = defineProps({ iconString: String });
 const { iconString } = toRefs(props);
 
+const user = useAuthStore().user;
 let icon = null;
 
 if (iconString.value === 'Home') icon = HomeOutline;
@@ -36,7 +38,7 @@ if (iconString.value === 'Logout') icon = Menu;
                 v-if="iconString === 'Profile'"
                 :class="{ 'mr-1': iconString === 'Profile' }"
                 class="rounded-full ml-[2px] w-[30px] cursor-pointer"
-                src="https://picsum.photos/id/50/300/320"
+                :src="user.file"
             />
             <component v-else :is="icon" fillColor="#000000" :size="36" />
             <span
