@@ -26,7 +26,9 @@ const authStore = useAuthStore();
 let showCreatePost = ref(false);
 let isLoading = ref(true);
 let isDropdownOpen = ref(false);
-const dropdown = ref(null);
+let notificationsOpen = ref(false);
+const account = ref(null);
+const notifications = ref(null);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -54,12 +56,25 @@ const logout = () => {
 };
 
 const closeDropDown = (event) => {
-    if (
-        isDropdownOpen &&
-        dropdown.value &&
-        !dropdown.value.contains(event.target)
-    ) {
+    const targetIsDropdown =
+        account.value && account.value.contains(event.target);
+    const targetNotifications =
+        notifications.value && notifications.value.contains(event.target);
+    if (!targetIsDropdown) {
         isDropdownOpen.value = false;
+    }
+    if (!targetNotifications) {
+        notificationsOpen.value = false;
+    }
+};
+
+const toggleDropdown = (dropdownType) => {
+    if (dropdownType === 'notifications') {
+        notificationsOpen.value = !notificationsOpen.value;
+        isDropdownOpen.value = false;
+    } else if (dropdownType === 'account') {
+        isDropdownOpen.value = !isDropdownOpen.value;
+        notificationsOpen.value = false;
     }
 };
 
@@ -93,17 +108,47 @@ onUnmounted(() => {
                     </router-link>
 
                     <!-- 通知アイコン -->
-                    <div class="pl-4 pr-3">
-                        <BellOutline fillColor="#000000" :size="27" />
+                    <div class="relative pl-4 pr-4" ref="notifications">
+                        <button
+                            @click="toggleDropdown('notifications')"
+                            type="button"
+                            class="relative"
+                        >
+                            <BellOutline fillColor="#000000" :size="27" />
+                            <!-- 未読通知数を表示 -->
+                            <span
+                                class="absolute top-0 right-0 translate-x-1/2 translate-y-1/2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-red-100 bg-red-600 rounded-full"
+                            >
+                                10
+                            </span>
+                        </button>
+
+                        <!-- 通知ドロップダウンメニュー -->
+                        <div
+                            v-if="notificationsOpen"
+                            class="absolute top-full right-[-40px] mt-5 w-64 bg-white rounded-md shadow-lg z-50 border border-gray-200"
+                        >
+                            <a
+                                href="#"
+                                class="inline-block bg-black text-white font-bold m-2 py-1 px-1 rounded hover:bg-gray-700"
+                            >
+                                全て既読にする
+                            </a>
+                            <div class="max-h-64 overflow-y-auto">
+                                <div
+                                    class="flex flex-col border-b border-gray-300"
+                                >
+                                    <p class="font-bold p-3">タイトル</p>
+                                    <p class="p-3">本文</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div
-                        class="relative items-center"
-                        ref="dropdown"
-                        v-if="authStore.user"
-                    >
+                    <!-- アカウントアイコン -->
+                    <div class="relative" ref="account" v-if="authStore.user">
                         <div
-                            @click="isDropdownOpen = !isDropdownOpen"
+                            @click="toggleDropdown('account')"
                             class="flex items-center cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-all duration-300"
                         >
                             <div
@@ -135,7 +180,7 @@ onUnmounted(() => {
                                         class="flex items-center space-x-2 text-gray-700"
                                     >
                                         <AccountOutline class="w-5 h-5" />
-                                        <span>プロフィール</span>
+                                        <span>プロフィール編集</span>
                                     </router-link>
                                 </li>
                                 <li
@@ -205,32 +250,36 @@ onUnmounted(() => {
 
             <div class="px-3">
                 <router-link :to="{ name: 'Home' }">
-                    <MenuItem iconString="Home" class="mb-4" />
+                    <MenuItem iconString="Home" class="mb-4 lg:mb-2" />
                 </router-link>
                 <router-link :to="{ name: 'Search' }">
-                    <MenuItem iconString="Search" class="mb-4" />
+                    <MenuItem iconString="Search" class="mb-4 lg:mb-2" />
                 </router-link>
                 <router-link :to="{ name: 'Calendar' }" v-if="authStore.user">
-                    <MenuItem iconString="Calendar" class="mb-4" />
+                    <MenuItem iconString="Calendar" class="mb-4 lg:mb-2" />
                 </router-link>
-                <!-- <MenuItem iconString="Messages" class="mb-4" /> -->
+                <MenuItem
+                    iconString="Notifications"
+                    class="mb-4 lg:mb-2"
+                    v-if="authStore.user"
+                />
                 <router-link :to="{ name: 'Likes' }" v-if="authStore.user">
-                    <MenuItem iconString="Notifications" class="mb-4" />
+                    <MenuItem iconString="Likes" class="mb-4 lg:mb-2" />
                 </router-link>
                 <MenuItem
                     v-if="authStore.user"
                     @click="showCreatePost = true"
                     iconString="Create"
-                    class="mb-4"
+                    class="mb-4 lg:mb-2"
                 />
                 <router-link :to="{ name: 'Login' }" v-if="!authStore.user">
-                    <MenuItem iconString="Login" class="mb-4" />
+                    <MenuItem iconString="Login" class="mb-4 lg:mb-2" />
                 </router-link>
                 <router-link
                     :to="{ name: 'User', params: { id: authStore.user.id } }"
                     v-if="authStore.user"
                 >
-                    <MenuItem iconString="Profile" class="mb-4" />
+                    <MenuItem iconString="Profile" class="mb-4 lg:mb-2" />
                 </router-link>
             </div>
 

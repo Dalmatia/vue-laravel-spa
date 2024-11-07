@@ -1,7 +1,7 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Upload from 'vue-material-design-icons/Upload.vue';
@@ -10,7 +10,7 @@ const authStore = useAuthStore();
 const newPassword = ref('');
 let isValidFile = ref(null);
 let fileDisplay = ref('');
-const router = useRoute();
+const router = useRouter();
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -54,6 +54,8 @@ const updateProfile = async () => {
         if (response.status === 200) {
             window.dispatchEvent(new Event('profile-updated'));
             await fetchUserData(); // 更新後に再度ユーザー情報を取得
+            await nextTick();
+            router.push({ name: 'User', params: { id: authStore.user.id } });
         }
     } catch (error) {
         console.error('プロフィール更新エラー:', error);
