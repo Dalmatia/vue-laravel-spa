@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 
@@ -18,6 +18,7 @@ import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRigh
 
 import MenuItem from '@/Components/MenuItem.vue';
 import CreateOutfitOverlay from '@/Components/Outfits/CreateOutfitOverlay.vue';
+import Notifications from '../Pages/Notifications.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -26,7 +27,7 @@ const authStore = useAuthStore();
 let showCreatePost = ref(false);
 let isLoading = ref(true);
 let isDropdownOpen = ref(false);
-let notificationsOpen = ref(false);
+let noticeOpen = ref(false);
 const account = ref(null);
 const notifications = ref(null);
 
@@ -36,55 +37,58 @@ const fetchUserData = async () => {
         await authStore.fetchUserData();
     } catch (error) {
         if (error.response && error.response.status === 401) {
-            handleUnauthorized();
+            logout();
         }
     } finally {
         isLoading.value = false;
     }
 };
 
-// ユーザー認証の判別
-const handleUnauthorized = () => {
-    localStorage.removeItem('authenticated');
-    authStore.logout();
-    router.push({ name: 'Login' });
-};
+const isAuthenticatedAndNotInSpecificRoutes = computed(
+    () =>
+        authStore.user &&
+        ![
+            '/',
+            `/user/${authStore.user.id}/editProfile`,
+            `/user/${authStore.user.id}/follow_list`,
+            `/user/${authStore.user.id}/follower_list`,
+            '/search',
+        ].includes(route.path)
+);
 
 const logout = () => {
     authStore.logout();
-    handleUnauthorized();
+    localStorage.removeItem('authenticated');
+    router.push({ name: 'Login' });
 };
 
-const closeDropDown = (event) => {
-    const targetIsDropdown =
-        account.value && account.value.contains(event.target);
-    const targetNotifications =
-        notifications.value && notifications.value.contains(event.target);
-    if (!targetIsDropdown) {
-        isDropdownOpen.value = false;
-    }
-    if (!targetNotifications) {
-        notificationsOpen.value = false;
-    }
-};
-
-const toggleDropdown = (dropdownType) => {
-    if (dropdownType === 'notifications') {
-        notificationsOpen.value = !notificationsOpen.value;
-        isDropdownOpen.value = false;
-    } else if (dropdownType === 'account') {
+const toggleMenu = (dropdownType, event) => {
+    if (event) event.stopPropagation();
+    if (dropdownType === 'account') {
         isDropdownOpen.value = !isDropdownOpen.value;
-        notificationsOpen.value = false;
+    }
+    if (dropdownType === 'notifications') {
+        noticeOpen.value = !noticeOpen.value;
+    }
+};
+
+const closeMenu = (event) => {
+    if (
+        (account.value && !account.value.contains(event.target)) ||
+        (notifications.value && !notifications.value.contains(event.target))
+    ) {
+        isDropdownOpen.value = false;
+        noticeOpen.value = false;
     }
 };
 
 onMounted(() => {
     fetchUserData();
-    window.addEventListener('click', closeDropDown);
+    window.addEventListener('click', closeMenu);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('click', closeDropDown);
+    window.removeEventListener('click', closeMenu);
 });
 </script>
 
@@ -108,47 +112,28 @@ onUnmounted(() => {
                     </router-link>
 
                     <!-- 通知アイコン -->
-                    <div class="relative pl-4 pr-4" ref="notifications">
-                        <button
-                            @click="toggleDropdown('notifications')"
-                            type="button"
+                    <div class="relative pl-4 pr-4">
+                        <router-link
+                            v-if="authStore.user"
+                            :to="{
+                                name: 'Notifications',
+                                params: { id: authStore.user.id },
+                            }"
                             class="relative"
                         >
                             <BellOutline fillColor="#000000" :size="27" />
-                            <!-- 未読通知数を表示 -->
                             <span
                                 class="absolute top-0 right-0 translate-x-1/2 translate-y-1/2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-red-100 bg-red-600 rounded-full"
                             >
                                 10
                             </span>
-                        </button>
-
-                        <!-- 通知ドロップダウンメニュー -->
-                        <div
-                            v-if="notificationsOpen"
-                            class="absolute top-full right-[-40px] mt-5 w-64 bg-white rounded-md shadow-lg z-50 border border-gray-200"
-                        >
-                            <a
-                                href="#"
-                                class="inline-block bg-black text-white font-bold m-2 py-1 px-1 rounded hover:bg-gray-700"
-                            >
-                                全て既読にする
-                            </a>
-                            <div class="max-h-64 overflow-y-auto">
-                                <div
-                                    class="flex flex-col border-b border-gray-300"
-                                >
-                                    <p class="font-bold p-3">タイトル</p>
-                                    <p class="p-3">本文</p>
-                                </div>
-                            </div>
-                        </div>
+                        </router-link>
                     </div>
 
                     <!-- アカウントアイコン -->
                     <div class="relative" ref="account" v-if="authStore.user">
                         <div
-                            @click="toggleDropdown('account')"
+                            @click="toggleMenu('account', $event)"
                             class="flex items-center cursor-pointer p-2 rounded-full hover:bg-gray-100 transition-all duration-300"
                         >
                             <div
@@ -212,14 +197,7 @@ onUnmounted(() => {
         </div>
 
         <div
-            v-if="
-                authStore.user &&
-                route.path !== '/' &&
-                route.path !== `/user/${authStore.user.id}/editProfile` &&
-                route.path !== `/user/${authStore.user.id}/follow_list` &&
-                route.path !== `/user/${authStore.user.id}/follower_list` &&
-                route.path !== '/search'
-            "
+            v-if="isAuthenticatedAndNotInSpecificRoutes"
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -234,7 +212,7 @@ onUnmounted(() => {
 
         <div
             id="SideNav"
-            class="fixed h-full bg-white xl:w-[255px] w-[80px] md:block hidden border-r border-r-gray-300"
+            class="fixed h-full bg-white xl:w-[255px] w-[80px] md:block hidden border-r border-r-gray-300 z-10"
         >
             <router-link :to="{ name: 'Home' }">
                 <img
@@ -258,11 +236,13 @@ onUnmounted(() => {
                 <router-link :to="{ name: 'Calendar' }" v-if="authStore.user">
                     <MenuItem iconString="Calendar" class="mb-4 lg:mb-2" />
                 </router-link>
-                <MenuItem
-                    iconString="Notifications"
-                    class="mb-4 lg:mb-2"
+                <div
+                    ref="notifications"
                     v-if="authStore.user"
-                />
+                    @click="toggleMenu('notifications', $event)"
+                >
+                    <MenuItem iconString="Notifications" class="mb-4 lg:mb-2" />
+                </div>
                 <router-link :to="{ name: 'Likes' }" v-if="authStore.user">
                     <MenuItem iconString="Likes" class="mb-4 lg:mb-2" />
                 </router-link>
@@ -440,4 +420,5 @@ onUnmounted(() => {
         v-if="showCreatePost"
         @close="showCreatePost = false"
     />
+    <Notifications v-show="noticeOpen" @close-notice="noticeOpen = false" />
 </template>

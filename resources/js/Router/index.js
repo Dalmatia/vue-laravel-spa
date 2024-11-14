@@ -13,6 +13,7 @@ const Likes = () => import('../Pages/LikesPage.vue');
 const FollowList = () => import('../Pages/FollowList.vue');
 const FollowerList = () => import('../Pages/FollowerList.vue');
 const Search = () => import('../Pages/Search.vue');
+const Notifications = () => import('../Pages/Notifications.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -93,6 +94,12 @@ const router = createRouter({
             path: '/search',
             name: 'Search',
             component: Search,
+        },
+        {
+            path: '/user/:id/notifications',
+            name: 'Notifications',
+            component: Notifications,
+            meta: { requiresAuth: true },
         },
     ],
 });
