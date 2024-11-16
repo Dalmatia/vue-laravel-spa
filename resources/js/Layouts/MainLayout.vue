@@ -30,6 +30,8 @@ let isDropdownOpen = ref(false);
 let noticeOpen = ref(false);
 const account = ref(null);
 const notifications = ref(null);
+const BREAKPOINT_MOBILE = 640;
+const isMobile = ref(window.innerWidth > BREAKPOINT_MOBILE);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -53,6 +55,7 @@ const isAuthenticatedAndNotInSpecificRoutes = computed(
             `/user/${authStore.user.id}/follow_list`,
             `/user/${authStore.user.id}/follower_list`,
             '/search',
+            `/user/${authStore.user.id}/notifications`,
         ].includes(route.path)
 );
 
@@ -82,13 +85,32 @@ const closeMenu = (event) => {
     }
 };
 
+// 画面サイズと向きに応じて通知メニューの挙動を調整
+const handleResize = () => {
+    const orientationType = screen.orientation?.type || '';
+    const isPortrait = orientationType.includes('portrait');
+    const mobile = window.innerWidth > BREAKPOINT_MOBILE;
+    if (isPortrait && !mobile && isMobile.value) {
+        noticeOpen.value = false;
+    }
+    isMobile.value = mobile;
+};
+
 onMounted(() => {
     fetchUserData();
     window.addEventListener('click', closeMenu);
+    window.addEventListener('resize', handleResize);
+    if (screen.orientation?.addEventListener) {
+        screen.orientation.addEventListener('change', handleResize);
+    }
 });
 
 onUnmounted(() => {
     window.removeEventListener('click', closeMenu);
+    window.removeEventListener('resize', handleResize);
+    if (screen.orientation?.removeEventListener) {
+        screen.orientation.removeEventListener('change', handleResize);
+    }
 });
 </script>
 
@@ -181,13 +203,13 @@ onUnmounted(() => {
                                 <li
                                     class="px-4 py-2 hover:bg-gray-50 transition-colors duration-200"
                                 >
-                                    <a
+                                    <div
                                         @click.prevent="logout()"
                                         class="flex items-center space-x-2 text-red-600 cursor-pointer"
                                     >
                                         <Logout class="w-5 h-5" />
                                         <span>ログアウト</span>
-                                    </a>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
@@ -292,8 +314,7 @@ onUnmounted(() => {
                 id="SuggestionsSection"
                 class="lg:w-4/12 lg:block hidden text-black mt-10"
             >
-                <a
-                    href="/"
+                <div
                     class="flex items-center justify-between max-w-[300px]"
                     v-if="authStore.user"
                 >
@@ -310,9 +331,15 @@ onUnmounted(() => {
                             />
                         </router-link>
                         <div class="pl-4">
-                            <div class="text-black font-extrabold">
+                            <router-link
+                                class="text-black font-extrabold"
+                                :to="{
+                                    name: 'User',
+                                    params: { id: authStore.user.id },
+                                }"
+                            >
                                 {{ authStore.user.name }}
-                            </div>
+                            </router-link>
                             <div class="text-gray-500 text-extrabold text-sm">
                                 NAME HERE
                             </div>
@@ -323,7 +350,7 @@ onUnmounted(() => {
                     >
                         切り替え
                     </button>
-                </a>
+                </div>
 
                 <div
                     class="max-w-[300px] flex items-center justify-between py-3"

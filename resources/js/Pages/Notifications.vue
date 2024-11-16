@@ -1,18 +1,84 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close-notice']);
 const hasNotifications = ref(false);
+const router = useRouter();
+const BREAKPOINT_MOBILE = 640;
+const isMobile = ref(window.innerWidth <= BREAKPOINT_MOBILE);
+
+// スマートフォン画面ではない時、ホーム画面に戻る
+const handleResize = () => {
+    const mobile = window.innerWidth <= BREAKPOINT_MOBILE;
+    if (!mobile && isMobile.value) {
+        // モバイルからデスクトップに切り替わったとき
+        router.push({ name: 'Home' });
+    }
+    isMobile.value = mobile; // 現在の状態を更新
+};
 
 const closeNotification = () => {
-    emit('close-notice');
+    if (isMobile.value) {
+        router.back();
+    } else {
+        emit('close-notice');
+    }
 };
+
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
-    <transition name="slide">
+    <!-- モバイルレイアウト -->
+    <div v-if="isMobile" class="fixed inset-0 z-20 bg-white overflow-y-auto">
+        <!-- ヘッダー -->
+        <div
+            class="flex items-center sticky top-0 justify-between px-4 py-4 border-b bg-white"
+        >
+            <button
+                @click="closeNotification"
+                class="text-gray-600 hover:text-gray-900"
+            >
+                <ArrowLeft :size="24" class="cursor-pointer" />
+            </button>
+            <span class="text-lg font-bold">お知らせ</span>
+            <div class="w-6"></div>
+            <!-- Closeボタンのサイズ調整 -->
+        </div>
+
+        <!-- 通知内容 -->
+        <div class="h-full p-4">
+            <div v-if="hasNotifications" class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <h4 class="font-semibold">通知タイトル</h4>
+                    <p class="text-sm text-gray-600">
+                        通知の内容がここに表示されます。
+                    </p>
+                </div>
+                <!-- 繰り返し表示 -->
+            </div>
+
+            <!-- 通知が無い場合 -->
+            <div
+                v-else
+                class="flex items-center justify-center h-full text-gray-500"
+            >
+                <h3 class="text-base">お知らせはありません</h3>
+            </div>
+        </div>
+    </div>
+
+    <transition name="slide" v-else>
         <div
             @click.stop
             class="absolute top-0 left-[73px] xl:left-60 z-0 w-full md:w-[397px] h-full bg-slate-100 shadow-md rounded-r-2xl border-r transition-transform duration-300"
