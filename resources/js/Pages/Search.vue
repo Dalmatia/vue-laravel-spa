@@ -51,6 +51,25 @@ const openOutfitOverlay = (outfit) => {
     openOverlay.value = true;
 };
 
+// コーディネートの削除
+const deleteOutfit = (object) => {
+    let url = '';
+    if (object.deleteType === 'Outfit') {
+        url = `/api/outfit/` + object.id;
+        axios
+            .delete(url)
+            .then((response) => {
+                console.log(response);
+                openOverlay.value = false;
+                window.dispatchEvent(new Event('outfit-deleted'));
+                fetchOutfits();
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+};
+
 const getEnums = async () => {
     try {
         const response = await axios.get('/api/enums');
@@ -622,6 +641,7 @@ onUnmounted(() => {
     <ShowOutfitOverlay
         v-if="openOverlay"
         :outfit="currentOutfit"
+        @delete-selected="deleteOutfit($event)"
         @close-overlay="openOverlay = false"
     />
 </template>

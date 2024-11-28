@@ -56,16 +56,14 @@ onUnmounted(() => {
     >
         <!-- お気に入りコーディネートページヘッダー部分 -->
         <header
-            class="pt-[5px] pr-0 pb-[15px] pl-0 bg-white min-h-[10px] border-b-[1px] border-[#ddd] border-solid relative"
+            class="pt-[5px] pr-0 pb-[15px] pl-0 bg-white min-h-[10px] border-b-[1px] border-[#ddd] border-solid sticky top-0"
         >
             <div class="table w-full table-fixed">
                 <div class="table w-[100%]">
                     <div
                         class="table-cell align-middle pr-[15px] w-[95%] border-r-[1px] border-[#ddd] border-solid"
                     >
-                        <h1
-                            class="text-[22px] leading-[1.5] font-bold break-words"
-                        >
+                        <h1 class="text-lg leading-[1.5] font-bold break-words">
                             お気に入りコーディネート
                         </h1>
                     </div>
@@ -90,7 +88,10 @@ onUnmounted(() => {
             </div>
         </header>
         <!-- お気に入りコーディネート表示部分 -->
-        <div id="favorite_outfit" class="relative z-[1]">
+        <div
+            id="favorite_outfit"
+            class="relative h-[calc(100vh-121px)] overflow-y-auto pb-20"
+        >
             <div
                 id="outfit_list"
                 class="container grid grid-cols-3 md:grid-cols-4 pt-0 pr-0 pb-[20px] pl-0"
@@ -102,26 +103,28 @@ onUnmounted(() => {
                 >
                     <div
                         class="relative float-left border-[1px] border-[#ddd] border-solid rounded-[3px] md:mt-[18px] md:mr-0 md:mb-0 md:ml-[18px] bg-white"
-                        @click="openOutfitOverlay(like)"
                     >
-                        <p
-                            v-if="like.outfit && like.outfit.file"
-                            class="relative w-[100%] h-auto overflow-hidden bg-[#f6f7f8]"
+                        <a
+                            @click.prevent="openOutfitOverlay(like)"
+                            class="block"
                         >
-                            <a @click="openOutfitOverlay(like)" class="block">
+                            <p
+                                v-if="like.outfit && like.outfit.file"
+                                class="relative w-full h-auto overflow-hidden bg-[#f6f7f8]"
+                            >
                                 <img
                                     :src="like.outfit.file"
-                                    class="w-full h-auto opacity-100 cursor-pointer"
+                                    class="w-full aspect-[2/3] cursor-pointer"
                                 />
-                            </a>
-                        </p>
+                            </p>
+                        </a>
                         <div
                             id="user_profile"
                             class="border-t-0 pt-[9px] pr-[10px] pb-[9px] pl-[10px]"
                         >
                             <div
                                 id="profile_image"
-                                class="relative float-left w-[22px] md:w-[40px]"
+                                class="relative float-left w-[22px] md:w-8"
                             >
                                 <div
                                     id="image"

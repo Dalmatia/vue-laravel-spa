@@ -14,7 +14,11 @@ const isMobile = ref(window.innerWidth <= BREAKPOINT_MOBILE);
 // スマートフォン画面ではない時、ホーム画面に戻る
 const handleResize = () => {
     const mobile = window.innerWidth <= BREAKPOINT_MOBILE;
-    if (!mobile && isMobile.value) {
+    if (
+        !mobile &&
+        isMobile.value &&
+        router.currentRoute.value.name === 'Notifications'
+    ) {
         // モバイルからデスクトップに切り替わったとき
         router.push({ name: 'Home' });
     }

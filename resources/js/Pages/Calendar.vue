@@ -30,6 +30,25 @@ const openOutfitOverlay = (date) => {
     openOverlay.value = true;
 };
 
+// コーディネートの削除
+const deleteOutfit = (object) => {
+    let url = '';
+    if (object.deleteType === 'Outfit') {
+        url = `/api/outfit/` + object.id;
+        axios
+            .delete(url)
+            .then((response) => {
+                console.log(response);
+                openOverlay.value = false;
+                fetchOutfits();
+                window.dispatchEvent(new Event('outfit-deleted'));
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+};
+
 // 月の開始日を取得する関数
 const getStartDate = () => {
     let date = dayjs(currentDate.value);
@@ -120,7 +139,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="content">
+    <div
+        id="content"
+        class="flex justify-center items-start min-h-screen bg-gray-50 pb-20"
+    >
         <div
             class="max-w-6xl mx-auto lg:mx-auto md:ml-14 w-[100vw] md:w-[84.5vw] xl:w-[70vw]"
         >
@@ -157,7 +179,7 @@ onUnmounted(() => {
             </div>
 
             <div
-                class="flex border-l-[1px] border-solid border-gray-300"
+                class="flex border-l-[1px] border-solid border-gray-300 flex-grow"
                 v-for="(week, index) in calendars"
                 :key="index"
             >
@@ -173,7 +195,7 @@ onUnmounted(() => {
                         @click="openOutfitOverlay(day.fullDate)"
                     >
                         <img
-                            class="w-auto h-auto my-auto mx-auto md:w-20 md:h-24 lg:w-20 lg:h-24"
+                            class="w-20 h-24 my-auto mx-auto md:w-20 md:h-24 lg:w-20 lg:h-24"
                             :src="day.outfit"
                         />
                     </a>

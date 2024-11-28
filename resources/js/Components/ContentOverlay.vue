@@ -40,6 +40,7 @@ const deleteOutfit = (object) => {
             .then((response) => {
                 console.log(response);
                 openOverlay.value = false;
+                window.dispatchEvent(new Event('outfit-deleted'));
                 fetchOutfits();
             })
             .catch((error) => {
