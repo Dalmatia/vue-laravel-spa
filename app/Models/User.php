@@ -78,4 +78,9 @@ class User extends Authenticatable
             'following_id',
         );
     }
+
+    public function receivesBroadcastNotificationsOn()
+    {
+        return 'user-notifications.' . $this->id;
+    }
 }

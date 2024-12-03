@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Follow;
 use App\Models\User;
+use App\Notifications\FollowedUser;
 
 class FollowController extends Controller
 {
@@ -32,6 +33,11 @@ class FollowController extends Controller
             'following_id' => $followingId,
             'followed_id' => $followedId,
         ]);
+
+        if ($follow->wasRecentlyCreated) {
+            $user->notify(new FollowedUser(auth()->user()));
+        }
+
         return response()->json(['success' => $follow->wasRecentlyCreated]);
     }
     //フォロー解除する

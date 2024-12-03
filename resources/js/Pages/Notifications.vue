@@ -1,12 +1,13 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close-notice']);
-const hasNotifications = ref(false);
+const props = defineProps(['user']);
+let notifications = ref([]);
 const router = useRouter();
 const BREAKPOINT_MOBILE = 640;
 const isMobile = ref(window.innerWidth <= BREAKPOINT_MOBILE);
@@ -33,7 +34,30 @@ const closeNotification = () => {
     }
 };
 
+const setupWebSocket = () => {
+    Echo.private('user-notifications.' + props.user.id).notification(
+        (notification) => {
+            notifications.value.unshift({
+                id: new Date().getTime(),
+                message: notification.message,
+                follower_name: notification.follower_name,
+            });
+        }
+    );
+};
+
+watch(
+    () => props.user,
+    (newUser) => {
+        if (newUser && newUser.id) {
+            setupWebSocket();
+        }
+    },
+    { immediate: true }
+);
+
 onMounted(() => {
+    handleResize();
     window.addEventListener('resize', handleResize);
 });
 
@@ -50,7 +74,7 @@ onUnmounted(() => {
             class="flex items-center sticky top-0 justify-between px-4 py-4 border-b bg-white"
         >
             <button
-                @click="closeNotification"
+                @click="closeNotification()"
                 class="text-gray-600 hover:text-gray-900"
             >
                 <ArrowLeft :size="24" class="cursor-pointer" />
@@ -61,17 +85,24 @@ onUnmounted(() => {
         </div>
 
         <!-- 通知内容 -->
-        <div class="h-full p-4">
-            <div v-if="hasNotifications" class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <h4 class="font-semibold">通知タイトル</h4>
-                    <p class="text-sm text-gray-600">
-                        通知の内容がここに表示されます。
-                    </p>
+        <div class="h-full">
+            <div v-if="notifications.length > 0">
+                <div
+                    v-for="notification in notifications"
+                    :key="notification.id"
+                    class="p-2 space-y-4"
+                >
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="font-semibold">
+                            {{ notification.follower_name }}
+                        </h4>
+                        <p class="text-sm text-gray-600">
+                            {{ notification.message }}
+                        </p>
+                    </div>
+                    <!-- 繰り返し表示 -->
                 </div>
-                <!-- 繰り返し表示 -->
             </div>
-
             <!-- 通知が無い場合 -->
             <div
                 v-else
@@ -102,16 +133,24 @@ onUnmounted(() => {
 
             <!-- 通知内容 -->
             <div class="bg-white h-[calc(100vh-4rem)] overflow-y-auto">
-                <!-- 通知がある場合 -->
-                <div v-if="hasNotifications" class="p-4 space-y-4">
-                    <!-- 通知アイテムの例 -->
-                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                        <h4 class="font-semibold">通知タイトル</h4>
-                        <p class="text-sm text-gray-600">
-                            通知の内容がここに表示されます。
-                        </p>
+                <div v-if="notifications.length > 0">
+                    <!-- 通知がある場合 -->
+                    <div
+                        v-for="notification in notifications"
+                        :key="notification.id"
+                        class="p-2 space-y-4"
+                    >
+                        <!-- 通知アイテムの例 -->
+                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-semibold">
+                                {{ notification.follower_name }}
+                            </h4>
+                            <p class="text-sm text-gray-600">
+                                {{ notification.message }}
+                            </p>
+                        </div>
+                        <!-- 通知アイテムの繰り返し -->
                     </div>
-                    <!-- 通知アイテムの繰り返し -->
                 </div>
 
                 <!-- 通知が無い場合 -->

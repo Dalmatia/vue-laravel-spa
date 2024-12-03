@@ -31,7 +31,7 @@ let noticeOpen = ref(false);
 const account = ref(null);
 const notifications = ref(null);
 const BREAKPOINT_MOBILE = 640;
-const isMobile = ref(window.innerWidth > BREAKPOINT_MOBILE);
+const isMobile = ref(window.innerWidth <= BREAKPOINT_MOBILE);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -447,5 +447,11 @@ onUnmounted(() => {
         v-if="showCreatePost"
         @close="showCreatePost = false"
     />
-    <Notifications v-show="noticeOpen" @close-notice="noticeOpen = false" />
+    <div v-if="authStore.user">
+        <Notifications
+            v-show="noticeOpen"
+            @close-notice="noticeOpen = false"
+            :user="authStore.user"
+        />
+    </div>
 </template>

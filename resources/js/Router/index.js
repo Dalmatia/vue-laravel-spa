@@ -100,6 +100,7 @@ const router = createRouter({
             name: 'Notifications',
             component: Notifications,
             meta: { requiresAuth: true },
+            props: (route) => ({ user: { id: route.params.id } }),
         },
     ],
 });
