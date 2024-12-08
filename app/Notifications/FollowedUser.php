@@ -22,7 +22,17 @@ class FollowedUser extends Notification implements ShouldBroadcast
 
     public function via(object $notifiable)
     {
-        return ['broadcast'];
+        return ['database', 'broadcast'];
+    }
+
+    public function toDatabase($notifiable)
+    {
+        return [
+            'follower_name' => $this->follower->name,
+            'follower_id' => $this->follower->id,
+            'message' => "{$this->follower->name} さんがあなたをフォローしました。",
+            'created_at' => now(),
+        ];
     }
 
     public function toBroadcast($notifiable)
@@ -30,7 +40,7 @@ class FollowedUser extends Notification implements ShouldBroadcast
         return new BroadcastMessage([
             'follower_name' => $this->follower->name,
             'follower_id' => $this->follower->id,
-            'message' => "{$this->follower->name} があなたをフォローしました。",
+            'message' => "{$this->follower->name} さんがあなたをフォローしました。",
         ]);
     }
 }

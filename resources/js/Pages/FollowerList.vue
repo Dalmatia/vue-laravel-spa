@@ -1,14 +1,23 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import { useRoute } from 'vue-router';
 import { useFollowStore } from '../stores/follow';
 
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import Magnify from 'vue-material-design-icons/Magnify.vue';
 
 const authStore = useAuthStore();
+const authUserId = ref(null);
+const route = useRoute();
 const followStore = useFollowStore();
 const userId = ref(null);
+
+const isFollowing = (userId) =>
+    followStore.followStatus(userId) && userId !== authUserId.value;
+
+const unFollow = (userId) =>
+    !followStore.followStatus(userId) && userId !== authUserId.value;
 
 // フォローする
 const follow = async (userId) => {
@@ -30,23 +39,37 @@ const deleteFollow = async (userId) => {
     }
 };
 
-// フォローデータを取得する
-const fetchFollowData = async () => {
-    if (authStore.user && authStore.user.id) {
-        userId.value = authStore.user.id;
-        await followStore.followerList(userId.value);
+// フォロワーデータを取得する
+const fetchFollowerData = async () => {
+    if (!route.params.id || userId.value === route.params.id) return;
+    userId.value = route.params.id;
+    try {
+        await followStore.followerList(userId.value || '');
         await followStore.fetchFollowStatus(
             followStore.followerUsers.map((user) => user.id)
         );
+    } catch (error) {
+        console.error('フォロワーデータの取得に失敗しました。', error);
     }
 };
 
 watch(
     () => authStore.user,
-    async (user) => {
-        if (user && user.id) {
-            await fetchFollowData();
+    (newUser) => {
+        if (newUser && newUser.id) {
+            authUserId.value = newUser.id;
+        } else {
+            authUserId.value = null;
         }
+    },
+    { immediate: true }
+);
+
+watch(
+    () => route.params.id,
+    async (newId) => {
+        if (!newId) return;
+        await fetchFollowerData();
     },
     { immediate: true }
 );
@@ -71,6 +94,7 @@ watch(
                                 />
                                 <input
                                     type="text"
+                                    name="search"
                                     placeholder="検索する"
                                     class="bg-transparent w-full placeholder-[#8E8E8E] border-0 ring-0 focus:ring-0"
                                 />
@@ -143,39 +167,13 @@ watch(
                                                     <button
                                                         class="border-none text-white bg-blue-500 rounded-lg relative text-center box-border cursor-pointer block text-sm font-semibold !py-[7px] !px-4 pointer-events-auto overflow-ellipsis w-auto leading-[18px] m-0"
                                                         type="button"
-                                                        @click="follow(user.id)"
-                                                        v-if="
-                                                            !followStore.followStatus(
-                                                                user.id
-                                                            )
-                                                        "
-                                                    >
-                                                        <div
-                                                            class="h-full overflow-y-visible overflow-x-visible rounded-l-none justify-center bg-transparent box-border flex items-center rounded-r-none flex-row relative px-1"
-                                                        >
-                                                            <div
-                                                                class="block font-semibold m-0 text-[14px] leading-[18px]"
-                                                            >
-                                                                フォロー
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                                <div
-                                                    class="overflow-y-visible overflow-x-visible shrink rounded-l-none bg-transparent box-border flex rounded-r-none static items-stretch flex-row self-auto justify-start grow-0 ml-3"
-                                                >
-                                                    <button
-                                                        class="border-none text-white bg-blue-500 rounded-lg relative text-center box-border cursor-pointer block text-sm font-semibold !py-[7px] !px-4 pointer-events-auto overflow-ellipsis w-auto leading-[18px] m-0"
-                                                        type="button"
                                                         @click="
                                                             deleteFollow(
                                                                 user.id
                                                             )
                                                         "
                                                         v-if="
-                                                            followStore.followStatus(
-                                                                user.id
-                                                            )
+                                                            isFollowing(user.id)
                                                         "
                                                     >
                                                         <div
@@ -188,6 +186,22 @@ watch(
                                                             </div>
                                                         </div>
                                                     </button>
+                                                    <button
+                                                        class="border-none text-white bg-blue-500 rounded-lg relative text-center box-border cursor-pointer block text-sm font-semibold !py-[7px] !px-4 pointer-events-auto overflow-ellipsis w-auto leading-[18px] m-0"
+                                                        type="button"
+                                                        @click="follow(user.id)"
+                                                        v-if="unFollow(user.id)"
+                                                    >
+                                                        <div
+                                                            class="h-full overflow-y-visible overflow-x-visible rounded-l-none justify-center bg-transparent box-border flex items-center rounded-r-none flex-row relative px-1"
+                                                        >
+                                                            <div
+                                                                class="block font-semibold m-0 text-[14px] leading-[18px]"
+                                                            >
+                                                                フォロー
+                                                            </div>
+                                                        </div>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -195,7 +209,12 @@ watch(
                                 </div>
                             </div>
                         </div>
-                        <p v-else>フォローしているユーザーはいません</p>
+                        <p
+                            v-else
+                            class="flex items-center justify-center h-full text-center text-gray-500"
+                        >
+                            フォローしているユーザーはいません
+                        </p>
                     </div>
                 </div>
             </main>

@@ -34,11 +34,13 @@ const closeNotification = () => {
     }
 };
 
+// リアルタイムで通知を受信
 const setupWebSocket = () => {
-    Echo.private('user-notifications.' + props.user.id).notification(
+    Echo.private('user-notifications.' + props.user.id).listen(
+        '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
         (notification) => {
             notifications.value.unshift({
-                id: new Date().getTime(),
+                id: notification.id,
                 message: notification.message,
                 follower_name: notification.follower_name,
             });
@@ -46,17 +48,37 @@ const setupWebSocket = () => {
     );
 };
 
-watch(
-    () => props.user,
-    (newUser) => {
-        if (newUser && newUser.id) {
-            setupWebSocket();
-        }
-    },
-    { immediate: true }
-);
+const handleNotificationClick = (notification) => {
+    // 通知を既読にするAPIを呼び出す
+    axios
+        .post(`/api/notifications/${notification.id}/read`)
+        .then(() => {
+            notification.read_at = new Date().toISOString(); // ローカルで既読状態に変更
+            router.push({
+                name: 'User',
+                params: { id: notification.follower_id },
+            }); // ユーザーページに遷移
+            emit('close-notice');
+        })
+        .catch((error) =>
+            console.error('通知を既読にできませんでした。', error)
+        );
+};
 
 onMounted(() => {
+    if (props.user && props.user.id) {
+        setupWebSocket();
+
+        fetch(`/api/notifications/${props.user.id}`)
+            .then((response) => response.json())
+            .then((data) => {
+                notifications.value = data.notifications;
+                console.log(notifications.value);
+            })
+            .catch((error) =>
+                console.error('通知の読み込みに失敗しました。', error)
+            );
+    }
     handleResize();
     window.addEventListener('resize', handleResize);
 });
@@ -90,17 +112,26 @@ onUnmounted(() => {
                 <div
                     v-for="notification in notifications"
                     :key="notification.id"
+                    @click="handleNotificationClick(notification)"
                     class="p-2 space-y-4"
                 >
-                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <div
+                        class="p-4 rounded-lg shadow-sm"
+                        :class="{
+                            'bg-gray-50': !notification.read_at,
+                            'bg-white': notification.read_at,
+                        }"
+                    >
                         <h4 class="font-semibold">
                             {{ notification.follower_name }}
                         </h4>
                         <p class="text-sm text-gray-600">
                             {{ notification.message }}
                         </p>
+                        <p class="text-sm text-gray-600">
+                            {{ notification.created_at }}
+                        </p>
                     </div>
-                    <!-- 繰り返し表示 -->
                 </div>
             </div>
             <!-- 通知が無い場合 -->
@@ -138,9 +169,9 @@ onUnmounted(() => {
                     <div
                         v-for="notification in notifications"
                         :key="notification.id"
+                        @click="handleNotificationClick(notification)"
                         class="p-2 space-y-4"
                     >
-                        <!-- 通知アイテムの例 -->
                         <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
                             <h4 class="font-semibold">
                                 {{ notification.follower_name }}
@@ -149,7 +180,6 @@ onUnmounted(() => {
                                 {{ notification.message }}
                             </p>
                         </div>
-                        <!-- 通知アイテムの繰り返し -->
                     </div>
                 </div>
 

@@ -1,12 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useFollowStore } from '../stores/follow.js';
+import { useRoute } from 'vue-router';
 
 import Cog from 'vue-material-design-icons/Cog.vue';
 import Grid from 'vue-material-design-icons/Grid.vue';
-import PlayBoxOutline from 'vue-material-design-icons/PlayBoxOutline.vue';
-import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue';
 import Hanger from 'vue-material-design-icons/Hanger.vue';
 import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
@@ -16,26 +15,25 @@ let showCreateItem = ref(false);
 
 const authStore = useAuthStore();
 const followStore = useFollowStore();
+const user = ref(null);
 const outfits = ref([]);
+const route = useRoute();
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
+    if (!route.params.id) return;
     try {
-        await authStore.fetchUserData();
+        const [userResponse] = await Promise.all([
+            axios.get(`/api/users/${route.params.id}`),
+            Promise.all([
+                followStore.followList(route.params.id),
+                followStore.followerList(route.params.id),
+            ]),
+        ]);
+        user.value = userResponse.data.user;
+        outfits.value = userResponse.data.outfits;
     } catch (error) {
-        if (error.response && error.response.status === 401) {
-            handleUnauthorized();
-        }
-    }
-};
-
-// 投稿したコーディネートを取得
-const fetchOutfits = async () => {
-    try {
-        const response = await axios.get(`/api/users/${authStore.user.id}`);
-        outfits.value = response.data.outfits;
-    } catch (error) {
-        console.error(error);
+        console.error('ユーザー情報の取得に失敗しました:', error);
     }
 };
 
@@ -44,21 +42,26 @@ const select = (selectedTab) => {
     tab.value = selectedTab;
 };
 
-const fetchData = async (action) => {
-    if (authStore.user && authStore.user.id) {
-        await action(authStore.user.id);
-    }
-};
+watch(
+    () => route.params.id,
+    (userId) => {
+        if (userId) {
+            user.value = null;
+            outfits.value = [];
+        }
+    },
+    { immediate: true }
+);
 
-onMounted(async () => {
-    await Promise.all([
-        fetchUserData(),
-        fetchOutfits(),
-        fetchData(followStore.followList),
-        fetchData(followStore.followerList),
-    ]).catch((error) => {
-        console.error('情報の取得に失敗しました。', error);
-    });
+onMounted(() => {
+    fetchUserData();
+    window.addEventListener('outfit-created', fetchUserData);
+    window.addEventListener('outfit-deleted', fetchUserData);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('outfit-created', fetchUserData);
+    window.removeEventListener('outfit-deleted', fetchUserData);
 });
 </script>
 
@@ -71,31 +74,37 @@ onMounted(async () => {
             <div>
                 <img
                     class="rounded-full object-fit md:w-[200px] w-[100px] cursor-pointer"
-                    :src="authStore.user.file"
+                    :src="user?.file"
                 />
             </div>
 
-            <div class="ml-6 w-full" v-if="authStore.user">
+            <div class="ml-6 w-full" v-if="user">
                 <div class="flex items-center md:mb-8 mb-5">
                     <div class="md:mr-6 mr-3 rounded-lg text-[22px]">
-                        {{ authStore.user.name }}
+                        {{ user.name }}
                     </div>
                     <router-link
+                        v-if="authStore.user?.id === user.id"
                         :to="{
                             name: 'EditProfile',
-                            params: { id: authStore.user.id },
+                            params: { id: user.id },
                         }"
                         class="md:block hidden md:mr-6 p-1 px-4 rounded-lg text-[16px] font-extrabold bg-gray-100 hover:bg-gray-200"
                     >
                         プロフィール編集
                     </router-link>
-                    <Cog :size="28" class="cursor-pointer" />
+                    <Cog
+                        :size="28"
+                        class="cursor-pointer"
+                        v-if="authStore.user?.id === user.id"
+                    />
                 </div>
                 <router-link
                     class="md:hidden mr-6 p-1 px-4 max-w-[260px] w-full rounded-lg text-[17px] font-extrabold bg-gray-100 hover:bg-gray-200"
+                    v-if="authStore.user?.id === user.id"
                     :to="{
                         name: 'EditProfile',
-                        params: { id: authStore.user.id },
+                        params: { id: user.id },
                     }"
                 >
                     プロフィール編集
@@ -159,21 +168,14 @@ onMounted(async () => {
             class="w-full flex items-center justify-between border-t border-t-gray-300"
         >
             <router-link
-                class="p-3 w-1/4 flex justify-center border-t border-t-gray-900"
+                class="p-3 w-1/3 flex justify-center border-t border-t-gray-900"
                 :to="{ name: 'User' }"
                 :class="{ active: tab === 'User' }"
                 @click="select('User')"
             >
                 <Grid :size="28" fillColor="#0095F6" class="cursor-pointer" />
             </router-link>
-            <div class="p-3 w-1/4 flex justify-center border-t">
-                <PlayBoxOutline
-                    :size="28"
-                    fillColor="#8E8E8E"
-                    class="cursor-pointer"
-                />
-            </div>
-            <div class="p-3 w-1/4 flex justify-center border-t">
+            <div class="p-3 w-1/3 flex justify-center border-t">
                 <PlusCircle
                     @click="showCreateItem = true"
                     :size="28"
@@ -181,15 +183,8 @@ onMounted(async () => {
                     class="cursor-pointer"
                 />
             </div>
-            <div class="p-3 w-1/4 flex justify-center border-t">
-                <BookmarkOutline
-                    :size="28"
-                    fillColor="#8E8E8E"
-                    class="cursor-pointer"
-                />
-            </div>
             <router-link
-                class="p-3 w-1/4 flex justify-center border-t"
+                class="p-3 w-1/3 flex justify-center border-t"
                 :to="{ name: 'Items' }"
                 @click="select('Items')"
             >
@@ -204,7 +199,7 @@ onMounted(async () => {
                 class="flex items-center justify-between max-w-[600px] mx-auto font-extrabold text-gray-400 text-[15px]"
             >
                 <router-link
-                    class="p-[17px] w-1/4 flex justify-center items-center border-t border-t-gray-900"
+                    class="p-[17px] w-1/3 flex justify-center items-center border-t border-t-gray-900"
                     :to="{ name: 'User' }"
                     :class="{ active: tab === 'User' }"
                     @click="select('User')"
@@ -212,15 +207,7 @@ onMounted(async () => {
                     <Grid :size="15" fillColor="#000000" />
                     <div class="ml-2 -mb-[1px] text-gray-900">POSTS</div>
                 </router-link>
-                <div class="p-[17px] w-1/4 flex justify-center items-center">
-                    <PlayBoxOutline
-                        :size="15"
-                        fillColor="#8E8E8E"
-                        class="cursor-pointer"
-                    />
-                    <div class="ml-2 -mb-[1px] text-gray-900">REELS</div>
-                </div>
-                <div class="p-[17px] w-1/4 flex justify-center items-center">
+                <div class="p-[17px] w-1/3 flex justify-center items-center">
                     <PlusCircle
                         @click="showCreateItem = true"
                         :size="40"
@@ -228,16 +215,8 @@ onMounted(async () => {
                         class="cursor-pointer"
                     />
                 </div>
-                <div class="p-[17px] w-1/4 flex justify-center items-center">
-                    <BookmarkOutline
-                        :size="15"
-                        fillColor="#8E8E8E"
-                        class="cursor-pointer"
-                    />
-                    <span class="ml-2 -mb-[1px]">SAVED</span>
-                </div>
                 <router-link
-                    class="p-[17px] w-1/4 flex justify-center items-center"
+                    class="p-[17px] w-1/3 flex justify-center items-center"
                     :to="{ name: 'Items' }"
                     @click="select('Items')"
                 >

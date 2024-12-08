@@ -6,6 +6,7 @@ use App\Http\Controllers\FollowController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -65,6 +66,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/follow/{user}', [FollowController::class, 'unFollow'])->name(('follow.unFollow'));
     Route::get('/users/{user}/follow_list', [FollowController::class, 'follow_list'])->name('follow.follow_list');
     Route::get('/users/{user}/follower_list', [FollowController::class, 'follower_list'])->name('follow.follower_list');
+
+    // 通知
+    Route::get('/notifications/{user}', [NotificationsController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);

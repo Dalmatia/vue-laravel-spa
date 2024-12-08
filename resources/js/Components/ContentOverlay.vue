@@ -1,7 +1,6 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
-import axios from 'axios';
-import { useAuthStore } from '../stores/auth';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 import ShowOutfitOverlay from './Outfits/ShowOutfitOverlay.vue';
 
@@ -10,18 +9,22 @@ import Comment from 'vue-material-design-icons/Comment.vue';
 
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
-
-const authStore = useAuthStore();
+const route = useRoute();
 const outfits = ref([]);
 const isHover = ref(Array(outfits.value.length).fill(false));
 
-const fetchOutfits = async () => {
+const fetchOutfits = async (userId) => {
     try {
-        const response = await axios.get(`/api/users/${authStore.user.id}`);
+        const response = await axios.get(`/api/users/${userId}`);
         outfits.value = response.data.outfits;
     } catch (error) {
         console.error(error);
     }
+};
+
+// 投稿作成時の更新
+const onOutfitCreated = () => {
+    fetchOutfits(route.params.id);
 };
 
 const openOutfitOverlay = (outfit) => {
@@ -41,7 +44,7 @@ const deleteOutfit = (object) => {
                 console.log(response);
                 openOverlay.value = false;
                 window.dispatchEvent(new Event('outfit-deleted'));
-                fetchOutfits();
+                fetchOutfits(route.params.id);
             })
             .catch((error) => {
                 console.error(error);
@@ -49,15 +52,29 @@ const deleteOutfit = (object) => {
     }
 };
 
+watch(
+    () => route.params.id,
+    (newId) => {
+        if (newId) {
+            fetchOutfits(newId);
+        }
+    },
+    { immediate: true }
+);
+
 onMounted(() => {
-    fetchOutfits();
-    window.addEventListener('outfit-created', fetchOutfits);
-    window.addEventListener('outfit-updated', fetchOutfits);
+    const userId = route.params.id;
+    if (userId) {
+        fetchOutfits(userId);
+    }
+    window.addEventListener('outfit-created', onOutfitCreated);
+    window.addEventListener('outfit-updated', onOutfitCreated);
 });
 
+// コンポーネントアンマウント時
 onUnmounted(() => {
-    window.removeEventListener('outfit-created', fetchOutfits);
-    window.removeEventListener('outfit-updated', fetchOutfits);
+    window.removeEventListener('outfit-created', onOutfitCreated);
+    window.removeEventListener('outfit-updated', onOutfitCreated);
 });
 </script>
 
