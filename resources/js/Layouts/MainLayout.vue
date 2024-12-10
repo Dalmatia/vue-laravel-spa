@@ -59,9 +59,8 @@ const isAuthenticatedAndNotInSpecificRoutes = computed(
         ].includes(route.path)
 );
 
-const logout = () => {
-    authStore.logout();
-    localStorage.removeItem('authenticated');
+const logout = async () => {
+    await authStore.logout();
     router.push({ name: 'Login' });
 };
 

@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { computed } from 'vue';
 
 const Home = () => import('../Pages/Home.vue');
 const Login = () => import('../Pages/Auth/Login.vue');
@@ -105,16 +107,39 @@ const router = createRouter({
     ],
 });
 
-router.beforeEach((to, from, next) => {
-    const authenticated = localStorage.getItem('authenticated');
+router.beforeEach(async (to, from, next) => {
+    const authStore = useAuthStore();
+
+    if (!authStore.authUser) {
+        try {
+            await authStore.fetchUserData();
+        } catch (error) {
+            console.error('ユーザー情報の取得に失敗:', error);
+            if (to.meta.requiresAuth) {
+                return next({ name: 'Login' });
+            }
+        }
+    }
+
+    const authenticated = !!authStore.authUser;
+    const userId = authStore.authUser?.id;
+    const routeUserId = Number(to.params.id);
 
     if (to.meta.requiresGuest && authenticated) {
-        next({ name: 'Home' });
-    } else if (to.meta.requiresAuth && !authenticated) {
-        next({ name: 'Login' });
-    } else {
-        next(); // 通常のルート遷移
+        return next({ name: 'Home' });
     }
+    if (to.meta.requiresAuth && !authenticated) {
+        return next({ name: 'Login' });
+    }
+    if (
+        to.meta.requiresAuth &&
+        ['Items', 'EditProfile', 'Notifications'].includes(to.name) &&
+        routeUserId !== userId
+    ) {
+        return next({ name: 'Home' });
+    }
+
+    next();
 });
 
 export default router;

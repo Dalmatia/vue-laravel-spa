@@ -25,7 +25,6 @@ const fetchUserData = async () => {
 
 // ユーザー認証の判別
 const handleUnauthorized = () => {
-    localStorage.removeItem('authenticated');
     authStore.logout();
     router.push({ name: 'Login' });
 };

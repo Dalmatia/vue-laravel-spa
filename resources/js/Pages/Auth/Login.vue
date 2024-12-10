@@ -1,28 +1,41 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
 import axios from 'axios';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const form = ref({
     email: '',
     password: '',
 });
 const errors = ref([]);
-// const emit = defineEmits(['updateSidebar']);
 
 const login = async () => {
-    await axios.get('/sanctum/csrf-cookie');
-    await axios
-        .post('/api/login', form.value)
-        .then(() => {
-            router.go('/');
-            localStorage.setItem('authenticated', 'true');
-            // emit('updateSidebar');
-        })
-        .catch((reason) => {
-            errors.value = reason?.response?.data?.errors ?? {};
-        });
+    try {
+        await authStore.getToken();
+        const response = await axios.post('/api/login', form.value);
+
+        if (response.status === 200) {
+            await authStore.fetchUserData();
+            console.log(
+                'ユーザー情報取得後のauthStore.authUser:',
+                authStore.authUser
+            );
+            await router.push({ name: 'Home' });
+        } else {
+            throw new Error('ログインに失敗しました');
+        }
+    } catch (reason) {
+        console.error('ログインエラー:', reason);
+
+        if (reason?.response?.data?.errors) {
+            errors.value = reason.response.data.errors;
+        } else {
+            errors.value = { general: 'ログインエラーが発生しました' };
+        }
+    }
 };
 </script>
 

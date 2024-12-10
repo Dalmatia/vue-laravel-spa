@@ -125,8 +125,14 @@ watch(
                                         <div
                                             class="flex-nowrap box-border flex items-center shrink-0 justify-between flex-row relative z-0"
                                         >
-                                            <div
+                                            <router-link
                                                 class="min-w-0 max-w-full flex-col self-center box-border flex shrink-0 relative z-0"
+                                                :to="{
+                                                    name: 'User',
+                                                    params: {
+                                                        id: user.id,
+                                                    },
+                                                }"
                                             >
                                                 <div
                                                     class="overflow-y-visible overflow-x-visible mr-3 rounded-bl-none bg-transparent flex-col box-border flex rounded-br-none shrink-0 static items-stretch self-auto justify-start grow-0 rounded-tl-none rounded-tr-none"
@@ -144,9 +150,15 @@ watch(
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div
+                                            </router-link>
+                                            <router-link
                                                 class="min-w-0 shrink basis-auto box-border flex items-center justify-between flex-row relative z-0 grow flex-wrap"
+                                                :to="{
+                                                    name: 'User',
+                                                    params: {
+                                                        id: user.id,
+                                                    },
+                                                }"
                                             >
                                                 <div
                                                     class="min-w-0 max-w-full flex-col box-border flex shrink-0 relative z-0 grow"
@@ -157,7 +169,7 @@ watch(
                                                         {{ user.name }}
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </router-link>
                                             <div
                                                 class="min-w-0 max-w-full flex-col self-center box-border flex shrink-0 relative z-0"
                                             >
