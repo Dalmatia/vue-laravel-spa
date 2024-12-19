@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // 通知
     Route::get('/notifications/{user}', [NotificationsController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationsController::class, 'markAsRead']);
+    Route::delete('/notifications/{id}', [NotificationsController::class, 'destroy']);
 });
 
 Route::get('/home', [HomeController::class, 'index'])->name('home.index')->withoutMiddleware(['auth:sanctum']);

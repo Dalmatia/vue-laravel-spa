@@ -15,7 +15,8 @@ const Likes = () => import('../Pages/LikesPage.vue');
 const FollowList = () => import('../Pages/FollowList.vue');
 const FollowerList = () => import('../Pages/FollowerList.vue');
 const Search = () => import('../Pages/Search.vue');
-const Notifications = () => import('../Pages/Notifications.vue');
+const Notifications = () =>
+    import('../Pages/Notification/NotificationPage.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -24,6 +25,7 @@ const router = createRouter({
             path: '/',
             name: 'Home',
             component: Home,
+            meta: { requiresAuth: true },
         },
         {
             path: '/login',

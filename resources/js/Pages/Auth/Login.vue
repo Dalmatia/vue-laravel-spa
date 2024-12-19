@@ -19,10 +19,6 @@ const login = async () => {
 
         if (response.status === 200) {
             await authStore.fetchUserData();
-            console.log(
-                'ユーザー情報取得後のauthStore.authUser:',
-                authStore.authUser
-            );
             await router.push({ name: 'Home' });
         } else {
             throw new Error('ログインに失敗しました');

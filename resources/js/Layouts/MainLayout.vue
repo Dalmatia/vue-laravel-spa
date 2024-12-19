@@ -18,7 +18,7 @@ import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRigh
 
 import MenuItem from '@/Components/MenuItem.vue';
 import CreateOutfitOverlay from '@/Components/Outfits/CreateOutfitOverlay.vue';
-import Notifications from '../Pages/Notifications.vue';
+import Notifications from '../Pages/Notification/NotificationPage.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -370,7 +370,7 @@ onUnmounted(() => {
                 >
                     <div class="flex items-center">
                         <img
-                            class="rounded-full z-10 w-[37px] h-[37px]"
+                            class="rounded-full z-0 w-[37px] h-[37px]"
                             src="https://picsum.photos/id/200/300/320"
                         />
                         <div class="pl-4">
@@ -446,11 +446,31 @@ onUnmounted(() => {
         v-if="showCreatePost"
         @close="showCreatePost = false"
     />
-    <div v-if="authStore.user">
-        <Notifications
-            v-show="noticeOpen"
-            @close-notice="noticeOpen = false"
-            :user="authStore.user"
-        />
-    </div>
+    <Transition name="slide">
+        <div v-if="authStore.user && noticeOpen" class="fixed inset-0">
+            <Notifications
+                @close-notice="noticeOpen = false"
+                :user="authStore.user"
+            />
+        </div>
+    </Transition>
 </template>
+
+<style scoped>
+.slide-enter-active,
+.slide-leave-active {
+    transition: transform 0.3s ease;
+}
+.slide-enter-from {
+    transform: translateX(-100%);
+}
+.slide-enter-to {
+    transform: translateX(0);
+}
+.slide-leave-from {
+    transform: translateX(0);
+}
+.slide-leave-to {
+    transform: translateX(-100%);
+}
+</style>

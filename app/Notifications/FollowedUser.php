@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use Carbon\Carbon;
 
 class FollowedUser extends Notification implements ShouldBroadcast
 {
@@ -30,7 +31,7 @@ class FollowedUser extends Notification implements ShouldBroadcast
         return [
             'follower_name' => $this->follower->name,
             'follower_id' => $this->follower->id,
-            'message' => "{$this->follower->name} さんがあなたをフォローしました。",
+            'message' => "あなたをフォローしました。",
             'created_at' => now(),
         ];
     }
@@ -40,7 +41,8 @@ class FollowedUser extends Notification implements ShouldBroadcast
         return new BroadcastMessage([
             'follower_name' => $this->follower->name,
             'follower_id' => $this->follower->id,
-            'message' => "{$this->follower->name} さんがあなたをフォローしました。",
+            'message' => "あなたをフォローしました。",
+            'created_at' => Carbon::now()->format('Y/m/d'),
         ]);
     }
 }

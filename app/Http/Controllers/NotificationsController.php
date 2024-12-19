@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Notifications\FollowedUser;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
+use Carbon\Carbon;
 
 class NotificationsController extends Controller
 {
@@ -19,6 +20,8 @@ class NotificationsController extends Controller
                 'message' => $notification->data['message'] ?? '通知メッセージがありません',
                 'follower_id' => $notification->data['follower_id'],
                 'follower_name' => $notification->data['follower_name'] ?? '不明なフォロワー',
+                'read_at' => $notification->read_at,
+                'created_at' => Carbon::parse($notification->created_at)->format('Y/m/d'),
             ];
         });
 
@@ -48,6 +51,18 @@ class NotificationsController extends Controller
         if ($notification) {
             $notification->markAsRead();
             return response()->json(['message' => '通知が既読になりました。'], 200);
+        }
+
+        return response()->json(['message' => '通知が見つかりませんでした。'], 404);
+    }
+
+    public function destroy($id)
+    {
+        $notification = DatabaseNotification::find($id);
+
+        if ($notification) {
+            $notification->delete();
+            return response()->json(['message' => '通知が削除されました。'], 200);
         }
 
         return response()->json(['message' => '通知が見つかりませんでした。'], 404);
