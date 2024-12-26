@@ -20,9 +20,9 @@ let commentOverlay = ref(false);
 
 const authUser = useAuthStore().user;
 const followStore = useFollowStore();
-const props = defineProps(['outfit']);
+const props = defineProps(['outfit', 'commentOverlay']);
 const outfit = ref(props.outfit);
-const postsByUser = outfit.value.user;
+const postsByUser = ref(outfit.value.user || {});
 const outfitItems = ref([]);
 const comments = ref([]);
 
@@ -77,9 +77,10 @@ const fetchItems = async () => {
 const fetchOutfit = async () => {
     try {
         const response = await axios.get(`/api/outfit/${outfit.value.id}`);
-
+        const data = response.data;
         // EditOutfitOverlay.vueのOutfitUpdateメソッドで変更された場合、データを反映
-        outfit.value = response.data;
+        outfit.value = data.outfit;
+        postsByUser.value = data.user;
         await fetchItems();
     } catch (error) {
         console.error(error);
@@ -151,6 +152,9 @@ onMounted(async () => {
     // EditOutfitOverlay.vueのoutfitUpdateメソッドで定義したイベントの購読
     window.addEventListener('outfit-updated', fetchOutfit);
     window.addEventListener('comment-posted', fetchComments);
+    if (props.commentOverlay) {
+        openCommentOverlay();
+    }
 });
 
 onUnmounted(() => {

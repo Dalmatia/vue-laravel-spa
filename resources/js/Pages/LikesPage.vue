@@ -19,7 +19,7 @@ const fetchLikes = async () => {
                 const outfitResponse = await axios.get(
                     `/api/outfit/${outfitId}`
                 );
-                like.outfit = outfitResponse.data; // コーディネート情報をlikeオブジェクトに追加
+                like.outfit = outfitResponse.data.outfit; // コーディネート情報をlikeオブジェクトに追加
 
                 // ユーザー情報を取得してlikeオブジェクトに追加
                 const userResponse = await axios.get(

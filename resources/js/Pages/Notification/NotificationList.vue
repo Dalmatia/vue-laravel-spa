@@ -15,7 +15,7 @@ const hasNotifications = computed(() => props.notifications.length > 0);
 </script>
 
 <template>
-    <div class="bg-white h-full overflow-y-auto">
+    <div class="bg-white h-full">
         <!-- 通知がある場合 -->
         <div v-if="hasNotifications">
             <div
@@ -34,13 +34,21 @@ const hasNotifications = computed(() => props.notifications.length > 0);
                         class="font-semibold"
                         @click="$emit('read', notification)"
                     >
-                        {{ notification.follower_name }}
+                        {{ notification.follower_name || 'システム通知' }}
                     </h4>
                     <p
                         class="text-sm text-gray-600"
                         @click="$emit('read', notification)"
                     >
-                        {{ notification.message }}
+                        <template v-if="notification.outfit_id">
+                            {{ notification.message }}
+                        </template>
+                        <template v-else-if="notification.follower_id">
+                            {{ notification.message }}
+                        </template>
+                        <template v-else>
+                            {{ notification.message }}
+                        </template>
                     </p>
                     <div
                         class="flex items-center space-x-1 text-sm text-gray-600"
@@ -65,5 +73,6 @@ const hasNotifications = computed(() => props.notifications.length > 0);
         >
             <h3 class="text-base">お知らせはありません</h3>
         </div>
+        <div class="pb-20"></div>
     </div>
 </template>

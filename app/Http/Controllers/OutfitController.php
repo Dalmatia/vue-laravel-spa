@@ -132,12 +132,30 @@ class OutfitController extends Controller
 
     public function show($id)
     {
-        $outfit = Outfit::find($id);
+        // Outfit を user リレーション込みで取得（N+1問題対策）
+        $outfit = Outfit::with('user')->find($id);
+
+        // コーディネートが見つからない場合
         if (!$outfit) {
-            return response()->json(['message' => 'お探しのコーディネートが見つかりません'], 404);
+            return response()->json([
+                'message' => 'お探しのコーディネートが見つかりません。',
+            ], 404);
         }
-        return response()->json($outfit, 200);
+
+        // ユーザーが見つからない場合
+        if (!$outfit->user) {
+            return response()->json([
+                'message' => 'コーディネートに関連付けられたユーザー情報が見つかりません。',
+            ], 404);
+        }
+
+        // 正常なレスポンス
+        return response()->json([
+            'outfit' => $outfit,
+            'user' => $outfit->user
+        ], 200);
     }
+
 
     public function update(Request $request, $id)
     {

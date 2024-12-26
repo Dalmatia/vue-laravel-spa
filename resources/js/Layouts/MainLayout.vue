@@ -32,6 +32,7 @@ const account = ref(null);
 const notifications = ref(null);
 const BREAKPOINT_MOBILE = 640;
 const isMobile = ref(window.innerWidth <= BREAKPOINT_MOBILE);
+const sideNavZIndex = ref(10);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -95,6 +96,14 @@ const handleResize = () => {
     isMobile.value = mobile;
 };
 
+const handleModalEvents = (event) => {
+    if (event.type === 'modal-opened') {
+        sideNavZIndex.value = 0;
+    } else if (event.type === 'modal-closed') {
+        sideNavZIndex.value = 10;
+    }
+};
+
 onMounted(() => {
     fetchUserData();
     window.addEventListener('click', closeMenu);
@@ -102,6 +111,9 @@ onMounted(() => {
     if (screen.orientation?.addEventListener) {
         screen.orientation.addEventListener('change', handleResize);
     }
+    window.addEventListener('modal-opened', handleModalEvents);
+    window.addEventListener('modal-closed', handleModalEvents);
+    window.addEventListener('outfit-deleted', handleModalEvents);
 });
 
 onUnmounted(() => {
@@ -110,6 +122,9 @@ onUnmounted(() => {
     if (screen.orientation?.removeEventListener) {
         screen.orientation.removeEventListener('change', handleResize);
     }
+    window.removeEventListener('modal-opened', handleModalEvents);
+    window.removeEventListener('modal-closed', handleModalEvents);
+    window.removeEventListener('outfit-deleted', handleModalEvents);
 });
 </script>
 
@@ -234,6 +249,7 @@ onUnmounted(() => {
         <div
             id="SideNav"
             class="fixed h-full bg-white xl:w-[255px] w-[80px] md:block hidden border-r border-r-gray-300 z-10"
+            :style="{ zIndex: sideNavZIndex }"
         >
             <router-link :to="{ name: 'Home' }">
                 <img

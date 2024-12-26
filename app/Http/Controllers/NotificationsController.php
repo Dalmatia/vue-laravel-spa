@@ -17,9 +17,12 @@ class NotificationsController extends Controller
         $notifications = $user->notifications->map(function ($notification) {
             return [
                 'id' => $notification->id,
+                'type' => $notification->type,
                 'message' => $notification->data['message'] ?? '通知メッセージがありません',
-                'follower_id' => $notification->data['follower_id'],
-                'follower_name' => $notification->data['follower_name'] ?? '不明なフォロワー',
+                'follower_id' => $notification->data['follower_id'] ?? null,
+                'follower_name' => $notification->data['follower_name'] ?? null,
+                'outfit_id' => $notification->data['outfit_id'] ?? null,
+                'user_id' => $notification->data['user_id'] ?? null,
                 'read_at' => $notification->read_at,
                 'created_at' => Carbon::parse($notification->created_at)->format('Y/m/d'),
             ];

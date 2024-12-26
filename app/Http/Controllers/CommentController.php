@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Outfit;
+use App\Notifications\OutfitCommented;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -40,6 +41,13 @@ class CommentController extends Controller
         $comment->user_id = $request->input('user_id');
         $comment->text = $request->input('text');
         $comment->save();
+
+        // コメント通知を送信
+        $postByUser = $comment->outfit->user; // 投稿者を取得
+        $commenter = auth()->user(); // コメントしたユーザーを取得
+        if ($postByUser->id !== $commenter->id) { // 自分がコメントした場合は通知を送らない
+            $postByUser->notify(new OutfitCommented($commenter, $comment->outfit, $comment));
+        }
     }
 
     /**

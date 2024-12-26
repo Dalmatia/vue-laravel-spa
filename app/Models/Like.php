@@ -10,6 +10,13 @@ class Like extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'outfit_id',  'like'
+        'user_id',
+        'outfit_id',
+        'like'
     ];
+
+    public function outfit()
+    {
+        return $this->belongsTo(Outfit::class);
+    }
 }

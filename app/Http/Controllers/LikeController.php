@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Like;
 use App\Models\Outfit;
+use App\Notifications\OutfitLiked;
 use Illuminate\Http\Request;
 
 class LikeController extends Controller
@@ -68,6 +69,11 @@ class LikeController extends Controller
         } else {
             $like->like = 1;
             $like->save();
+        }
+        // いいね! 通知を送信
+        $postByUser = $like->outfit->user; // 投稿者を取得
+        if ($postByUser->id !== $user->id) { // 自分の投稿にいいね！した場合は通知を送らない
+            $postByUser->notify(new OutfitLiked($user, $like->outfit));
         }
         $count = $likes->where('outfit_id', $outfit)->where('like', 1)->count();
         return response()->json(['count' => $count]);

@@ -15,7 +15,7 @@ const fetchOutfit = async () => {
     try {
         const response = await axios.get(`/api/outfit/${id.value}`);
 
-        outfit.value = response.data;
+        outfit.value = response.data.outfit;
     } catch (error) {
         console.error(error);
     }
