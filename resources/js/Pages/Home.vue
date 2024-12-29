@@ -5,12 +5,10 @@ import { useFollowStore } from '../stores/follow';
 
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
 
-import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';
 import unFollow from 'vue-material-design-icons/AccountCheckOutline.vue';
 
 let wWidth = ref(window.innerWidth);
-let currentSlide = ref(0);
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
 
@@ -86,6 +84,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    window.removeEventListener('resize', () => {
+        wWidth.value = window.innerWidth;
+    });
     window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
 });
@@ -103,6 +104,8 @@ onUnmounted(() => {
                     <img
                         class="block h-[193px] w-[177px] md:h-[300px] md:w-full"
                         :src="outfit.file"
+                        :srcset="wWidth >= 768 ? outfit.file : outfit.thumbnail"
+                        loading="lazy"
                     />
                 </a>
                 <p class="text-grey-darker text-sm">{{ outfit.outfit_date }}</p>

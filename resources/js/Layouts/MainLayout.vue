@@ -131,7 +131,7 @@ onUnmounted(() => {
 <template>
     <div id="MainLayout" class="w-full h-screen">
         <div
-            v-if="route.path == '/'"
+            v-show="route.path == '/'"
             id="TopNavHome"
             class="fixed z-30 md:hidden block w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -233,7 +233,7 @@ onUnmounted(() => {
         </div>
 
         <div
-            v-if="isAuthenticatedAndNotInSpecificRoutes"
+            v-show="isAuthenticatedAndNotInSpecificRoutes"
             id="TopNavUser"
             class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
         >
@@ -254,7 +254,7 @@ onUnmounted(() => {
             <router-link :to="{ name: 'Home' }">
                 <img
                     class="xl:hidden block w-[25px] mt-10 ml-[25px] mb-10 cursor-pointer"
-                    src="/icons/hanger.svg"
+                    src="@/assets/icons/hanger.svg"
                 />
                 <h1
                     class="font-aurore xl:block hidden w-[120px] mt-10 ml-6 mb-10 cursor-pointer"
@@ -325,7 +325,7 @@ onUnmounted(() => {
             </div>
 
             <div
-                v-if="route.path == '/'"
+                v-show="route.path == '/'"
                 id="SuggestionsSection"
                 class="lg:w-4/12 lg:block hidden text-black mt-10"
             >

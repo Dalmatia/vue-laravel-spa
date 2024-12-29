@@ -59,14 +59,15 @@ const fetchItems = async () => {
             { label: 'シューズ', id: outfit.value.shoes },
         ];
 
-        const fetchPromises = itemTypes
-            .filter((itemType) => itemType.id)
-            .map(async (itemType) => {
-                const itemData = await fetchItemData(itemType.id);
-                return { label: itemType.label, ...itemData };
-            });
+        const items = await Promise.all(
+            itemTypes
+                .filter((itemType) => itemType.id)
+                .map(async (itemType) => {
+                    const itemData = await fetchItemData(itemType.id);
+                    return { label: itemType.label, ...itemData };
+                })
+        );
 
-        const items = await Promise.all(fetchPromises);
         outfitItems.value = items;
     } catch (error) {
         console.error('データの取得に失敗しました:', error);
@@ -138,7 +139,7 @@ const fetchComments = async () => {
             comment.user = users.find((user) => user.id === comment.user_id);
         });
     } catch (error) {
-        console.error(`コメントの取得に失敗しました: ${error}`);
+        console.error(`コメントの取得に失敗しました:`, error);
     }
 };
 
@@ -149,9 +150,9 @@ const openCommentOverlay = () => {
 
 onMounted(async () => {
     await Promise.all([fetchOutfit(), followStatus(), fetchComments()]);
-    // EditOutfitOverlay.vueのoutfitUpdateメソッドで定義したイベントの購読
     window.addEventListener('outfit-updated', fetchOutfit);
     window.addEventListener('comment-posted', fetchComments);
+
     if (props.commentOverlay) {
         openCommentOverlay();
     }

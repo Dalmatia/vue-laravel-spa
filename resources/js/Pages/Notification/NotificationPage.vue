@@ -71,7 +71,8 @@ const setupWebSocket = () => {
         channel
             .listen(
                 '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
-                (notification) => {
+                async (notification) => {
+                    await fetchPostImage(notification);
                     state.notifications.unshift(notification);
                 }
             )
@@ -89,6 +90,7 @@ const setupWebSocket = () => {
     connect();
 };
 
+// エラーメッセージを表示する
 const showError = (message) => {
     state.errorMessage = message;
     setTimeout(() => {
@@ -96,6 +98,20 @@ const showError = (message) => {
     }, 3000);
 };
 
+const fetchPostImage = async (notification) => {
+    if (notification.outfit_id) {
+        try {
+            const response = await axios.get(
+                `/api/outfit/${notification.outfit_id}`
+            );
+            notification.outfit_image = response.data.outfit.file; // サムネイル画像URLを設定
+        } catch (error) {
+            console.error('投稿情報の取得に失敗しました:', error);
+        }
+    }
+};
+
+// 通知を取得
 const fetchNotifications = async () => {
     if (!state.hasMore || state.isLoading) return;
     state.isLoading = true;
@@ -104,6 +120,9 @@ const fetchNotifications = async () => {
             `/api/notifications/${props.user.id}?page=${state.currentPage}`
         );
         if (response.data && response.data.notifications) {
+            const notifications = response.data.notifications;
+            // 通知タイプによって投稿画像を取得
+            await Promise.all(notifications.map(fetchPostImage));
             state.notifications = [
                 ...state.notifications,
                 ...response.data.notifications,
@@ -113,16 +132,17 @@ const fetchNotifications = async () => {
         } else {
             showError('通知の読み込みに失敗しました。');
         }
-    } catch {
+    } catch (error) {
         showError('通知の読み込みに失敗しました。');
+        console.error(error);
     } finally {
         state.isLoading = false;
     }
 };
 
+// 通知を既読にし、通知の種類に応じた処理を実行する
 const markAsRead = async (notification) => {
     try {
-        // 通知を既読にする
         await axios.post(`/api/notifications/${notification.id}/read`);
         notification.read_at = new Date().toISOString();
 
@@ -133,10 +153,11 @@ const markAsRead = async (notification) => {
     } catch (error) {
         // エラー表示
         showError('問題が発生しました。');
-        console.error(error); // デバッグ用
+        console.error(error);
     }
 };
 
+// 通知の削除
 const deleteNotification = () => {
     if (state.selectedNotification === null) return;
     axios
@@ -164,16 +185,21 @@ const deleteOutfit = (object) => {
                 window.dispatchEvent(new Event('outfit-deleted'));
             })
             .catch((error) => {
+                showError('コーディネートの削除に失敗しました。');
                 console.error(error);
             });
+    } else {
+        showError('無効な削除タイプです。');
     }
 };
 
+// 通知削除モーダルを表示
 const showDeleteModal = (id) => {
     state.selectedNotification = id;
     state.openModal = true;
 };
 
+// 投稿の詳細・コメントページを表示
 const toggleOutfitOverlay = (outfit = null, showComments = false) => {
     state.currentOutfit = outfit;
     state.openOverlay = !!outfit;

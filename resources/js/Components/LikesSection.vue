@@ -1,11 +1,10 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, toRefs } from 'vue';
+import { onMounted, onUnmounted, ref, toRefs } from 'vue';
 import CommentsPage from '../Components/Comments/CommentsPage.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import CommentOutline from 'vue-material-design-icons/CommentOutline.vue';
-import SendOutline from 'vue-material-design-icons/SendOutline.vue';
 import BookmarkOutline from 'vue-material-design-icons/BookmarkOutline.vue';
 import axios from 'axios';
 
@@ -133,7 +132,7 @@ onUnmounted(() => {
                 </span>
             </button>
         </div>
-        <div class="flex gap-[6px]">
+        <!-- <div class="flex gap-[6px]">
             <div
                 class="border border-gray-500 bg-white text-gray-500 xl:border-gray-300 xl:bg-gradient-to-b xl:from-white xl:to-gray-60 xl:hover:opacity-70 xl:text-gray-600 block text-center rounded-[4px] leading-[1] xl:rounded-[2px] w-full"
             >
@@ -148,7 +147,7 @@ onUnmounted(() => {
                     </span>
                 </span>
             </div>
-        </div>
+        </div> -->
     </div>
     <CommentsPage
         v-if="openOverlay"

@@ -22,6 +22,7 @@ class NotificationsController extends Controller
                 'follower_id' => $notification->data['follower_id'] ?? null,
                 'follower_name' => $notification->data['follower_name'] ?? null,
                 'outfit_id' => $notification->data['outfit_id'] ?? null,
+                'outfit_image' => $notification->data['outfit_image'] ?? null,
                 'user_id' => $notification->data['user_id'] ?? null,
                 'read_at' => $notification->read_at,
                 'created_at' => Carbon::parse($notification->created_at)->format('Y/m/d'),

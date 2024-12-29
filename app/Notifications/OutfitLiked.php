@@ -34,6 +34,7 @@ class OutfitLiked extends Notification implements ShouldBroadcast
         return [
             'user_id' => $this->user->id,
             'outfit_id' => $this->outfit->id,
+            'outfit_image' => $this->outfit->file,
             'message' => __("あなたの投稿にいいね!がつきました。"),
             'created_at' => now(),
         ];
@@ -44,6 +45,7 @@ class OutfitLiked extends Notification implements ShouldBroadcast
         return new BroadcastMessage([
             'user_id' => $this->user->id,
             'outfit_id' => $this->outfit->id,
+            'outfit_image' => $this->outfit->file,
             'message' => __("あなたの投稿にいいね!がつきました。"),
             'created_at' => Carbon::now()->format('Y/m/d'),
         ]);

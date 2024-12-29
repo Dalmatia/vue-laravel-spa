@@ -33,12 +33,19 @@ class FileService
       $file = Image::make($request->file('file'));
     }
 
-    // 拡張子を取得
-    $extension = $request->file('file')->getClientOriginalExtension();
-    // ハッシュ化したファイル名を生成
-    $hashName = md5(time() . $request->file('file')->getClientOriginalName()) . '.' . $extension;
-    $file->save(public_path() . $directory . $hashName);
-    $model->file = $directory . $hashName;
+    // ユニークIDを生成
+    $uniqueId = uniqid('', true);
+    // 元の形式で保存
+    // $originalExtension = $request->file('file')->getClientOriginalExtension();
+    // $originalHashName = md5($uniqueId . $request->file('file')->getClientOriginalName()) . '.' . $originalExtension;
+    // $file->save(public_path() . $directory . $originalHashName);
+
+    // WebP形式で保存
+    $webpHashName = md5($uniqueId . $request->file('file')->getClientOriginalName()) . '.webp';
+    $file->encode('webp', 90);
+    $file->save(public_path() . $directory . $webpHashName);
+    // モデルにはWebP形式のパスを保存
+    $model->file = $directory . $webpHashName;
 
     return $model;
   }
