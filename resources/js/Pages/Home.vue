@@ -17,6 +17,10 @@ const authStore = useAuthStore();
 const user = computed(() => (authStore.user ? authStore.user.id : null));
 const followStore = useFollowStore();
 
+const resizeHandler = () => {
+    wWidth.value = window.innerWidth;
+};
+
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
     try {
@@ -46,6 +50,7 @@ const deleteOutfit = (object) => {
             })
             .catch((error) => {
                 console.error(error);
+                alert('コーディネートの削除に失敗しました。');
             });
     }
 };
@@ -75,18 +80,14 @@ const deleteFollow = async (userId) => {
 };
 
 onMounted(() => {
-    window.addEventListener('resize', () => {
-        wWidth.value = window.innerWidth;
-    });
+    window.addEventListener('resize', resizeHandler);
     fetchOutfits();
     window.addEventListener('outfit-created', fetchOutfits);
     window.addEventListener('outfit-updated', fetchOutfits);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('resize', () => {
-        wWidth.value = window.innerWidth;
-    });
+    window.removeEventListener('resize', resizeHandler);
     window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
 });
@@ -104,8 +105,8 @@ onUnmounted(() => {
                     <img
                         class="block h-[193px] w-[177px] md:h-[300px] md:w-full"
                         :src="outfit.file"
-                        :srcset="wWidth >= 768 ? outfit.file : outfit.thumbnail"
                         loading="lazy"
+                        alt="コーディネート画像"
                     />
                 </a>
                 <p class="text-grey-darker text-sm">{{ outfit.outfit_date }}</p>
@@ -119,7 +120,7 @@ onUnmounted(() => {
                             class="rounded-full w-8 h-8 overflow-hidden border-2"
                         >
                             <img
-                                alt="Placeholder"
+                                alt="ユーザー画像"
                                 class="w-full h-full object-cover"
                                 :src="outfit.user.file"
                             />

@@ -18,4 +18,18 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
+    # Enable Gzip Compression
+    RewriteCond %{HTTP:Accept-Encoding} gzip
+    RewriteCond %{REQUEST_FILENAME}\.gz -s
+    RewriteRule ^(.+) $1.gz [L]
+
+    <FilesMatch "\.css\.gz$">
+        ForceType text/css
+        AddEncoding x-gzip .gz
+    </FilesMatch>
+    <FilesMatch "\.js\.gz$">
+        ForceType application/x-javascript
+        AddEncoding x-gzip .gz
+    </FilesMatch>
 </IfModule>
