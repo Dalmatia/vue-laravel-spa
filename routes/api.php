@@ -9,6 +9,7 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WeatherAPIController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
@@ -78,3 +79,4 @@ Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
 Route::get('/enums', [EnumController::class, 'index']);
+Route::get('/weather', [WeatherAPIController::class, 'getWeather']);

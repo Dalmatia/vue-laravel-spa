@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/auth';
 import { useFollowStore } from '../stores/follow';
 
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import WeatherForecast from '../Components/WeatherForecast.vue';
 
 import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';
 import unFollow from 'vue-material-design-icons/AccountCheckOutline.vue';
@@ -95,6 +96,9 @@ onUnmounted(() => {
 
 <template>
     <div id="Posts" class="md:pr-1.5 lg:pl-0 md:pl-[90px]">
+        <WeatherForecast />
+        <!-- コーディネート一覧 -->
+        <span class="font-bold text-lg pr-6">他ユーザーのコーディネート</span>
         <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
             <article
                 class="overflow-hidden rounded-lg shadow-lg"
@@ -152,6 +156,7 @@ onUnmounted(() => {
                 </footer>
             </article>
         </div>
+        <div class="pb-20"></div>
     </div>
 
     <ShowOutfitOverlay
