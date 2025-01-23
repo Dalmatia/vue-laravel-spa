@@ -1,16 +1,32 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
+import SelectPrefectures from './SelectPrefectures.vue';
+
+const showModal = ref(false);
+const selectedCity = ref('東京');
 const selectedTab = ref('today');
 const isLoading = ref(true);
 const weather = ref(null);
 
-const fetchWeather = async () => {
+// 選択された地域データを処理する関数
+const handleCitySaved = (event) => {
+    selectedCity.value = event.city;
+    fetchWeather(event.city);
+    showModal.value = false; // モーダルを閉じる
+};
+
+const fetchWeather = async (city = '東京') => {
     isLoading.value = true;
     try {
-        const response = await axios.get('/api/weather');
-        weather.value = response.data.weather;
-        console.log(weather.value);
+        const response = await axios.get(`/api/geocode`, { params: { city } });
+        const { lat, lon } = response.data;
+        const weatherResponse = await axios.get(`/api/weather`, {
+            params: { lat, lon },
+        });
+        console.log(weatherResponse.data);
+
+        weather.value = weatherResponse.data.weather;
     } catch (error) {
         console.error('天気情報の取得に失敗しました。', error);
         weather.value = { error: true, message: error.response?.data?.message };
@@ -27,7 +43,23 @@ onMounted(() => {
 <template>
     <div class="mb-6">
         <!-- コーデ予報セクション -->
-        <h2 class="font-bold text-lg">コーディネート予報</h2>
+        <div class="flex items-center justify-between">
+            <div class="text-center flex-1">
+                <h2 class="font-bold text-lg">コーディネート予報</h2>
+                <p v-if="selectedCity" class="text-gray-500 text-md mt-1">
+                    {{ selectedCity }}
+                </p>
+            </div>
+            <button class="text-blue-500 self-start" @click="showModal = true">
+                地域設定
+            </button>
+        </div>
+        <div v-if="showModal">
+            <SelectPrefectures
+                @city-saved="handleCitySaved"
+                @close="showModal = false"
+            />
+        </div>
         <div
             v-if="isLoading"
             class="flex items-center justify-center border py-14"

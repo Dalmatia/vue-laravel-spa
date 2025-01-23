@@ -9,15 +9,58 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherAPIController extends Controller
 {
+    public function geocoding(Request $request)
+    {
+        $validated = $request->validate([
+            'city' => 'required|string|max:255',
+        ]);
+
+        $city = $validated['city'];
+        $apiKey = env('WEATHER_API_KEY');
+        if (!$apiKey) {
+            return response()->json(['error' => 'WEATHER_API_KEYが設定されていません。'], 500);
+        }
+
+        $url = "http://api.openweathermap.org/geo/1.0/direct?q={$city},JP&limit=1&appid={$apiKey}";
+
+        try {
+            $client = new Client();
+            $response = $client->get($url);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('ジオコーディングAPIのリクエストに失敗しました。');
+            }
+
+            $data = json_decode($response->getBody(), true);
+
+            if (empty($data)) {
+                return response()->json(['error' => '指定された地域が見つかりません。'], 404);
+            }
+
+            return response()->json([
+                'lat' => $data[0]['lat'],
+                'lon' => $data[0]['lon'],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('ジオコーディングAPIエラー: ' . $e->getMessage());
+            return response()->json(['error' => 'ジオコーディングに失敗しました。'], 500);
+        }
+    }
+
     public function getWeather(Request $request)
     {
+        $validated = $request->validate([
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lon' => 'nullable|numeric|between:-180,180',
+        ]);
+
         $apiKey = env('WEATHER_API_KEY');
         if (!$apiKey) {
             throw new \RuntimeException('WEATHER_API_KEY が設定されていません。');
         }
 
-        $lat = round($request->input('lat', 35.6897), 2); // デフォルトは東京（緯度小数点以下2桁に丸める）
-        $lon = round($request->input('lon', 139.6895), 2);
+        $lat = round($validated['lat'] ?? 35.6897, 2); // デフォルトは東京（緯度小数点以下2桁に丸める）
+        $lon = round($validated['lon'] ?? 139.6917, 2);
         $url = "https://api.openweathermap.org/data/2.5/forecast?lat={$lat}&lon={$lon}&appid={$apiKey}&units=metric&lang=ja";
 
         try {

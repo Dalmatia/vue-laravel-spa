@@ -79,4 +79,5 @@ Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
 Route::get('/enums', [EnumController::class, 'index']);
+Route::get('/geocode', [WeatherAPIController::class, 'geocoding']);
 Route::get('/weather', [WeatherAPIController::class, 'getWeather']);
