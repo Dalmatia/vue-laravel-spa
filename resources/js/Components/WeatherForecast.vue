@@ -1,30 +1,41 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 
-import SelectPrefectures from './SelectPrefectures.vue';
+import SelectCity from './SelectCity.vue';
 
 const showModal = ref(false);
-const selectedCity = ref('東京');
+const selectedCity = ref({
+    region_id: null,
+    prefecture_id: null,
+    city_id: null,
+    name: '千代田区',
+    latitude: 35.69389,
+    longitude: 139.753616,
+});
 const selectedTab = ref('today');
 const isLoading = ref(true);
 const weather = ref(null);
 
 // 選択された地域データを処理する関数
 const handleCitySaved = (event) => {
-    selectedCity.value = event.city;
-    fetchWeather(event.city);
+    selectedCity.value = event;
+    console.log(selectedCity.value);
+
+    selectedCity.value.latitude = event.latitude;
+    selectedCity.value.longitude = event.longitude;
+    fetchWeather();
     showModal.value = false; // モーダルを閉じる
 };
 
-const fetchWeather = async (city = '東京') => {
+const fetchWeather = async () => {
     isLoading.value = true;
     try {
-        const response = await axios.get(`/api/geocode`, { params: { city } });
-        const { lat, lon } = response.data;
         const weatherResponse = await axios.get(`/api/weather`, {
-            params: { lat, lon },
+            params: {
+                latitude: selectedCity.value.latitude,
+                longitude: selectedCity.value.longitude,
+            },
         });
-        console.log(weatherResponse.data);
 
         weather.value = weatherResponse.data.weather;
     } catch (error) {
@@ -35,9 +46,13 @@ const fetchWeather = async (city = '東京') => {
     }
 };
 
-onMounted(() => {
-    fetchWeather();
-});
+watch(
+    () => [selectedCity.value.latitude, selectedCity.value.longitude],
+    async () => {
+        await fetchWeather();
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
@@ -47,7 +62,7 @@ onMounted(() => {
             <div class="text-center flex-1">
                 <h2 class="font-bold text-lg">コーディネート予報</h2>
                 <p v-if="selectedCity" class="text-gray-500 text-md mt-1">
-                    {{ selectedCity }}
+                    {{ selectedCity.name }}
                 </p>
             </div>
             <button class="text-blue-500 self-start" @click="showModal = true">
@@ -55,7 +70,7 @@ onMounted(() => {
             </button>
         </div>
         <div v-if="showModal">
-            <SelectPrefectures
+            <SelectCity
                 @city-saved="handleCitySaved"
                 @close="showModal = false"
             />
@@ -120,11 +135,9 @@ onMounted(() => {
             <div v-if="selectedTab === 'today'" class="border p-4">
                 <h2 class="font-bold text-base mb-2">今日の天気:</h2>
                 <div class="flex justify-center">
-                    <img
-                        :src="`http://openweathermap.org/img/wn/${weather.today.icon}@2x.png`"
-                        :alt="weather.today.description"
-                        class="w-20 h-20 mr-4"
-                    />
+                    <div class="text-7xl text-center mr-4">
+                        {{ weather.today.weather_icon }}
+                    </div>
                     <div class="flex flex-col">
                         <p class="text-sm font-bold">
                             {{ weather.today.description }}
@@ -139,7 +152,7 @@ onMounted(() => {
                             </p>
                         </div>
                         <span class="flex text-sm font-bold">
-                            降水確率
+                            降水確率:
                             <p class="ml-4">
                                 {{ weather.today.precipitation_probability }}%
                             </p>
@@ -152,11 +165,9 @@ onMounted(() => {
             <div v-else class="border p-4">
                 <h2 class="font-bold text-base mb-2">明日の天気:</h2>
                 <div class="flex justify-center">
-                    <img
-                        :src="`http://openweathermap.org/img/wn/${weather.tomorrow.icon}@2x.png`"
-                        :alt="weather.tomorrow.description"
-                        class="w-20 h-20 mr-4"
-                    />
+                    <div class="text-7xl text-center mr-4">
+                        {{ weather.tomorrow.weather_icon }}
+                    </div>
                     <div class="flex flex-col">
                         <p class="text-sm font-bold">
                             {{ weather.tomorrow.description }}
@@ -171,7 +182,7 @@ onMounted(() => {
                             </p>
                         </div>
                         <span class="flex text-sm font-bold">
-                            降水確率
+                            降水確率:
                             <p class="ml-4">
                                 {{
                                     weather.tomorrow.precipitation_probability

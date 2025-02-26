@@ -8,6 +8,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OutfitController;
+use App\Http\Controllers\RegionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WeatherAPIController;
 use Illuminate\Http\Request;
@@ -79,5 +80,7 @@ Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
 Route::get('/enums', [EnumController::class, 'index']);
-Route::get('/geocode', [WeatherAPIController::class, 'geocoding']);
+Route::get('/regions', [RegionController::class, 'getRegions']); // 地域一覧
+Route::get('/region/{regionId}/prefectures', [RegionController::class, 'getPrefs']); // 都道府県
+Route::get('/prefecture/{prefId}/cities', [RegionController::class, 'getCities']); // 市町村区
 Route::get('/weather', [WeatherAPIController::class, 'getWeather']);
