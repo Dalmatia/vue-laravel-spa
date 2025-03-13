@@ -54,78 +54,46 @@ class WeatherAPIController extends Controller
         }
 
         $weatherCode = $data['daily']['weathercode'][$index] ?? null;
+        $weatherDetails = $this->getWeatherDetails($weatherCode);
 
         return [
             'date' => date('n/j', strtotime($data['daily']['time'][$index])),
-            'description' => $this->getWeatherDescription($weatherCode),
+            'description' => $weatherDetails['description'],
+            'weather_icon' => $weatherDetails['icon'],
             'max_temp' => isset($data['daily']['temperature_2m_max'][$index]) ? round($data['daily']['temperature_2m_max'][$index]) : '不明',
             'min_temp' => isset($data['daily']['temperature_2m_min'][$index]) ? round($data['daily']['temperature_2m_min'][$index]) : '不明',
             'precipitation_probability' => $data['daily']['precipitation_probability_max'][$index] ?? '不明',
-            'weather_icon' => $this->getWeatherIcon($data['daily']['weathercode'][$index] ?? null),
         ];
     }
 
-    private function getWeatherDescription($weatherCode)
+    private function getWeatherDetails($weatherCode)
     {
-        $descriptions = [
-            0 => '晴れ',
-            1 => '主に晴れ',
-            2 => '部分的に曇り',
-            3 => '曇り',
-            45 => '霧',
-            48 => '霧（霜）',
-            51 => '小雨',
-            53 => '中雨',
-            55 => '強雨',
-            61 => '小雨',
-            63 => '中雨',
-            65 => '大雨',
-            71 => '小雪',
-            73 => '中雪',
-            75 => '大雪',
-            77 => 'みぞれ',
-            80 => '局地的な小雨',
-            81 => '局地的な中雨',
-            82 => '局地的な大雨',
-            85 => '吹雪（小雪）',
-            86 => '吹雪（大雪）',
-            95 => '雷雨',
-            96 => '雷雨（小氷雹）',
-            99 => '雷雨（大氷雹）',
+        if ($weatherCode === null) {
+            return ['description' => '不明', 'icon' => '✨'];
+        }
+
+        $weatherDetails = [
+            0 => ['description' => '快晴', 'icon' => '☀️'],
+            1 => ['description' => '晴れ', 'icon' => '🌤'],
+            2 => ['description' => '晴れ時々曇り', 'icon' => '⛅'],
+            3 => ['description' => '曇り', 'icon' => '☁️'],
+            45 => ['description' => '霧', 'icon' => '🌫'],
+            48 => ['description' => '霧（霜）', 'icon' => '🌫'],
+            50 => ['description' => '霧雨', 'icon' => '🌧'],
+            55 => ['description' => '小雨', 'icon' => '☔'],
+            60 => ['description' => '雨', 'icon' => '☔'],
+            70 => ['description' => '雪', 'icon' => '☃'],
+            80 => ['description' => 'にわか雨', 'icon' => '🌧'],
+            90 => ['description' => '雪・雹', 'icon' => '❄️'],
+            95 => ['description' => '雷雨', 'icon' => '⛈'],
+            99 => ['description' => '雷雨（大氷雹）', 'icon' => '⛈'],
         ];
 
-        return $descriptions[$weatherCode] ?? '不明';
-    }
-
-    private function getWeatherIcon($weatherCode)
-    {
-        $icons = [
-            0 => '☀️', // 晴れ
-            1 => '🌤', // 主に晴れ
-            2 => '⛅', // 部分的に曇り
-            3 => '☁️', // 曇り
-            45 => '🌫', // 霧
-            48 => '🌫', // 霧（霜）
-            51 => '🌦', // 小雨
-            53 => '🌦', // 中雨
-            55 => '🌦', // 強雨
-            61 => '🌧', // 小雨
-            63 => '🌧', // 中雨
-            65 => '🌧', // 大雨
-            71 => '🌨', // 小雪
-            73 => '🌨', // 中雪
-            75 => '❄️', // 大雪
-            77 => '🌧❄️', // みぞれ
-            80 => '🌦', // 局地的な小雨
-            81 => '🌧', // 局地的な中雨
-            82 => '⛈', // 局地的な大雨
-            85 => '🌨🌬', // 吹雪（小雪）
-            86 => '🌨🌬', // 吹雪（大雪）
-            95 => '⛈', // 雷雨
-            96 => '⛈', // 雷雨（小氷雹）
-            99 => '⛈', // 雷雨（大氷雹）
-        ];
-
-        return $icons[$weatherCode] ?? '❓'; // 未知の天気コード
+        foreach ($weatherDetails as $maxCode => $details) {
+            if ($weatherCode <= $maxCode) {
+                return $details;
+            }
+        }
+        return ['description' => '不明', 'icon' => '✨'];
     }
 }

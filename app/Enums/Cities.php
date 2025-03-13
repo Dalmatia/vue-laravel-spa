@@ -236,7 +236,17 @@ final class Cities extends Enum
      */
     public static function getCityById(int $prefectureId, int $cityId): ?array
     {
-        return self::CITIES[$prefectureId][$cityId] ?? null;
+        if (!isset(self::CITIES[$prefectureId])) {
+            return null;
+        }
+
+        foreach (self::CITIES[$prefectureId] as $city) {
+            if ($city['id'] === $cityId) {
+                return $city;
+            }
+        }
+
+        return null;
     }
 
     /**

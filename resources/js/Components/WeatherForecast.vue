@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import SelectCity from './SelectCity.vue';
 
@@ -8,21 +8,42 @@ const selectedCity = ref({
     region_id: null,
     prefecture_id: null,
     city_id: null,
-    name: '千代田区',
-    latitude: 35.69389,
-    longitude: 139.753616,
+    name: '',
+    latitude: null,
+    longitude: null,
 });
 const selectedTab = ref('today');
 const isLoading = ref(true);
 const weather = ref(null);
 
+const fetchSavedCity = async () => {
+    try {
+        const response = await axios.get('/api/getSavedCity');
+        if (response.data) {
+            selectedCity.value = {
+                region_id: response.data.region_id,
+                prefecture_id: response.data.prefecture_id,
+                city_id: response.data.city_id,
+                name: response.data.city_name,
+                latitude: response.data.latitude,
+                longitude: response.data.longitude,
+            };
+        }
+    } catch (error) {
+        console.error('保存された市区町村の取得に失敗しました:', error);
+    }
+};
+
 // 選択された地域データを処理する関数
 const handleCitySaved = (event) => {
-    selectedCity.value = event;
-    console.log(selectedCity.value);
-
-    selectedCity.value.latitude = event.latitude;
-    selectedCity.value.longitude = event.longitude;
+    selectedCity.value = {
+        region_id: event.region_id,
+        prefecture_id: event.prefecture_id,
+        city_id: event.city_id,
+        name: event.city.name,
+        latitude: event.city.latitude,
+        longitude: event.city.longitude,
+    };
     fetchWeather();
     showModal.value = false; // モーダルを閉じる
 };
@@ -40,19 +61,21 @@ const fetchWeather = async () => {
         weather.value = weatherResponse.data.weather;
     } catch (error) {
         console.error('天気情報の取得に失敗しました。', error);
-        weather.value = { error: true, message: error.response?.data?.message };
+        weather.value = {
+            error: true,
+            message:
+                error.response?.data?.message ||
+                '天気情報を取得できませんでした。',
+        };
     } finally {
         isLoading.value = false;
     }
 };
 
-watch(
-    () => [selectedCity.value.latitude, selectedCity.value.longitude],
-    async () => {
-        await fetchWeather();
-    },
-    { immediate: true }
-);
+onMounted(async () => {
+    await fetchSavedCity();
+    await fetchWeather();
+});
 </script>
 
 <template>

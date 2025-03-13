@@ -106,10 +106,6 @@ final class Regions extends Enum
 
     public static function getPrefecturesByRegion(int $regionId): array
     {
-        if (!isset(self::$regionPrefectures[$regionId])) {
-            return null; // 未定義の地域IDなら null を返す
-        }
-
         $prefectureIds = self::$regionPrefectures[$regionId] ?? [];
         return array_map(
             fn($id) => ['id' => $id, 'name' => Prefectures::getLabel($id)] ?? '不明',

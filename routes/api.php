@@ -83,4 +83,6 @@ Route::get('/enums', [EnumController::class, 'index']);
 Route::get('/regions', [RegionController::class, 'getRegions']); // 地域一覧
 Route::get('/region/{regionId}/prefectures', [RegionController::class, 'getPrefs']); // 都道府県
 Route::get('/prefecture/{prefId}/cities', [RegionController::class, 'getCities']); // 市町村区
+Route::post('/saveCity', [RegionController::class, 'saveCity']); // 選択した地域、都道府県、市区町村を保存
+Route::get('/getSavedCity', [RegionController::class, 'getSavedCity']); // 保存した地域、都道府県、市区町村を取得
 Route::get('/weather', [WeatherAPIController::class, 'getWeather']);
