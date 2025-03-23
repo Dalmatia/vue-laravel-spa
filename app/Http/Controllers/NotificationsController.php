@@ -48,6 +48,12 @@ class NotificationsController extends Controller
         return response()->json(['message' => '通知が送信されました。'], 200);
     }
 
+    public function unreadCount(User $user)
+    {
+        $count = $user->unreadNotifications()->count();
+        return response()->json(['unread_count' => $count]);
+    }
+
     public function markAsRead($id)
     {
         $notification = DatabaseNotification::find($id);

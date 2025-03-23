@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 
@@ -20,12 +20,11 @@ import MenuItem from '@/Components/MenuItem.vue';
 import CreateOutfitOverlay from '@/Components/Outfits/CreateOutfitOverlay.vue';
 import Notifications from '../Pages/Notification/NotificationPage.vue';
 
+const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
 
 let showCreatePost = ref(false);
-let isLoading = ref(true);
 let isDropdownOpen = ref(false);
 let noticeOpen = ref(false);
 const account = ref(null);
@@ -33,19 +32,7 @@ const notifications = ref(null);
 const BREAKPOINT_MOBILE = 640;
 const isMobile = ref(window.innerWidth <= BREAKPOINT_MOBILE);
 const sideNavZIndex = ref(10);
-
-// ユーザー情報の取得
-const fetchUserData = async () => {
-    try {
-        await authStore.fetchUserData();
-    } catch (error) {
-        if (error.response && error.response.status === 401) {
-            logout();
-        }
-    } finally {
-        isLoading.value = false;
-    }
-};
+const unreadCount = ref(0);
 
 const isAuthenticatedAndNotInSpecificRoutes = computed(
     () =>
@@ -63,6 +50,9 @@ const isAuthenticatedAndNotInSpecificRoutes = computed(
 const logout = async () => {
     await authStore.logout();
     router.push({ name: 'Login' });
+    if (authStore.user?.id) {
+        Echo.stopListening(`user-notifications.${authStore.user.id}`);
+    }
 };
 
 const toggleMenu = (dropdownType, event) => {
@@ -87,13 +77,12 @@ const closeMenu = (event) => {
 
 // 画面サイズと向きに応じて通知メニューの挙動を調整
 const handleResize = () => {
-    const orientationType = screen.orientation?.type || '';
-    const isPortrait = orientationType.includes('portrait');
-    const mobile = window.innerWidth > BREAKPOINT_MOBILE;
-    if (isPortrait && !mobile && isMobile.value) {
+    const isPortrait = screen.orientation?.type.includes('portrait');
+    const mobile = window.innerWidth <= BREAKPOINT_MOBILE;
+    isMobile.value = mobile;
+    if (isPortrait && mobile) {
         noticeOpen.value = false;
     }
-    isMobile.value = mobile;
 };
 
 const handleModalEvents = (event) => {
@@ -104,8 +93,43 @@ const handleModalEvents = (event) => {
     }
 };
 
-onMounted(() => {
-    fetchUserData();
+// 通知を取得
+const fetchNotifications = async () => {
+    try {
+        const response = await axios.get(
+            `/api/notifications/${authStore.user.id}/unread_count`
+        );
+        unreadCount.value = response.data.unread_count;
+    } catch (error) {
+        console.error('通知の取得に失敗しました:', error);
+        unreadCount.value = 0;
+    }
+};
+
+const setupWebSocket = async () => {
+    if (!authStore.user || !authStore.user.id) return;
+    Echo.private(`user-notifications.${authStore.user.id}`).notification(() => {
+        fetchNotifications();
+    });
+};
+
+watch(
+    () => route.fullPath,
+    async () => {
+        if (authStore.user?.id) {
+            await fetchNotifications();
+        }
+    }
+);
+
+onMounted(async () => {
+    await authStore.fetchUserData();
+
+    if (authStore.user && authStore.user.id) {
+        await fetchNotifications();
+        setupWebSocket();
+    }
+
     window.addEventListener('click', closeMenu);
     window.addEventListener('resize', handleResize);
     if (screen.orientation?.addEventListener) {
@@ -125,6 +149,9 @@ onUnmounted(() => {
     window.removeEventListener('modal-opened', handleModalEvents);
     window.removeEventListener('modal-closed', handleModalEvents);
     window.removeEventListener('outfit-deleted', handleModalEvents);
+    if (authStore.user && authStore.user.id) {
+        Echo.stopListening(`user-notifications.${authStore.user.id}`);
+    }
 });
 </script>
 
@@ -161,7 +188,7 @@ onUnmounted(() => {
                             <span
                                 class="absolute top-0 right-0 translate-x-1/2 translate-y-1/2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-red-100 bg-red-600 rounded-full"
                             >
-                                10
+                                {{ unreadCount }}
                             </span>
                         </router-link>
                     </div>

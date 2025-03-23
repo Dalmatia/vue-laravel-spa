@@ -24,7 +24,7 @@ const hasNotifications = computed(() => props.notifications.length > 0);
                 class="p-2 space-y-4"
             >
                 <div
-                    class="p-4 rounded-lg shadow-md cursor-pointer flex items-center relative"
+                    class="p-4 rounded-lg shadow-md cursor-pointer flex items-center"
                     :class="{
                         'bg-gray-300': !notification.read_at,
                         'bg-white': notification.read_at,

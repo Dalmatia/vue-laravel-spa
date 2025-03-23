@@ -1,6 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { useAuthStore } from '../stores/auth';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useFollowStore } from '../stores/follow';
 
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
@@ -14,8 +13,6 @@ let openFilter = ref(false);
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
 const outfits = ref([]);
-const authStore = useAuthStore();
-const user = computed(() => (authStore.user ? authStore.user.id : null));
 const followStore = useFollowStore();
 
 // 検索する項目毎のデータの取得
@@ -122,10 +119,10 @@ onUnmounted(() => {
         <!-- デスクトップ用レイアウト -->
         <div class="hidden md:block">
             <nav
-                class="flex flex-col box-border items-stretch sticky top-0 z-40 bg-white"
+                class="flex flex-col box-border items-stretch sticky top-0 bg-white"
             >
-                <div class="relative z-11 flex flex-col h-auto">
-                    <header class="relative z-11 flex flex-col h-auto">
+                <div class="relative flex flex-col h-auto">
+                    <header class="relative flex flex-col h-auto">
                         <h1 class="text-center mb-5 text-lg font-semibold">
                             コーディネート検索
                         </h1>
@@ -157,7 +154,7 @@ onUnmounted(() => {
 
                         <!-- 絞り込み検索ドロップダウンメニュー -->
                         <div
-                            class="absolute top-full left-0 z-40 w-full bg-white"
+                            class="absolute top-20 left-0 w-full bg-white"
                             v-if="openFilter"
                         >
                             <form class="w-full p-4">
@@ -173,6 +170,7 @@ onUnmounted(() => {
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
                                                 <select
+                                                    id="mainCategory"
                                                     v-model="
                                                         filters.mainCategory
                                                     "
@@ -203,6 +201,7 @@ onUnmounted(() => {
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
                                                 <select
+                                                    id="subCategory"
                                                     v-model="
                                                         filters.subCategory
                                                     "
@@ -233,6 +232,7 @@ onUnmounted(() => {
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
                                                 <select
+                                                    id="color"
                                                     v-model="filters.color"
                                                     class="w-full"
                                                 >
@@ -261,6 +261,7 @@ onUnmounted(() => {
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
                                                 <select
+                                                    id="season"
                                                     v-model="filters.season"
                                                     class="w-full"
                                                 >
@@ -307,7 +308,7 @@ onUnmounted(() => {
             </nav>
 
             <!-- コーディネート表示部分 -->
-            <div id="outfit" class="relative z-[1]">
+            <div id="outfit">
                 <div
                     id="outfit_list"
                     class="grid grid-cols-3 md:grid-cols-4 pt-0 pr-0 pb-[20px] pl-0"
@@ -318,10 +319,10 @@ onUnmounted(() => {
                         class="pt-[10px] pr-[6px] pb-[5px] pl-[6px] w-full"
                     >
                         <div
-                            class="relative float-left border-[1px] border-[#ddd] border-solid rounded-[3px] bg-white"
+                            class="float-left border-[1px] border-[#ddd] border-solid rounded-[3px] bg-white"
                         >
                             <p
-                                class="relative w-full h-auto overflow-hidden bg-[#f6f7f8]"
+                                class="w-full h-auto overflow-hidden bg-[#f6f7f8]"
                                 @click="openOutfitOverlay(outfit)"
                             >
                                 <img
@@ -335,7 +336,7 @@ onUnmounted(() => {
                             >
                                 <div
                                     id="profile_image"
-                                    class="relative float-left w-[22px] md:w-[40px]"
+                                    class="float-left w-[22px] md:w-[40px]"
                                 >
                                     <img
                                         :src="outfit.user.file"
@@ -406,14 +407,14 @@ onUnmounted(() => {
 
             <!-- 絞り込み検索ドロップダウンメニュー -->
             <div
-                class="fixed w-full overflow-hidden z-40 bg-white"
+                class="fixed w-full overflow-hidden z-40 bg-white top-14 pt-1"
                 v-if="openFilter"
             >
                 <ul
                     class="w-full list-none m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
                 >
                     <li
-                        class="pb-[115px] transition-none block bg-white text-left m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent"
+                        class="transition-none block bg-white text-left m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent"
                     >
                         <form
                             class="m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
@@ -436,6 +437,7 @@ onUnmounted(() => {
                                                 メインカテゴリー
                                             </span>
                                             <select
+                                                id="mainCategory"
                                                 v-model="filters.mainCategory"
                                                 class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
@@ -466,6 +468,7 @@ onUnmounted(() => {
                                                 サブカテゴリー
                                             </span>
                                             <select
+                                                id="subCategory"
                                                 v-model="filters.subCategory"
                                                 class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
@@ -496,6 +499,7 @@ onUnmounted(() => {
                                                 カラー
                                             </span>
                                             <select
+                                                id="color"
                                                 v-model="filters.color"
                                                 class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
@@ -526,6 +530,7 @@ onUnmounted(() => {
                                                 シーズン
                                             </span>
                                             <select
+                                                id="season"
                                                 v-model="filters.season"
                                                 class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
                                             >
