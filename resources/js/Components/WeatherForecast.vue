@@ -183,6 +183,10 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
+            <div v-if="selectedTab === 'today'">
+                <strong>服装アドバイス:</strong>
+                <p>{{ weather.today.advice }}</p>
+            </div>
 
             <!-- 明日の予報 -->
             <div v-else class="border p-4">
@@ -214,6 +218,10 @@ onMounted(async () => {
                         </span>
                     </div>
                 </div>
+            </div>
+            <div v-if="selectedTab === 'tomorrow'">
+                <strong>服装アドバイス:</strong>
+                <p>{{ weather.tomorrow.advice }}</p>
             </div>
         </div>
     </div>

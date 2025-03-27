@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Gemini\Laravel\Facades\Gemini;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -40,8 +41,22 @@ class WeatherAPIController extends Controller
         return response()->json([
             'status' => 'success',
             'weather' => [
-                'today' => $this->formatWeather($weatherData, 0),
-                'tomorrow' => $this->formatWeather($weatherData, 1),
+                'today' => array_merge(
+                    $this->formatWeather($weatherData, 0),
+                    $this->suggestClothing(
+                        $this->formatWeather($weatherData, 0)['max_temp'],
+                        $this->formatWeather($weatherData, 0)['min_temp'],
+                        $this->formatWeather($weatherData, 0)['precipitation_probability']
+                    )
+                ),
+                'tomorrow' => array_merge(
+                    $this->formatWeather($weatherData, 1),
+                    $this->suggestClothing(
+                        $this->formatWeather($weatherData, 1)['max_temp'],
+                        $this->formatWeather($weatherData, 1)['min_temp'],
+                        $this->formatWeather($weatherData, 1)['precipitation_probability']
+                    )
+                ),
             ],
             'message' => '天気情報の取得に成功しました。',
         ]);
@@ -93,5 +108,28 @@ class WeatherAPIController extends Controller
             }
         }
         return ['description' => '不明', 'icon' => '✨'];
+    }
+
+    private function suggestClothing($maxTemp, $minTemp, $precipitation)
+    {
+        if ($maxTemp === '不明' || $minTemp === '不明') {
+            return ['advice' => '気温データが取得できませんでした。', 'category' => '不明'];
+        }
+
+        $client = Gemini::generativeModel("gemini-1.5-pro-001");
+
+        // 基本的な服装ルール
+        $prompt = "今日の天気予報は以下の通りです。\n"
+            . "最高気温: {$maxTemp}℃\n"
+            . "最低気温: {$minTemp}℃\n"
+            . "降水確率: {$precipitation}%\n"
+            . "この天候に適した服装のアドバイスを簡潔に教えてください。";
+
+        $response = $client->generateContent($prompt);
+
+        return [
+            'advice' => $response->text() ?? 'アドバイスを取得できませんでした。',
+            'category' => 'AIによる提案'
+        ];
     }
 }
