@@ -3,10 +3,12 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { useFollowStore } from '../stores/follow';
 
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import SelectColor from './SelectColor.vue';
 
 import Sort from 'vue-material-design-icons/SortVariant.vue';
 import Filter from 'vue-material-design-icons/Tune.vue';
 import Close from 'vue-material-design-icons/Close.vue';
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 import axios from 'axios';
 
 let openFilter = ref(false);
@@ -24,9 +26,11 @@ const seasons = ref([]);
 const filters = ref({
     mainCategory: '',
     subCategory: '',
-    color: '',
+    color: null,
     season: '',
 });
+
+const openModal = ref(false);
 
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
@@ -79,6 +83,43 @@ const getEnums = async () => {
     }
 };
 
+const selectColor = (color) => {
+    openModal.value = true;
+    filters.value.color = color;
+};
+
+// クラスで特殊色のスタイルを分岐
+const getColorClass = (color) => {
+    if (color.name === 'ネオン') {
+        return 'neon-glow';
+    } else if (color.name === 'ボーダー柄') {
+        return 'border-pattern';
+    } else if (color.name === 'パターン柄') {
+        return 'patterned-pattern';
+    } else if (color.name === 'シルバー') {
+        return 'silver';
+    } else if (color.name === 'ゴールド') {
+        return 'gold';
+    } else if (color.name === 'その他') {
+        return 'other-color';
+    } else {
+        return '';
+    }
+};
+
+// 通常色は直接背景色で表現
+const getColorStyle = (color) => {
+    const special = [
+        'ネオン',
+        'ボーダー柄',
+        'パターン柄',
+        'シルバー',
+        'ゴールド',
+    ];
+    if (special.includes(color.name)) return {};
+    return { backgroundColor: color.hex };
+};
+
 const filterByCategory = () => {
     fetchOutfits();
     openFilter.value = false;
@@ -89,7 +130,7 @@ const clearFilters = () => {
     filters.value = {
         mainCategory: '',
         subCategory: '',
-        color: '',
+        color: null,
         season: '',
     };
     filterByCategory();
@@ -231,24 +272,50 @@ onUnmounted(() => {
                                             <td
                                                 class="py-0 pr-5 pl-10 border-y border-solid border-y-[#f2f2f2]"
                                             >
-                                                <select
-                                                    id="color"
-                                                    v-model="filters.color"
-                                                    class="w-full"
+                                                <button
+                                                    aria-label="カラーを選択"
+                                                    type="button"
+                                                    class="w-full border border-gray-300 px-4 py-2 rounded text-left"
+                                                    @click="
+                                                        selectColor(
+                                                            filters.color
+                                                        )
+                                                    "
                                                 >
-                                                    <option value="">
-                                                        カラーを選択
-                                                    </option>
-                                                    <option
-                                                        v-for="(
-                                                            label, value
-                                                        ) in colors"
-                                                        :key="value"
-                                                        :value="value"
+                                                    <div
+                                                        v-if="!filters.color"
+                                                        class="flex items-center gap-2"
                                                     >
-                                                        {{ label }}
-                                                    </option>
-                                                </select>
+                                                        カラーを選択
+                                                    </div>
+                                                    <div
+                                                        v-if="filters.color"
+                                                        class="flex items-center gap-2"
+                                                    >
+                                                        <span>
+                                                            選択中のカラー:
+                                                        </span>
+                                                        <div
+                                                            class="w-5 h-5 rounded-full border"
+                                                            :style="
+                                                                getColorStyle(
+                                                                    filters.color
+                                                                )
+                                                            "
+                                                            :class="
+                                                                getColorClass(
+                                                                    filters.color
+                                                                )
+                                                            "
+                                                        ></div>
+                                                        <span class="text-sm">
+                                                            {{
+                                                                filters.color
+                                                                    .name
+                                                            }}
+                                                        </span>
+                                                    </div>
+                                                </button>
                                             </td>
                                         </tr>
                                         <tr>
@@ -407,7 +474,7 @@ onUnmounted(() => {
 
             <!-- 絞り込み検索ドロップダウンメニュー -->
             <div
-                class="fixed w-full overflow-hidden z-40 bg-white top-14 pt-1"
+                class="fixed w-full left-0 inset-x-0 overflow-hidden z-40 bg-white top-14 pt-1"
                 v-if="openFilter"
             >
                 <ul
@@ -420,7 +487,7 @@ onUnmounted(() => {
                             class="m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
                         >
                             <div
-                                class="overflow-hidden overflow-y-scroll text-left m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
+                                class="overflow-hidden overflow-y-auto text-left m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block"
                             >
                                 <ul
                                     class="list-none m-0 p-0 border-0 text-[100%] align-baseline outline-0 bg-transparent block ms-0 me-0"
@@ -498,24 +565,46 @@ onUnmounted(() => {
                                             >
                                                 カラー
                                             </span>
-                                            <select
-                                                id="color"
-                                                v-model="filters.color"
-                                                class="w-full box-border text-base leading-normal text-right pt-[15px] pr-[15px] pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
+                                            <button
+                                                aria-label="カラーを選択"
+                                                type="button"
+                                                class="w-full box-border text-base leading-normal text-right pt-[15px] pr-0 pb-4 pl-0 m-0 border-0 align-baseline outline-0 bg-transparent"
+                                                @click="
+                                                    selectColor(filters.color)
+                                                "
                                             >
-                                                <option value="">
-                                                    指定なし
-                                                </option>
-                                                <option
-                                                    v-for="(
-                                                        label, value
-                                                    ) in colors"
-                                                    :key="value"
-                                                    :value="value"
+                                                <div
+                                                    v-if="filters.color"
+                                                    class="flex justify-end items-center gap-2"
                                                 >
-                                                    {{ label }}
-                                                </option>
-                                            </select>
+                                                    <span>
+                                                        選択中のカラー:
+                                                    </span>
+                                                    <div
+                                                        class="w-5 h-5 rounded-full border"
+                                                        :style="
+                                                            getColorStyle(
+                                                                filters.color
+                                                            )
+                                                        "
+                                                        :class="
+                                                            getColorClass(
+                                                                filters.color
+                                                            )
+                                                        "
+                                                    ></div>
+                                                    <span class="text-sm">
+                                                        {{ filters.color.name }}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    v-else
+                                                    class="flex justify-end items-center gap-2"
+                                                >
+                                                    カラーを選択
+                                                    <ChevronRight />
+                                                </div>
+                                            </button>
                                         </div>
                                     </li>
                                     <li
@@ -649,4 +738,75 @@ onUnmounted(() => {
         @delete-selected="deleteOutfit($event)"
         @close-overlay="openOverlay = false"
     />
+    <SelectColor
+        v-if="openModal"
+        :colors="colors"
+        :selectedColor="filters.color?.value"
+        @color-selected="selectColor($event)"
+        @close="openModal = false"
+    />
 </template>
+
+<style scoped>
+.neon-glow {
+    background-color: #39ff14;
+    box-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14;
+}
+
+.border-pattern {
+    background-image: repeating-linear-gradient(
+        90deg,
+        #d1d5db,
+        #d1d5db 5px,
+        #ffffff 5px,
+        #ffffff 10px
+    );
+}
+
+.patterned-pattern {
+    background-image: repeating-linear-gradient(
+            45deg,
+            #e5e7eb,
+            #e5e7eb 5px,
+            #ffffff 5px,
+            #ffffff 10px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            #e5e7eb,
+            #e5e7eb 5px,
+            #ffffff 5px,
+            #ffffff 10px
+        );
+    background-blend-mode: multiply;
+}
+
+.silver {
+    background: linear-gradient(
+        45deg,
+        #757575 0%,
+        #9e9e9e 45%,
+        #e8e8e8 70%,
+        #9e9e9e 85%,
+        #757575 90% 100%
+    );
+}
+
+.gold {
+    background: linear-gradient(
+        45deg,
+        #b67b03 0%,
+        #daaf08 45%,
+        #fee9a0 70%,
+        #daaf08 85%,
+        #b67b03 90% 100%
+    );
+}
+
+.other-color {
+    background: linear-gradient(to right, red 50%, blue 50%) top,
+        linear-gradient(to right, green 50%, yellow 50%) bottom;
+    background-size: 100% 50%;
+    background-repeat: no-repeat;
+}
+</style>

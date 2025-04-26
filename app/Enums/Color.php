@@ -61,6 +61,32 @@ final class Color extends Enum
         self::other => 'その他',
     ];
 
+    protected static $hexCodes = [
+        self::black => '#000000',
+        self::white => '#ffffff',
+        self::gray => '#9ca3af',
+        self::red => '#ff0000',
+        self::navy => '#1e3a8a',
+        self::blue => '#60a5fa',
+        self::light_blue => '#93c5fd',
+        self::green => '#4ade80',
+        self::olive => '#808000',
+        self::brown => '#a0522d',
+        self::beige => '#f5f5dc',
+        self::purple => '#a78bfa',
+        self::yellow => '#fde047',
+        self::orange => '#fb923c',
+        self::pink => '#f9a8d4',
+        self::neon => '#39ff14',
+        self::border => '#d1d5db',     // グレー系想定
+        self::patterned => '#e5e7eb',  // 明るめグレー想定
+        self::denim => '#1e40af',
+        self::silver => '#c0c0c0',
+        self::gold => '#ffd700',
+        self::other => '#d4d4d4',
+    ];
+
+
     public static function getDescription($value): string
     {
         return static::$labels[$value] ?? '存在しないカラーです';
@@ -101,7 +127,11 @@ final class Color extends Enum
         $selectArray = [];
 
         foreach (static::getValues() as $value) {
-            $selectArray[$value] = static::getDescription($value);
+            $selectArray[] = [
+                'value' => $value,
+                'name' => static::getDescription($value),
+                'hex' => static::$hexCodes[$value] ?? '#cccccc', // fallback color
+            ];
         }
 
         return $selectArray;

@@ -116,7 +116,7 @@ class WeatherAPIController extends Controller
             return ['advice' => '気温データが取得できませんでした。', 'category' => '不明'];
         }
 
-        $client = Gemini::generativeModel("gemini-1.5-pro-001");
+        $client = Gemini::generativeModel("gemini-2.0-flash-001");
 
         // 基本的な服装ルール
         $prompt = "今日の天気予報は以下の通りです。\n"
