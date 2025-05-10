@@ -128,7 +128,7 @@ final class Color extends Enum
 
         foreach (static::getValues() as $value) {
             $selectArray[] = [
-                'value' => $value,
+                'id' => $value,
                 'name' => static::getDescription($value),
                 'hex' => static::$hexCodes[$value] ?? '#cccccc', // fallback color
             ];

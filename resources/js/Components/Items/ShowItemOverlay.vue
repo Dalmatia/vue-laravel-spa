@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, onUnmounted } from 'vue';
 import { useAuthStore } from '../../stores/auth.js';
-import { getEnumStore } from '../../stores/enum.js';
+import { specialColors } from '../../src/specialColors';
 
 import ShowItemOptionsOverlay from './ShowItemOptionsOverlay.vue';
 
@@ -10,6 +10,7 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue';
 
 const authStore = useAuthStore();
+const { getColorClass, getColorStyle } = specialColors();
 const props = defineProps({ item: Object });
 const item = ref(props.item);
 const main_category = ref(null);
@@ -19,7 +20,10 @@ const season = ref(null);
 const deleteType = ref(null);
 const id = ref(null);
 // 選択したメイン・サブカテゴリー、カラー、季節の情報の取得
-const selection = getEnumStore();
+const mainCategories = ref([]);
+const subCategories = ref([]);
+const colors = ref([]);
+const seasons = ref([]);
 
 defineEmits(['closeOverlay', 'deleteSelected']);
 
@@ -48,18 +52,29 @@ const fetchItemData = async () => {
     }
 };
 
-// 選択したメインカテゴリー名等のデータ取得
-const fetchSelectData = () => {
-    main_category.value = selection.getMainCategoryName(
-        item.value.main_category
-    );
-    sub_category.value = selection.getSubCategoryName(item.value.sub_category);
-    color.value = selection.getColor(item.value.color);
-    season.value = selection.getSeason(item.value.season);
+// メインカテゴリーなどの情報取得
+const fetchSelectData = async () => {
+    try {
+        const response = await axios.get('/api/enums');
+        mainCategories.value = response.data.mainCategories;
+        main_category.value = mainCategories.value.find(
+            (m) => m.id === item.value.main_category
+        );
+        subCategories.value = response.data.subCategories;
+        sub_category.value = subCategories.value.find(
+            (s) => s.id === item.value.sub_category
+        );
+        colors.value = response.data.colors;
+        color.value = colors.value.find((c) => c.id === item.value.color);
+        seasons.value = response.data.seasons;
+        season.value = seasons.value.find((s) => s.id === item.value.season);
+    } catch (error) {
+        console.error('Enum データの取得に失敗しました', error);
+    }
 };
 
 onMounted(async () => {
-    await Promise.all([fetchUserData(), fetchItemData()]);
+    await Promise.all([fetchUserData(), fetchItemData(), fetchSelectData()]);
     // EditItemOverlay.vueのitemUpdateメソッドで定義したイベントの購読
     window.addEventListener('item-updated', fetchItemData);
 });
@@ -128,7 +143,9 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             メインカテゴリー
                         </div>
-                        <span>{{ main_category }}</span>
+                        <span v-if="main_category">
+                            {{ main_category.name }}
+                        </span>
                     </div>
 
                     <!-- サブカテゴリー表示 -->
@@ -136,7 +153,9 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             サブカテゴリー
                         </div>
-                        <span>{{ sub_category }}</span>
+                        <span v-if="sub_category">
+                            {{ sub_category.name }}
+                        </span>
                     </div>
 
                     <!-- カラー選択 -->
@@ -144,7 +163,15 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー
                         </div>
-                        <span>{{ color }}</span>
+                        <div class="flex items-center gap-2" v-if="color">
+                            <div
+                                class="w-6 h-6 rounded-full border border-gray-300"
+                                :style="getColorStyle(color)"
+                                :class="getColorClass(color)"
+                            ></div>
+                            <!-- ラベル表示 -->
+                            <span>{{ color.name }}</span>
+                        </div>
                     </div>
 
                     <!-- 季節表示 -->
@@ -152,13 +179,15 @@ onUnmounted(() => {
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
-                        <span>{{ season }}</span>
+                        <span v-if="season">
+                            {{ season.name }}
+                        </span>
                     </div>
 
                     <!-- メモ表示 -->
                     <div class="flex w-full max-h-[200px] bg-white border-b">
                         <textarea
-                            ref="textarea"
+                            id="item_memo"
                             rows="10"
                             class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 text-gray-600 text-[18px] outline-none resize-none"
                             v-model="item.memo"

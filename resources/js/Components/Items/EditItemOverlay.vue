@@ -4,6 +4,10 @@ import axios from 'axios';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
+
+import SelectColor from '@/pages/SelectColor.vue';
+import { specialColors } from '../../src/specialColors';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editItem: Object, required: true });
@@ -13,6 +17,9 @@ const mainCategories = ref([]);
 const subCategories = ref([]);
 const colors = ref([]);
 const seasons = ref([]);
+const openModal = ref(false);
+const selectedColor = ref(null);
+const { getColorClass, getColorStyle } = specialColors();
 
 let isValidFile = ref(null);
 let fileDisplay = ref('');
@@ -117,6 +124,19 @@ const fetchEnums = async () => {
     }
 };
 
+const selectColor = (color) => {
+    if (selectedColor.value?.id === color?.value) {
+        // 同じ色をもう一度選ぶ → 選択解除
+        selectedColor.value = null;
+        editForm.value.color = null;
+    } else {
+        // 新しい色を選択
+        selectedColor.value = color;
+        editForm.value.color = color?.id || null;
+    }
+    openModal.value = false;
+};
+
 // 内容が変更されなかった時にeditFormを初期化
 watch(
     () => props.editItem,
@@ -144,8 +164,14 @@ watch(
     }
 );
 
-onMounted(() => {
-    fetchEnums();
+onMounted(async () => {
+    await fetchEnums();
+    if (props.editItem.color) {
+        editForm.value.color = props.editItem.color;
+        selectedColor.value = colors.value.find(
+            (c) => c.id === props.editItem.color
+        );
+    }
 });
 
 watch(editForm, (newValue) => {
@@ -262,14 +288,18 @@ watch(editForm, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             メインカテゴリー
                         </div>
-                        <select v-model="editForm.main_category" required>
+                        <select
+                            id="main_category"
+                            v-model="editForm.main_category"
+                            required
+                        >
                             <option value="" disabled>選択してください</option>
                             <option
-                                v-for="(label, value) in mainCategories"
-                                :key="value"
-                                :value="value"
+                                v-for="mainCategory in mainCategories"
+                                :key="mainCategory.id"
+                                :value="mainCategory.id"
                             >
-                                {{ label }}
+                                {{ mainCategory.name }}
                             </option>
                         </select>
                     </div>
@@ -285,14 +315,17 @@ watch(editForm, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             サブカテゴリー
                         </div>
-                        <select v-model="editForm.sub_category">
+                        <select
+                            id="sub_category"
+                            v-model="editForm.sub_category"
+                        >
                             <option :value="null">指定なし</option>
                             <option
-                                v-for="(label, value) in subCategories"
-                                :key="value"
-                                :value="value"
+                                v-for="subCategory in subCategories"
+                                :key="subCategory.id"
+                                :value="subCategory.id"
                             >
-                                {{ label }}
+                                {{ subCategory.name }}
                             </option>
                         </select>
                     </div>
@@ -308,16 +341,34 @@ watch(editForm, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー選択
                         </div>
-                        <select v-model="editForm.color" required>
-                            <option value="" disabled>選択してください</option>
-                            <option
-                                v-for="(label, value) in colors"
-                                :key="value"
-                                :value="value"
+                        <button
+                            aria-label="カラーを選択"
+                            type="button"
+                            class="text-base leading-normal text-right"
+                            @click="openModal = true"
+                        >
+                            <div
+                                v-if="selectedColor"
+                                class="flex justify-end items-center gap-2"
                             >
-                                {{ label }}
-                            </option>
-                        </select>
+                                <span> 選択中のカラー: </span>
+                                <div
+                                    class="w-5 h-5 rounded-full border"
+                                    :style="getColorStyle(selectedColor)"
+                                    :class="getColorClass(selectedColor)"
+                                ></div>
+                                <span class="text-sm">
+                                    {{ selectedColor.name }}
+                                </span>
+                            </div>
+                            <div
+                                v-else
+                                class="flex justify-end items-center gap-2"
+                            >
+                                カラーを選択
+                                <ChevronRight />
+                            </div>
+                        </button>
                     </div>
 
                     <!-- 季節表示 -->
@@ -325,14 +376,14 @@ watch(editForm, (newValue) => {
                         <div class="text-lg font-extrabold text-gray-500">
                             シーズン
                         </div>
-                        <select v-model="editForm.season">
+                        <select id="season" v-model="editForm.season">
                             <option :value="null">指定なし</option>
                             <option
-                                v-for="(label, value) in seasons"
-                                :key="value"
-                                :value="value"
+                                v-for="season in seasons"
+                                :key="season.id"
+                                :value="season.id"
                             >
-                                {{ label }}
+                                {{ season.name }}
                             </option>
                         </select>
                     </div>
@@ -346,6 +397,7 @@ watch(editForm, (newValue) => {
                     </div>
                     <div class="flex w-full max-h-[200px] bg-white border-b">
                         <textarea
+                            id="memo"
                             ref="textarea"
                             rows="10"
                             class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 text-gray-600 text-[18px] outline-none resize-none"
@@ -356,4 +408,11 @@ watch(editForm, (newValue) => {
             </div>
         </div>
     </div>
+    <SelectColor
+        v-if="openModal"
+        :colors="colors"
+        :selectedColor="selectedColor?.id"
+        @color-selected="selectColor($event)"
+        @close="openModal = false"
+    />
 </template>

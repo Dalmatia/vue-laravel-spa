@@ -3,8 +3,10 @@ import { ref, reactive, onMounted, watch } from 'vue';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
-import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
+import SelectColor from '@/pages/SelectColor.vue';
+import { specialColors } from '../../src/specialColors';
 // const user = usePage().props.auth.user;
 
 const emit = defineEmits(['close']);
@@ -13,7 +15,7 @@ const form = reactive({
     file: null,
     main_category: '',
     sub_category: null,
-    color: '',
+    color: null,
     season: null,
     memo: null,
 });
@@ -22,6 +24,9 @@ const mainCategories = ref([]);
 const subCategories = ref([]);
 const colors = ref([]);
 const seasons = ref([]);
+const openModal = ref(false);
+const selectedColor = ref(null);
+const { getColorClass, getColorStyle } = specialColors();
 
 let isValidFile = ref(null);
 let fileDisplay = ref('');
@@ -110,11 +115,24 @@ const closeOverlay = () => {
     form.file = null;
     form.main_category = '';
     form.sub_category = null;
-    form.color = '';
+    form.color = null;
     form.season = null;
     form.memo = null;
     fileDisplay.value = '';
     emit('close');
+};
+
+const selectColor = (color) => {
+    if (selectedColor.value?.id === color?.id) {
+        // 同じ色をもう一度選ぶ → 選択解除
+        selectedColor.value = null;
+        form.color = null;
+    } else {
+        // 新しい色を選択
+        selectedColor.value = color;
+        form.color = color?.id || null;
+    }
+    openModal.value = false;
 };
 
 // 各選択項目の値取得
@@ -224,11 +242,11 @@ watch(
                         <select v-model="form.main_category">
                             <option value="" disabled>選択してください</option>
                             <option
-                                v-for="(label, value) in mainCategories"
-                                :key="value"
-                                :value="value"
+                                v-for="mainCategory in mainCategories"
+                                :key="mainCategory.id"
+                                :value="mainCategory.id"
                             >
-                                {{ label }}
+                                {{ mainCategory.name }}
                             </option>
                         </select>
                     </div>
@@ -250,11 +268,11 @@ watch(
                         <select v-model="form.sub_category">
                             <option :value="null">選択してください</option>
                             <option
-                                v-for="(label, value) in subCategories"
-                                :key="value"
-                                :value="value"
+                                v-for="subCategory in subCategories"
+                                :key="subCategory.id"
+                                :value="subCategory.id"
                             >
-                                {{ label }}
+                                {{ subCategory.name }}
                             </option>
                         </select>
                     </div>
@@ -270,16 +288,34 @@ watch(
                         <div class="text-lg font-extrabold text-gray-500">
                             カラー選択
                         </div>
-                        <select v-model="form.color">
-                            <option value="" disabled>選択してください</option>
-                            <option
-                                v-for="(label, value) in colors"
-                                :key="value"
-                                :value="value"
+                        <button
+                            aria-label="カラーを選択"
+                            type="button"
+                            class="text-base leading-normal text-right"
+                            @click="openModal = true"
+                        >
+                            <div
+                                v-if="selectedColor"
+                                class="flex justify-end items-center gap-2"
                             >
-                                {{ label }}
-                            </option>
-                        </select>
+                                <span> 選択中のカラー: </span>
+                                <div
+                                    class="w-5 h-5 rounded-full border"
+                                    :style="getColorStyle(selectedColor)"
+                                    :class="getColorClass(selectedColor)"
+                                ></div>
+                                <span class="text-sm">
+                                    {{ selectedColor.name }}
+                                </span>
+                            </div>
+                            <div
+                                v-else
+                                class="flex justify-end items-center gap-2"
+                            >
+                                カラーを選択
+                                <ChevronRight />
+                            </div>
+                        </button>
                     </div>
 
                     <!-- 季節選択 -->
@@ -296,11 +332,11 @@ watch(
                         <select v-model="form.season">
                             <option :value="null">選択してください</option>
                             <option
-                                v-for="(label, value) in seasons"
-                                :key="value"
-                                :value="value"
+                                v-for="season in seasons"
+                                :key="season.id"
+                                :value="season.id"
                             >
-                                {{ label }}
+                                {{ season.name }}
                             </option>
                         </select>
                     </div>
@@ -324,4 +360,11 @@ watch(
             </div>
         </div>
     </div>
+    <SelectColor
+        v-if="openModal"
+        :colors="colors"
+        :selectedColor="selectedColor?.id"
+        @color-selected="selectColor($event)"
+        @close="openModal = false"
+    />
 </template>

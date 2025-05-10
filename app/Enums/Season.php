@@ -47,7 +47,10 @@ final class Season extends Enum
         $selectArray = [];
 
         foreach (static::getValues() as $value) {
-            $selectArray[$value] = static::getDescription($value);
+            $selectArray[] = [
+                'id' => $value,
+                'name' => static::getDescription($value),
+            ];
         }
 
         return $selectArray;

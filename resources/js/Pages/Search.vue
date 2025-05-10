@@ -4,6 +4,7 @@ import { useFollowStore } from '../stores/follow';
 
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
 import SelectColor from './SelectColor.vue';
+import { specialColors } from '../src/specialColors';
 
 import Sort from 'vue-material-design-icons/SortVariant.vue';
 import Filter from 'vue-material-design-icons/Tune.vue';
@@ -16,6 +17,7 @@ let currentOutfit = ref(null);
 let openOverlay = ref(false);
 const outfits = ref([]);
 const followStore = useFollowStore();
+const { getColorClass, getColorStyle } = specialColors();
 
 // 検索する項目毎のデータの取得
 const mainCategories = ref([]);
@@ -88,38 +90,6 @@ const selectColor = (color) => {
     filters.value.color = color;
 };
 
-// クラスで特殊色のスタイルを分岐
-const getColorClass = (color) => {
-    if (color.name === 'ネオン') {
-        return 'neon-glow';
-    } else if (color.name === 'ボーダー柄') {
-        return 'border-pattern';
-    } else if (color.name === 'パターン柄') {
-        return 'patterned-pattern';
-    } else if (color.name === 'シルバー') {
-        return 'silver';
-    } else if (color.name === 'ゴールド') {
-        return 'gold';
-    } else if (color.name === 'その他') {
-        return 'other-color';
-    } else {
-        return '';
-    }
-};
-
-// 通常色は直接背景色で表現
-const getColorStyle = (color) => {
-    const special = [
-        'ネオン',
-        'ボーダー柄',
-        'パターン柄',
-        'シルバー',
-        'ゴールド',
-    ];
-    if (special.includes(color.name)) return {};
-    return { backgroundColor: color.hex };
-};
-
 const filterByCategory = () => {
     fetchOutfits();
     openFilter.value = false;
@@ -158,7 +128,7 @@ onUnmounted(() => {
         class="box-border mx-auto max-w-6xl min-h-fit md:pl-[88px] lg:px-7 w-full"
     >
         <!-- デスクトップ用レイアウト -->
-        <div class="hidden md:block">
+        <div class="hidden md:block md:w-[650px] lg:w-[880px]">
             <nav
                 class="flex flex-col box-border items-stretch sticky top-0 bg-white"
             >
@@ -221,13 +191,11 @@ onUnmounted(() => {
                                                         メインカテゴリーを選択
                                                     </option>
                                                     <option
-                                                        v-for="(
-                                                            label, value
-                                                        ) in mainCategories"
-                                                        :key="value"
-                                                        :value="value"
+                                                        v-for="mainCategory in mainCategories"
+                                                        :key="mainCategory.id"
+                                                        :value="mainCategory.id"
                                                     >
-                                                        {{ label }}
+                                                        {{ mainCategory.name }}
                                                     </option>
                                                 </select>
                                             </td>
@@ -252,13 +220,11 @@ onUnmounted(() => {
                                                         サブカテゴリーを選択
                                                     </option>
                                                     <option
-                                                        v-for="(
-                                                            label, value
-                                                        ) in subCategories"
-                                                        :key="value"
-                                                        :value="value"
+                                                        v-for="subCategory in subCategories"
+                                                        :key="subCategory.id"
+                                                        :value="subCategory.id"
                                                     >
-                                                        {{ label }}
+                                                        {{ subCategory.name }}
                                                     </option>
                                                 </select>
                                             </td>
@@ -282,12 +248,6 @@ onUnmounted(() => {
                                                         )
                                                     "
                                                 >
-                                                    <div
-                                                        v-if="!filters.color"
-                                                        class="flex items-center gap-2"
-                                                    >
-                                                        カラーを選択
-                                                    </div>
                                                     <div
                                                         v-if="filters.color"
                                                         class="flex items-center gap-2"
@@ -315,6 +275,12 @@ onUnmounted(() => {
                                                             }}
                                                         </span>
                                                     </div>
+                                                    <div
+                                                        v-else
+                                                        class="flex items-center gap-2"
+                                                    >
+                                                        カラーを選択
+                                                    </div>
                                                 </button>
                                             </td>
                                         </tr>
@@ -336,13 +302,11 @@ onUnmounted(() => {
                                                         シーズンを選択
                                                     </option>
                                                     <option
-                                                        v-for="(
-                                                            label, value
-                                                        ) in seasons"
-                                                        :key="value"
-                                                        :value="value"
+                                                        v-for="season in seasons"
+                                                        :key="season.id"
+                                                        :value="season.id"
                                                     >
-                                                        {{ label }}
+                                                        {{ season.name }}
                                                     </option>
                                                 </select>
                                             </td>
@@ -375,8 +339,17 @@ onUnmounted(() => {
             </nav>
 
             <!-- コーディネート表示部分 -->
-            <div id="outfit">
+            <div id="outfit_section">
                 <div
+                    v-if="outfits.length === 0"
+                    class="flex justify-center items-center w-full h-[calc(100vh-215px)]"
+                >
+                    <p class="text-gray-600 text-2xl font-bold text-center">
+                        該当するコーディネートが見つかりませんでした。
+                    </p>
+                </div>
+                <div
+                    v-else
                     id="outfit_list"
                     class="grid grid-cols-3 md:grid-cols-4 pt-0 pr-0 pb-[20px] pl-0"
                 >
@@ -429,9 +402,6 @@ onUnmounted(() => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div v-if="outfits.length === 0">
-                        <p>該当するコーディネートが見つかりませんでした。</p>
                     </div>
                 </div>
             </div>
@@ -512,13 +482,11 @@ onUnmounted(() => {
                                                     指定なし
                                                 </option>
                                                 <option
-                                                    v-for="(
-                                                        label, value
-                                                    ) in mainCategories"
-                                                    :key="value"
-                                                    :value="value"
+                                                    v-for="mainCategory in mainCategories"
+                                                    :key="mainCategory.id"
+                                                    :value="mainCategory.id"
                                                 >
-                                                    {{ label }}
+                                                    {{ mainCategory.name }}
                                                 </option>
                                             </select>
                                         </div>
@@ -543,13 +511,11 @@ onUnmounted(() => {
                                                     指定なし
                                                 </option>
                                                 <option
-                                                    v-for="(
-                                                        label, value
-                                                    ) in subCategories"
-                                                    :key="value"
-                                                    :value="value"
+                                                    v-for="subCategory in subCategories"
+                                                    :key="subCategory.id"
+                                                    :value="subCategory.id"
                                                 >
-                                                    {{ label }}
+                                                    {{ subCategory.name }}
                                                 </option>
                                             </select>
                                         </div>
@@ -627,13 +593,11 @@ onUnmounted(() => {
                                                     指定なし
                                                 </option>
                                                 <option
-                                                    v-for="(
-                                                        label, value
-                                                    ) in seasons"
-                                                    :key="value"
-                                                    :value="value"
+                                                    v-for="season in seasons"
+                                                    :key="season.id"
+                                                    :value="season.id"
                                                 >
-                                                    {{ label }}
+                                                    {{ season.name }}
                                                 </option>
                                             </select>
                                         </div>
@@ -668,9 +632,13 @@ onUnmounted(() => {
             <div id="outfit" class="z-[1]">
                 <div
                     v-if="outfits.length === 0"
-                    class="flex justify-center items-center w-full h-32"
+                    class="flex justify-center items-center w-full h-[calc(100vh-225px)]"
                 >
-                    <p>該当するコーディネートが見つかりませんでした。</p>
+                    <p
+                        class="text-gray-600 font-semibold text-base text-center"
+                    >
+                        該当するコーディネートが見つかりませんでした。
+                    </p>
                 </div>
                 <div
                     v-else
@@ -741,72 +709,8 @@ onUnmounted(() => {
     <SelectColor
         v-if="openModal"
         :colors="colors"
-        :selectedColor="filters.color?.value"
+        :selectedColor="filters.color?.id"
         @color-selected="selectColor($event)"
         @close="openModal = false"
     />
 </template>
-
-<style scoped>
-.neon-glow {
-    background-color: #39ff14;
-    box-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14;
-}
-
-.border-pattern {
-    background-image: repeating-linear-gradient(
-        90deg,
-        #d1d5db,
-        #d1d5db 5px,
-        #ffffff 5px,
-        #ffffff 10px
-    );
-}
-
-.patterned-pattern {
-    background-image: repeating-linear-gradient(
-            45deg,
-            #e5e7eb,
-            #e5e7eb 5px,
-            #ffffff 5px,
-            #ffffff 10px
-        ),
-        repeating-linear-gradient(
-            -45deg,
-            #e5e7eb,
-            #e5e7eb 5px,
-            #ffffff 5px,
-            #ffffff 10px
-        );
-    background-blend-mode: multiply;
-}
-
-.silver {
-    background: linear-gradient(
-        45deg,
-        #757575 0%,
-        #9e9e9e 45%,
-        #e8e8e8 70%,
-        #9e9e9e 85%,
-        #757575 90% 100%
-    );
-}
-
-.gold {
-    background: linear-gradient(
-        45deg,
-        #b67b03 0%,
-        #daaf08 45%,
-        #fee9a0 70%,
-        #daaf08 85%,
-        #b67b03 90% 100%
-    );
-}
-
-.other-color {
-    background: linear-gradient(to right, red 50%, blue 50%) top,
-        linear-gradient(to right, green 50%, yellow 50%) bottom;
-    background-size: 100% 50%;
-    background-repeat: no-repeat;
-}
-</style>
