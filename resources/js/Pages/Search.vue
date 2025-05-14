@@ -33,12 +33,20 @@ const filters = ref({
 });
 
 const openModal = ref(false);
+const showSortOptions = ref(false);
+const sortOptions = {
+    popular: '人気順',
+    latest: '新着順',
+    oldest: '古い順',
+};
+const sortOrder = ref('popular');
+const sortDropdown = ref(null);
 
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
     try {
         const response = await axios.get('/api/outfits', {
-            params: filters.value,
+            params: { ...filters.value, sort: sortOrder.value },
         });
         outfits.value = response.data.outfits;
         // 各ユーザーのフォロー状態をチェック
@@ -106,6 +114,22 @@ const clearFilters = () => {
     filterByCategory();
 };
 
+const toggleSortOptions = () => {
+    showSortOptions.value = !showSortOptions.value;
+};
+
+const changeSort = (order) => {
+    sortOrder.value = order;
+    showSortOptions.value = false;
+    fetchOutfits();
+};
+
+const handleClickOutside = (event) => {
+    if (sortDropdown.value && !sortDropdown.value.contains(event.target)) {
+        showSortOptions.value = false;
+    }
+};
+
 onMounted(async () => {
     try {
         await Promise.all([fetchOutfits(), getEnums()]);
@@ -115,11 +139,13 @@ onMounted(async () => {
 
     window.addEventListener('outfit-created', fetchOutfits);
     window.addEventListener('outfit-updated', fetchOutfits);
+    document.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
     window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
+    document.removeEventListener('click', handleClickOutside);
 });
 </script>
 
@@ -143,12 +169,41 @@ onUnmounted(() => {
                             <div
                                 class="flex items-center justify-between w-full px-4 h-11"
                             >
-                                <button
-                                    class="bg-transparent border-none cursor-pointer"
-                                >
-                                    <Sort :size="27" />
-                                </button>
+                                <div class="relative" ref="sortDropdown">
+                                    <button
+                                        class="bg-transparent border-none cursor-pointer"
+                                        @click.stop="toggleSortOptions()"
+                                    >
+                                        <Sort :size="27" />
+                                    </button>
 
+                                    <!-- ドロップダウンメニュー -->
+                                    <transition
+                                        name="fade-slide"
+                                        enter-active-class="transition duration-200"
+                                        leave-active-class="transition duration-150"
+                                    >
+                                        <ul
+                                            v-if="showSortOptions"
+                                            class="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-50"
+                                        >
+                                            <li
+                                                v-for="(
+                                                    label, key
+                                                ) in sortOptions"
+                                                :key="key"
+                                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                :class="{
+                                                    'bg-gray-100 font-semibold':
+                                                        sortOrder === key,
+                                                }"
+                                                @click="changeSort(key)"
+                                            >
+                                                {{ label }}
+                                            </li>
+                                        </ul>
+                                    </transition>
+                                </div>
                                 <button
                                     class="p-0 bg-transparent border-none cursor-pointer"
                                     @click="openFilter = !openFilter"
@@ -173,7 +228,7 @@ onUnmounted(() => {
                                     <tbody>
                                         <tr>
                                             <td
-                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white"
+                                                class="w-[300px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white"
                                             >
                                                 メインカテゴリー
                                             </td>
@@ -202,7 +257,7 @@ onUnmounted(() => {
                                         </tr>
                                         <tr>
                                             <td
-                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                                class="w-[300px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
                                             >
                                                 サブカテゴリー
                                             </td>
@@ -231,7 +286,7 @@ onUnmounted(() => {
                                         </tr>
                                         <tr>
                                             <td
-                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                                class="w-[300px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
                                             >
                                                 カラー
                                             </td>
@@ -286,7 +341,7 @@ onUnmounted(() => {
                                         </tr>
                                         <tr>
                                             <td
-                                                class="w-[310px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
+                                                class="w-[300px] h-20 bg-[#f2f2f2] py-0 px-[30px] font-bold text-right border-y border-solid border-b-white box-border relative align-middle m-0 border-0 text-[100%] table-cell"
                                             >
                                                 シーズン
                                             </td>
@@ -418,12 +473,40 @@ onUnmounted(() => {
                         class="fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
                     >
                         <div class="items-center flex basis-8 flex-row">
-                            <button
-                                class="p-0 bg-transparent border-none cursor-pointer flex items-center"
-                                type="button"
-                            >
-                                <Sort :size="27" />
-                            </button>
+                            <div class="relative" ref="sortDropdown">
+                                <button
+                                    class="p-0 bg-transparent border-none cursor-pointer flex items-center"
+                                    type="button"
+                                    @click="toggleSortOptions()"
+                                >
+                                    <Sort :size="27" />
+                                </button>
+
+                                <!-- ドロップダウンメニュー -->
+                                <transition
+                                    name="fade-slide"
+                                    enter-active-class="transition duration-200"
+                                    leave-active-class="transition duration-150"
+                                >
+                                    <ul
+                                        v-if="showSortOptions"
+                                        class="absolute left-0 mt-4 w-40 bg-white border border-gray-200 rounded shadow-md z-50"
+                                    >
+                                        <li
+                                            v-for="(label, key) in sortOptions"
+                                            :key="key"
+                                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                            :class="{
+                                                'bg-gray-100 font-semibold':
+                                                    sortOrder === key,
+                                            }"
+                                            @click="changeSort(key)"
+                                        >
+                                            {{ label }}
+                                        </li>
+                                    </ul>
+                                </transition>
+                            </div>
                         </div>
                         <h1 class="text-center">コーディネート検索</h1>
                         <div class="flex items-center">
@@ -714,3 +797,22 @@ onUnmounted(() => {
         @close="openModal = false"
     />
 </template>
+
+<style scoped>
+.fade-slide-enter-from {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+.fade-slide-enter-to {
+    opacity: 1;
+    transform: translateY(0);
+}
+.fade-slide-leave-from {
+    opacity: 1;
+    transform: translateY(0);
+}
+.fade-slide-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+</style>

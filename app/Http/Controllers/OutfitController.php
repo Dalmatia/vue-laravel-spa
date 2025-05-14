@@ -90,7 +90,11 @@ class OutfitController extends Controller
 
     public function index(Request $request)
     {
-        $query = Outfit::query();
+        $query = Outfit::withCount([
+            'likes as likes_count' => function ($query) {
+                $query->where('like', 1);
+            }
+        ]);
 
         // フィルタリング条件を取得
         $filters = [
@@ -112,7 +116,24 @@ class OutfitController extends Controller
                 }
             }
         }
-        $outfits = $query->orderBy('outfit_date', 'desc')->get();
+
+        // ソート条件のマッピング
+        $sortOptions = [
+            'popular' => ['likes_count', 'desc'],
+            'latest'  => ['outfit_date', 'desc'],
+            'oldest'  => ['outfit_date', 'asc'],
+        ];
+
+        $sort = $request->query('sort', 'popular'); // デフォルトは 'popular'
+
+        // 対応するソート条件があるかチェック
+        if (isset($sortOptions[$sort])) {
+            [$column, $direction] = $sortOptions[$sort];
+            $query->orderBy($column, $direction);
+        }
+
+        // 結果を取得
+        $outfits = $query->get();
 
         // コーディネートを取得し、ユーザー情報も取得
         return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
