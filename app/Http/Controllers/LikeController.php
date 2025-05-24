@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Like;
-use App\Models\Outfit;
 use App\Notifications\OutfitLiked;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LikeController extends Controller
 {
@@ -15,22 +14,29 @@ class LikeController extends Controller
      */
     public function likes()
     {
-        $user = auth()->user()->id;
+        $userId = auth()->id();
 
-        // いいねしたコーディネートのIDの配列を取得
-        $likes = Like::where('user_id', $user)
+        $likeIds = DB::table('likes')
+            ->select(DB::raw('MAX(id) as id'))
+            ->where('user_id', $userId)
             ->where('like', 1)
-            ->latest()
-            ->pluck('outfit_id')
-            ->toArray();
+            ->groupBy('outfit_id')
+            ->pluck('id');
 
-        // 対応するコーディネートを一度に取得
-        $outfits = Outfit::whereIn('id', $likes)->get();
+        $likes = Like::with(['outfit.user'])
+            ->whereIn('id', $likeIds)
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($like) {
+                return [
+                    'id' => $like->id,
+                    'outfit_id' => $like->outfit_id,
+                    'outfit' => $like->outfit,
+                    'user' => $like->outfit->user,
+                ];
+            });
 
-        // いいねしたコーディネートの一覧を取得
-        $likes = Like::whereIn('outfit_id', $likes)->where('like', 1)->orderBy('created_at', 'desc')->get();
-
-        return response()->json(['likes' => $likes, 'outfits' => new AllOutfitsCollection($outfits)]);
+        return response()->json(['likes' => $likes]);
     }
 
     /**

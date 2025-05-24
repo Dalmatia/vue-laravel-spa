@@ -330,11 +330,11 @@ onMounted(async () => {
                         >
                             <option :value="null">選択してください</option>
                             <option
-                                v-for="(label, value) in seasons"
-                                :key="value"
-                                :value="value"
+                                v-for="season in seasons"
+                                :key="season.id"
+                                :value="season.id"
                             >
-                                {{ label }}
+                                {{ season.name }}
                             </option>
                         </select>
                     </div>

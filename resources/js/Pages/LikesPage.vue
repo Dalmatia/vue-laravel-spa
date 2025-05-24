@@ -11,23 +11,6 @@ const fetchLikes = async () => {
     try {
         const response = await axios.get('/api/likes');
         likes.value = response.data.likes;
-
-        // お気に入りしたコーディネート情報を取得する
-        await Promise.all(
-            likes.value.map(async (like) => {
-                const outfitId = like.outfit_id;
-                const outfitResponse = await axios.get(
-                    `/api/outfit/${outfitId}`
-                );
-                like.outfit = outfitResponse.data.outfit; // コーディネート情報をlikeオブジェクトに追加
-
-                // ユーザー情報を取得してlikeオブジェクトに追加
-                const userResponse = await axios.get(
-                    `/api/users/${like.outfit.user_id}`
-                );
-                like.user = userResponse.data.user;
-            })
-        );
     } catch (error) {
         console.error('データの取得に失敗しました。:', error);
     }
