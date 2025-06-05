@@ -5,12 +5,18 @@ import ja from 'dayjs/locale/ja';
 
 import { useAuthStore } from '../stores/auth';
 import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import YearMonthPicker from './YearMonthPicker.vue';
+
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';
 
 let currentDate = ref(dayjs().locale(ja));
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
 const authStore = useAuthStore();
 const outfits = ref([]);
+const outfitImgMap = ref(new Map());
+const showMonthPicker = ref(false);
+const currentYear = new Date().getFullYear();
 
 // ユーザーが投稿したコーディネートの取得
 const fetchOutfits = async () => {
@@ -18,6 +24,9 @@ const fetchOutfits = async () => {
         await authStore.fetchUserData();
         const response = await axios.get(`/api/users/${authStore.user.id}`);
         outfits.value = response.data.outfits;
+        outfitImgMap.value = new Map(
+            outfits.value.map((o) => [o.outfit_date, o.file])
+        );
     } catch (error) {
         console.error(error);
     }
@@ -49,50 +58,36 @@ const deleteOutfit = (object) => {
     }
 };
 
-// 月の開始日を取得する関数
-const getStartDate = () => {
-    let date = dayjs(currentDate.value);
-    date = date.startOf('month');
-    const youbiNum = date.day();
-    return date.subtract(youbiNum, 'days');
-};
-
-// 月の終了日を取得する関数
-const getEndDate = () => {
-    let date = dayjs(currentDate.value);
-    date = date.endOf('month');
-    const youbiNum = date.day();
-    return date.add(6 - youbiNum, 'days');
+// 月の開始日と終了日を取得する関数
+const getCalendarBounds = (date) => {
+    const start = dayjs(date).startOf('month').startOf('week');
+    const end = dayjs(date).endOf('month').endOf('week');
+    return { start, end };
 };
 
 // カレンダーの生成
 const getCalendar = () => {
-    let startDate = getStartDate();
-    const endDate = getEndDate();
-    const weekNumber = Math.ceil(endDate.diff(startDate, 'days') / 7);
+    const { start, end } = getCalendarBounds(currentDate.value);
+    const totalDays = end.diff(start, 'days') + 1;
+    const weekNumber = Math.ceil(totalDays / 7);
 
     let calendars = [];
-    let calendarDate = startDate;
+    let calendarDate = start;
     for (let week = 0; week < weekNumber; week++) {
         let weekRow = [];
         for (let day = 0; day < 7; day++) {
+            const fullDate = calendarDate.format('YYYY-MM-DD');
             weekRow.push({
                 day: calendarDate.get('date'),
                 month: calendarDate.format('YYYY-MM'),
-                fullDate: calendarDate.format('YYYY-MM-DD'),
-                outfit: getOutfitImage(calendarDate.format('YYYY-MM-DD')),
+                fullDate,
+                outfit: outfitImgMap.value.get(fullDate) || '',
             });
             calendarDate = calendarDate.add(1, 'days');
         }
         calendars.push(weekRow);
     }
     return calendars;
-};
-
-// コーディネート日の画像を取得する関数
-const getOutfitImage = (date) => {
-    const outfit = outfits.value.find((outfit) => outfit.outfit_date === date);
-    return outfit ? outfit.file : '';
 };
 
 // 次の月に移動する関数
@@ -141,14 +136,18 @@ onUnmounted(() => {
 <template>
     <div
         id="content"
-        class="flex justify-center items-start min-h-screen bg-gray-50 pb-20"
+        class="flex justify-center items-start min-h-screen pb-20"
     >
         <div
-            class="max-w-6xl mx-auto lg:mx-auto md:ml-14 w-[100vw] md:w-[84.5vw] xl:w-[70vw]"
+            class="max-w-6xl lg:mx-auto md:ml-20 w-[100vw] md:w-[84.5vw] xl:w-[70vw]"
         >
             <div class="flex flex-wrap justify-between p-3">
-                <h2 class="text-xl">
+                <h2
+                    class="text-xl cursor-pointer flex items-center"
+                    @click="showMonthPicker = !showMonthPicker"
+                >
                     {{ displayDate }}
+                    <ChevronDown />
                 </h2>
                 <div class="flex justify-end">
                     <button
@@ -193,10 +192,13 @@ onUnmounted(() => {
                     <a
                         v-if="day.outfit"
                         @click="openOutfitOverlay(day.fullDate)"
+                        role="button"
+                        tabindex="0"
                     >
                         <img
                             class="w-20 h-24 my-auto mx-auto md:w-20 md:h-24 lg:w-20 lg:h-24"
                             :src="day.outfit"
+                            :alt="`${day.month}の${day.day}日のコーディネート`"
                         />
                     </a>
                 </div>
@@ -204,16 +206,19 @@ onUnmounted(() => {
         </div>
         <div class="pb-20 md:pb-5"></div>
     </div>
+    <!-- コーディネートの詳細ページ -->
     <ShowOutfitOverlay
         v-if="openOverlay"
         :outfit="currentOutfit"
         @delete-selected="deleteOutfit($event)"
         @close-overlay="openOverlay = false"
     />
+    <!-- 年月ピッカー -->
+    <YearMonthPicker
+        v-if="showMonthPicker"
+        :currentSelect="currentDate.toDate()"
+        :maxYear="currentYear"
+        @update:currentSelect="(val) => (currentDate = dayjs(val))"
+        @close="showMonthPicker = false"
+    />
 </template>
-
-<style>
-.outside {
-    background-color: #f7f7f7;
-}
-</style>
