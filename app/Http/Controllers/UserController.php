@@ -45,9 +45,19 @@ class UserController extends Controller
             return redirect()->route('home.index');
         }
 
-        $outfits = Outfit::where('user_id', $id)->orderBy('created_at', 'desc')->get();
+        $outfits = Outfit::with(['comments', 'user'])
+            ->withCount(['likes as likes_count' => function ($query) {
+                $query->where('like', 1);
+            }, 'comments as comments_count'])
+            ->where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        return response()->json(['user' => $user, 'outfits' => new AllOutfitsCollection($outfits)]);
+        return response()->json([
+            'user' => $user,
+            'outfits' => new AllOutfitsCollection($outfits),
+            'outfit_count' => $outfits->count(),
+        ], 200);
     }
 
     /**

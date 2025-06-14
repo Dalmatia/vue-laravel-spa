@@ -1,6 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch } from 'vue';
 
 import ShowOutfitOverlay from './Outfits/ShowOutfitOverlay.vue';
 
@@ -9,23 +8,17 @@ import Comment from 'vue-material-design-icons/Comment.vue';
 
 let currentOutfit = ref(null);
 let openOverlay = ref(false);
-const route = useRoute();
-const outfits = ref([]);
-const isHover = ref(Array(outfits.value.length).fill(false));
-
-const fetchOutfits = async (userId) => {
-    try {
-        const response = await axios.get(`/api/users/${userId}`);
-        outfits.value = response.data.outfits;
-    } catch (error) {
-        console.error(error);
-    }
-};
-
-// 投稿作成時の更新
-const onOutfitCreated = () => {
-    fetchOutfits(route.params.id);
-};
+const props = defineProps({
+    outfits: {
+        type: Array,
+        required: true,
+    },
+    outfitCount: {
+        type: Number,
+        required: true,
+    },
+});
+const isHover = ref([]);
 
 const openOutfitOverlay = (outfit) => {
     currentOutfit.value = outfit;
@@ -44,7 +37,6 @@ const deleteOutfit = (object) => {
                 console.log(response);
                 openOverlay.value = false;
                 window.dispatchEvent(new Event('outfit-deleted'));
-                fetchOutfits(route.params.id);
             })
             .catch((error) => {
                 console.error(error);
@@ -53,36 +45,19 @@ const deleteOutfit = (object) => {
 };
 
 watch(
-    () => route.params.id,
-    (newId) => {
-        if (newId) {
-            fetchOutfits(newId);
-        }
+    props.outfits,
+    (newOutfits) => {
+        isHover.value = Array(newOutfits.length).fill(false);
     },
     { immediate: true }
 );
-
-onMounted(() => {
-    const userId = route.params.id;
-    if (userId) {
-        fetchOutfits(userId);
-    }
-    window.addEventListener('outfit-created', onOutfitCreated);
-    window.addEventListener('outfit-updated', onOutfitCreated);
-});
-
-// コンポーネントアンマウント時
-onUnmounted(() => {
-    window.removeEventListener('outfit-created', onOutfitCreated);
-    window.removeEventListener('outfit-updated', onOutfitCreated);
-});
 </script>
 
 <template>
     <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
         <div
             class="flex items-center justify-center cursor-pointer relative"
-            v-for="(outfit, index) in outfits"
+            v-for="(outfit, index) in props.outfits"
             :key="outfit.id"
             @click="openOutfitOverlay(outfit)"
             @mouseenter="isHover[index] = true"
@@ -96,11 +71,15 @@ onUnmounted(() => {
                 <div class="flex items-center justify-around w-[50%]">
                     <div class="flex items-center justify-center">
                         <Heart fillColor="#FFFFFF" :size="30" />
-                        <div class="pl-1">3</div>
+                        <div class="pl-1">
+                            {{ outfit.likes_count }}
+                        </div>
                     </div>
                     <div class="flex items-center justify-center">
                         <Comment fillColor="#FFFFFF" :size="30" />
-                        <div class="pl-1">5</div>
+                        <div class="pl-1">
+                            {{ outfit.comments_count }}
+                        </div>
                     </div>
                 </div>
             </div>

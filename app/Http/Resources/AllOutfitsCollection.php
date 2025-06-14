@@ -43,6 +43,8 @@ class AllOutfitsCollection extends ResourceCollection
                         ],
                     ];
                 }),
+                'likes_count' => $outfit->likes_count,
+                'comments_count' => $outfit->comments_count,
                 'user' => [
                     'id' => $outfit->user->id,
                     'name' => $outfit->user->name,

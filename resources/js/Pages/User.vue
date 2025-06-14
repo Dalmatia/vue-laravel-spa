@@ -12,13 +12,15 @@ import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 import CreateItemOverlay from '@/Components/Items/CreateItemOverlay.vue';
 
 let showCreateItem = ref(false);
+let prevUserId = ref(null);
 
 const authStore = useAuthStore();
 const followStore = useFollowStore();
 const user = ref(null);
 const outfits = ref([]);
+const outfit_count = ref(0);
 const route = useRoute();
-const userId = ref(route.params.id);
+const userId = computed(() => route.params.id);
 const authUser = computed(() => authStore.user?.id === user.value?.id);
 
 // ユーザー情報の取得
@@ -28,16 +30,19 @@ const fetchUser = async () => {
         const response = await axios.get(`/api/users/${userId.value}`);
         user.value = response.data.user;
         outfits.value = response.data.outfits;
+        outfit_count.value = response.data.outfit_count;
     } catch (error) {
         console.error('ユーザー情報の取得に失敗しました:', error);
     }
 };
 
 const fetchFollowData = async () => {
+    if (!userId.value) return;
     try {
         await Promise.all([
             followStore.followList(userId.value),
             followStore.followerList(userId.value),
+            followStore.followStatusCheck(userId.value),
         ]);
     } catch (error) {
         console.error('フォロー情報の取得に失敗しました:', error.message);
@@ -45,14 +50,8 @@ const fetchFollowData = async () => {
 };
 
 const fetchUserData = async () => {
-    user.value = null;
-    outfits.value = [];
+    if (!userId.value) return;
     await Promise.all([fetchUser(), fetchFollowData()]);
-};
-
-let tab = ref('User');
-const select = (selectedTab) => {
-    tab.value = selectedTab;
 };
 
 const toggleFollow = async () => {
@@ -68,14 +67,18 @@ const toggleFollow = async () => {
     }
 };
 
-watch(userId, async (newId) => {
-    if (newId) {
-        await followStore.followStatusCheck(newId);
-    }
-});
+watch(
+    () => route.params.id,
+    (newId, oldId) => {
+        if (newId && newId !== prevUserId.value) {
+            prevUserId.value = newId;
+            fetchUserData();
+        }
+    },
+    { immediate: true }
+);
 
 onMounted(() => {
-    fetchUserData();
     window.addEventListener('outfit-created', fetchUserData);
     window.addEventListener('outfit-deleted', fetchUserData);
 });
@@ -146,7 +149,7 @@ onUnmounted(() => {
                     <div class="flex items-center text-[18px]">
                         <div class="mr-6">
                             <span class="font-extrabold">
-                                {{ outfits.length }}
+                                {{ outfit_count }}
                             </span>
                             投稿
                         </div>
@@ -177,7 +180,7 @@ onUnmounted(() => {
         >
             <div class="text-center p-3">
                 <div class="font-extrabold">
-                    {{ outfits.length }}
+                    {{ outfit_count }}
                 </div>
                 <div class="text-gray-400 font-semibold -mt-1.5">投稿</div>
             </div>
@@ -202,10 +205,9 @@ onUnmounted(() => {
             v-if="user"
         >
             <router-link
-                class="p-3 w-1/3 flex justify-center border-t border-t-gray-900"
-                :to="{ name: 'User' }"
-                :class="{ active: tab === 'User' }"
-                @click="select('User')"
+                class="p-3 w-1/3 flex justify-center border-t"
+                :to="{ name: 'User', params: { id: user.id } }"
+                :class="{ 'border-t border-t-gray-900': route.name === 'User' }"
             >
                 <Grid :size="28" fillColor="#0095F6" class="cursor-pointer" />
             </router-link>
@@ -219,9 +221,11 @@ onUnmounted(() => {
             </div>
             <router-link
                 class="p-3 w-1/3 flex justify-center border-t"
-                :to="{ name: 'Items' }"
-                @click="select('Items')"
                 v-if="authUser"
+                :to="{ name: 'Items', params: { id: user.id } }"
+                :class="{
+                    'border-t border-t-gray-900': route.name === 'Items',
+                }"
             >
                 <Hanger :size="28" fillColor="#8E8E8E" class="cursor-pointer" />
             </router-link>
@@ -237,10 +241,11 @@ onUnmounted(() => {
                 class="flex items-center justify-between max-w-[600px] mx-auto font-extrabold text-gray-400 text-[15px]"
             >
                 <router-link
-                    class="p-[17px] w-1/3 flex justify-center items-center border-t border-t-gray-900"
-                    :to="{ name: 'User' }"
-                    :class="{ active: tab === 'User' }"
-                    @click="select('User')"
+                    class="p-[17px] w-1/3 flex justify-center items-center"
+                    :to="{ name: 'User', params: { id: user.id } }"
+                    :class="{
+                        'border-t border-t-gray-900': route.name === 'User',
+                    }"
                 >
                     <Grid :size="15" fillColor="#000000" />
                     <div class="ml-2 -mb-[1px] text-gray-900">POSTS</div>
@@ -258,9 +263,11 @@ onUnmounted(() => {
                 </div>
                 <router-link
                     class="p-[17px] w-1/3 flex justify-center items-center"
-                    :to="{ name: 'Items' }"
-                    @click="select('Items')"
                     v-if="authUser"
+                    :to="{ name: 'Items', params: { id: user.id } }"
+                    :class="{
+                        'border-t border-t-gray-900': route.name === 'Items',
+                    }"
                 >
                     <Hanger :size="15" fillColor="#8E8E8E" />
                     <span class="ml-2 -mb-[1px]">ITEMS</span>
@@ -269,7 +276,13 @@ onUnmounted(() => {
         </div>
 
         <div>
-            <router-view></router-view>
+            <router-view v-slot="{ Component }">
+                <component
+                    :is="Component"
+                    :outfits="outfits"
+                    :outfit-count="outfit_count"
+                />
+            </router-view>
         </div>
 
         <div class="pb-20"></div>

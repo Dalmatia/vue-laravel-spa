@@ -2,16 +2,16 @@
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import axios from 'axios';
 import { getEnumStore } from '../stores/enum';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { useRoute, useRouter } from 'vue-router';
 
+const router = useRouter();
+const route = useRoute();
+const userId = route.params.id;
 const items = ref([]);
 
 // カテゴリごとにアイテムを分類するためのデータ構造
 const categorizedItems = reactive({});
 const getCategoryName = getEnumStore();
-const router = useRouter();
-const userId = useAuthStore().user.id;
 
 // 登録アイテムの表示
 const fetchItems = async () => {

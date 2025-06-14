@@ -19,7 +19,7 @@ class ClothingAdviceService
       . "平均風速: {$weatherData['windAvg']} m/s"
       . "この天候に適した服装のアドバイスを簡潔に日本語でお願いします。";
 
-    $client = Gemini::generativeModel("models/gemini-1.5-flash-001");
+    $client = Gemini::generativeModel("gemini-2.0-flash-lite-001");
     try {
       $response = $client->generateContent($prompt);
       $text = $response->text();
