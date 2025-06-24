@@ -1,33 +1,28 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import SelectCity from './SelectCity.vue';
 
 const showModal = ref(false);
-const selectedCity = ref({
-    region_id: null,
-    prefecture_id: null,
-    city_id: null,
-    name: '',
-    latitude: null,
-    longitude: null,
-});
+const selectedCity = ref(null);
 const selectedTab = ref('today');
 const isLoading = ref(true);
 const weather = ref(null);
 
+const formatCity = (cityData) => ({
+    region_id: cityData.region_id,
+    prefecture_id: cityData.prefecture_id,
+    city_id: cityData.city_id,
+    name: cityData.city?.name ?? cityData.city_name,
+    latitude: cityData.city?.latitude ?? cityData.latitude,
+    longitude: cityData.city?.longitude ?? cityData.longitude,
+});
+
 const fetchSavedCity = async () => {
     try {
-        const response = await axios.get('/api/getSavedCity');
+        const response = await axios.get('/api/get_saved_location');
         if (response.data) {
-            selectedCity.value = {
-                region_id: response.data.region_id,
-                prefecture_id: response.data.prefecture_id,
-                city_id: response.data.city_id,
-                name: response.data.city_name,
-                latitude: response.data.latitude,
-                longitude: response.data.longitude,
-            };
+            selectedCity.value = formatCity(response.data);
         }
     } catch (error) {
         console.error('保存された市区町村の取得に失敗しました:', error);
@@ -36,19 +31,13 @@ const fetchSavedCity = async () => {
 
 // 選択された地域データを処理する関数
 const handleCitySaved = (event) => {
-    selectedCity.value = {
-        region_id: event.region_id,
-        prefecture_id: event.prefecture_id,
-        city_id: event.city_id,
-        name: event.city.name,
-        latitude: event.city.latitude,
-        longitude: event.city.longitude,
-    };
+    selectedCity.value = formatCity(event);
     fetchWeather();
     showModal.value = false; // モーダルを閉じる
 };
 
 const fetchWeather = async () => {
+    if (!selectedCity.value) return;
     isLoading.value = true;
     try {
         const weatherResponse = await axios.get(`/api/weather`, {
@@ -72,6 +61,11 @@ const fetchWeather = async () => {
     }
 };
 
+const currentWeather = computed(() => {
+    if (!weather.value) return null;
+    return weather.value[selectedTab.value];
+});
+
 onMounted(async () => {
     await fetchSavedCity();
     await fetchWeather();
@@ -88,7 +82,14 @@ onMounted(async () => {
                     {{ selectedCity.name }}
                 </p>
             </div>
-            <button class="text-blue-500 self-start" @click="showModal = true">
+            <button
+                @click="showModal = true"
+                :disabled="isLoading"
+                :class="[
+                    'text-blue-500 self-start px-2 py-1 transition',
+                    isLoading ? 'opacity-50 cursor-not-allowed' : '',
+                ]"
+            >
                 地域設定
             </button>
         </div>
@@ -128,7 +129,7 @@ onMounted(async () => {
             <span class="ml-2 text-gray-500">天気情報を取得中...</span>
         </div>
 
-        <h2 v-else-if="weather.error" class="text-center text-red-500 py-14">
+        <h2 v-else-if="weather?.error" class="text-center text-red-500 py-14">
             {{ weather.message }}
         </h2>
 
@@ -137,7 +138,7 @@ onMounted(async () => {
             <div class="flex border-b mb-4 justify-between">
                 <button
                     v-for="tab in ['today', 'tomorrow']"
-                    :key="tab"
+                    :key="`${tab}-${weather?.[tab]?.date ?? ''}`"
                     :class="[
                         'px-4 py-2 text-base font-medium mx-auto',
                         selectedTab === tab
@@ -154,74 +155,52 @@ onMounted(async () => {
                 </button>
             </div>
 
-            <!-- 今日の予報 -->
-            <div v-if="selectedTab === 'today'" class="border p-4">
-                <h2 class="font-bold text-base mb-2">今日の天気:</h2>
-                <div class="flex justify-center">
-                    <div class="text-7xl text-center mr-4">
-                        {{ weather.today.weather_icon }}
-                    </div>
-                    <div class="flex flex-col">
-                        <p class="text-sm font-bold">
-                            {{ weather.today.description }}
-                        </p>
-                        <div class="flex">
-                            <p class="text-lg font-semibold mr-2 text-red-500">
-                                {{ weather.today.max_temp }}°C
-                            </p>
-                            |
-                            <p class="text-lg font-semibold ml-2 text-blue-500">
-                                {{ weather.today.min_temp }}°C
-                            </p>
+            <!-- 天気データとアドバイス -->
+            <div v-if="currentWeather">
+                <div class="border p-4">
+                    <h2 class="font-bold text-base mb-2">
+                        {{
+                            selectedTab === 'today'
+                                ? '今日の天気:'
+                                : '明日の天気:'
+                        }}
+                    </h2>
+                    <div class="flex justify-center">
+                        <div class="text-7xl text-center mr-4">
+                            {{ currentWeather.weather_icon }}
                         </div>
-                        <span class="flex text-sm font-bold">
-                            降水確率:
-                            <p class="ml-4">
-                                {{ weather.today.precipitation_probability }}%
+                        <div class="flex flex-col">
+                            <p class="text-sm font-bold">
+                                {{ currentWeather.description }}
                             </p>
-                        </span>
+                            <div class="flex">
+                                <p
+                                    class="text-lg font-semibold mr-2 text-red-500"
+                                >
+                                    {{ currentWeather.max_temp }}°C
+                                </p>
+                                |
+                                <p
+                                    class="text-lg font-semibold ml-2 text-blue-500"
+                                >
+                                    {{ currentWeather.min_temp }}°C
+                                </p>
+                            </div>
+                            <span class="flex text-sm font-bold">
+                                降水確率:
+                                <p class="ml-4">
+                                    {{
+                                        currentWeather.precipitation_probability
+                                    }}%
+                                </p>
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div v-if="selectedTab === 'today'">
-                <strong>服装アドバイス:</strong>
-                <p>{{ weather.today.advice }}</p>
-            </div>
-
-            <!-- 明日の予報 -->
-            <div v-else class="border p-4">
-                <h2 class="font-bold text-base mb-2">明日の天気:</h2>
-                <div class="flex justify-center">
-                    <div class="text-7xl text-center mr-4">
-                        {{ weather.tomorrow.weather_icon }}
-                    </div>
-                    <div class="flex flex-col">
-                        <p class="text-sm font-bold">
-                            {{ weather.tomorrow.description }}
-                        </p>
-                        <div class="flex">
-                            <p class="text-lg font-semibold mr-2 text-red-500">
-                                {{ weather.tomorrow.max_temp }}°C
-                            </p>
-                            |
-                            <p class="text-lg font-semibold ml-2 text-blue-500">
-                                {{ weather.tomorrow.min_temp }}°C
-                            </p>
-                        </div>
-                        <span class="flex text-sm font-bold">
-                            降水確率:
-                            <p class="ml-4">
-                                {{
-                                    weather.tomorrow.precipitation_probability
-                                }}%
-                            </p>
-                        </span>
-                    </div>
+                <div class="mt-2 px-2">
+                    <strong>服装アドバイス:</strong>
+                    <p>{{ currentWeather.advice }}</p>
                 </div>
-            </div>
-            <div v-if="selectedTab === 'tomorrow'">
-                <strong>服装アドバイス:</strong>
-                <p>{{ weather.tomorrow.advice }}</p>
             </div>
         </div>
     </div>

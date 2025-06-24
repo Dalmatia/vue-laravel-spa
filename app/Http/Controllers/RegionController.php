@@ -57,7 +57,7 @@ class RegionController extends Controller
         ]);
     }
 
-    public function saveCity(Request $request)
+    public function saveSelectedLocation(Request $request)
     {
         $request->validate([
             'region_id' => 'required|integer',
@@ -88,7 +88,7 @@ class RegionController extends Controller
         }
     }
 
-    public function getSavedCity()
+    public function getSavedLocation()
     {
         $user_id = auth()->user()->id;
         $savedRegion = Region::where('user_id', $user_id)->first();
