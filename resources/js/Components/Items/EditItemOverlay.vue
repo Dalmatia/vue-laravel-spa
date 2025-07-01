@@ -54,11 +54,11 @@ const itemUpdate = async () => {
     };
 
     const formData = new FormData();
-    if (editForm.value.file) {
+    if (editForm.value.file instanceof File) {
         formData.append('file', editForm.value.file);
     }
     Object.entries(editForm.value).forEach(([key, value]) => {
-        if (key !== 'file') formData.append(key, value);
+        if (key !== 'file') formData.append(key, value ?? '');
     });
 
     try {
@@ -95,7 +95,7 @@ const selectNewImage = () => {
 // ファイルアップロード
 const getUploadedImage = (e) => {
     editForm.value.file = e.target.files[0];
-    const validTypes = ['image/png', 'image/jpeg'];
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
     if (!validTypes.includes(editForm.value.file.type)) {
         isValidFile.value = false;
         return;

@@ -9,7 +9,7 @@ import Grid from 'vue-material-design-icons/Grid.vue';
 import Hanger from 'vue-material-design-icons/Hanger.vue';
 import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
-import CreateItemOverlay from '@/Components/Items/CreateItemOverlay.vue';
+import CreateItemOverlay from '@/Components/Items/Register/CreateItemOverlay.vue';
 
 let showCreateItem = ref(false);
 let prevUserId = ref(null);
@@ -209,7 +209,14 @@ onUnmounted(() => {
                 :to="{ name: 'User', params: { id: user.id } }"
                 :class="{ 'border-t border-t-gray-900': route.name === 'User' }"
             >
-                <Grid :size="28" fillColor="#0095F6" class="cursor-pointer" />
+                <Grid
+                    :size="28"
+                    class="cursor-pointer"
+                    :class="{
+                        'text-[#8E8E8E]': route.name !== 'User',
+                        'text-[#0095F6]': route.name === 'User',
+                    }"
+                />
             </router-link>
             <div class="p-3 w-1/3 flex justify-center border-t" v-if="authUser">
                 <PlusCircle
@@ -227,7 +234,14 @@ onUnmounted(() => {
                     'border-t border-t-gray-900': route.name === 'Items',
                 }"
             >
-                <Hanger :size="28" fillColor="#8E8E8E" class="cursor-pointer" />
+                <Hanger
+                    :size="28"
+                    class="cursor-pointer"
+                    :class="{
+                        'text-[#8E8E8E]': route.name !== 'Items',
+                        'text-[#0095F6]': route.name === 'Items',
+                    }"
+                />
             </router-link>
         </div>
     </div>
@@ -244,11 +258,13 @@ onUnmounted(() => {
                     class="p-[17px] w-1/3 flex justify-center items-center"
                     :to="{ name: 'User', params: { id: user.id } }"
                     :class="{
-                        'border-t border-t-gray-900': route.name === 'User',
+                        'text-[#8E8E8E]': route.name !== 'User',
+                        'border-t border-t-gray-900 text-gray-900':
+                            route.name === 'User',
                     }"
                 >
-                    <Grid :size="15" fillColor="#000000" />
-                    <div class="ml-2 -mb-[1px] text-gray-900">POSTS</div>
+                    <Grid :size="15" />
+                    <div class="ml-2 -mb-[1px]">POSTS</div>
                 </router-link>
                 <div
                     class="p-[17px] w-1/3 flex justify-center items-center"
@@ -266,10 +282,12 @@ onUnmounted(() => {
                     v-if="authUser"
                     :to="{ name: 'Items', params: { id: user.id } }"
                     :class="{
-                        'border-t border-t-gray-900': route.name === 'Items',
+                        'text-[#8E8E8E]': route.name !== 'Items',
+                        'border-t border-t-gray-900 text-gray-900':
+                            route.name === 'Items',
                     }"
                 >
-                    <Hanger :size="15" fillColor="#8E8E8E" />
+                    <Hanger :size="15" />
                     <span class="ml-2 -mb-[1px]">ITEMS</span>
                 </router-link>
             </div>
