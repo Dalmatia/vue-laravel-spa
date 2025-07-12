@@ -3,19 +3,19 @@ import { ref, reactive } from 'vue';
 export function useItemForm(emitClose) {
     const form = reactive({
         file: null,
-        main_category: '',
+        main_category: null,
         sub_category: null,
         color: null,
         season: null,
         memo: null,
     });
 
-    const formErrors = ref({
+    const formErrors = reactive({
         file: null,
-        main_category: '',
-        sub_category: '',
-        color: '',
-        season: '',
+        main_category: null,
+        sub_category: null,
+        color: null,
+        season: null,
         memo: null,
     });
 
@@ -23,8 +23,8 @@ export function useItemForm(emitClose) {
     const fileDisplay = ref('');
 
     const clearFormErrors = () => {
-        Object.keys(formErrors.value).forEach((key) => {
-            formErrors.value[key] = null;
+        Object.keys(formErrors).forEach((key) => {
+            formErrors[key] = null;
         });
     };
 
@@ -36,8 +36,8 @@ export function useItemForm(emitClose) {
 
     const handleApiError = (errors) => {
         const responseErrors = errors.response?.data?.errors || {};
-        Object.entries(formErrors.value).forEach(([key]) => {
-            formErrors.value[key] = responseErrors[key] || null;
+        Object.entries(formErrors).forEach(([key]) => {
+            formErrors[key] = responseErrors[key] || null;
         });
     };
 
@@ -71,10 +71,12 @@ export function useItemForm(emitClose) {
 
         if (!['jpg', 'jpeg', 'png'].includes(extension)) {
             isValidFile.value = false;
+            fileDisplay.value = '';
             return;
         }
 
         isValidFile.value = true;
+        formErrors.file = null;
         fileDisplay.value = URL.createObjectURL(form.file);
         setTimeout(() => {
             document

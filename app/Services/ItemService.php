@@ -32,16 +32,16 @@ class ItemService
       $item->main_category = $request->main_category;
     }
 
-    if ($request->filled('sub_category')) {
-      $item->sub_category = ($request->sub_category !== 'null') ? $request->sub_category : null;
+    if ($request->has('sub_category')) {
+      $item->sub_category = ($request->sub_category !== '') ? $request->sub_category : null;
     }
 
     if ($request->filled('color')) {
       $item->color =  $request->color;
     }
 
-    if ($request->filled('season')) {
-      $item->season =  ($request->season !== 'null') ? $request->season : null;
+    if ($request->has('season')) {
+      $item->season =  ($request->season !== '') ? $request->season : null;
     }
 
     if ($request->filled('memo')) {

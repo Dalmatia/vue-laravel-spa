@@ -44,12 +44,6 @@ const showError = computed(() => {
             >
                 {{ showError }}
             </div>
-            <div
-                v-if="!fileDisplay && isValidFile === false"
-                class="text-red-500 text-center p-2 font-extrabold"
-            >
-                ファイルが受け付けられませんでした。
-            </div>
         </div>
         <img
             v-if="fileDisplay && isValidFile === true"

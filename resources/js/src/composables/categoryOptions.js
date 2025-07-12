@@ -6,17 +6,23 @@ export function useCategoryOptions(mainCategoryRef) {
 
     const fetchAllCategories = async () => {
         try {
-            const response = await axios.get('/api/enums');
+            const response = await axios.get('/api/main_categories');
             mainCategories.value = response.data.mainCategories || [];
-            subCategories.value = response.data.subCategories || [];
         } catch (error) {
             console.error('Enum データの取得に失敗しました', error);
         }
     };
 
-    const fetchSubCategories = async () => {
+    const fetchSubCategories = async (mainCategoryId) => {
+        if (!mainCategoryId) {
+            subCategories.value = [];
+            return;
+        }
+
         try {
-            const response = await axios.get(`/api/enums`);
+            const response = await axios.get(
+                `/api/main_categories/${mainCategoryId}/sub_categories`
+            );
             subCategories.value = response.data.subCategories || [];
         } catch (error) {
             console.error('サブカテゴリーの取得に失敗しました', error);
@@ -24,9 +30,13 @@ export function useCategoryOptions(mainCategoryRef) {
     };
 
     // メインカテゴリが変更されたらサブカテゴリも更新
-    watch(mainCategoryRef, () => {
-        fetchSubCategories();
-    });
+    watch(
+        mainCategoryRef,
+        (newVal) => {
+            fetchSubCategories(newVal);
+        },
+        { immediate: true }
+    );
 
     return {
         mainCategories,

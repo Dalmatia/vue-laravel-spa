@@ -61,9 +61,9 @@ const selectColor = (color) => {
 };
 
 // 各選択項目の値取得
-onMounted(() => {
-    fetchEnums();
-    fetchAllCategories();
+onMounted(async () => {
+    await fetchEnums();
+    await fetchAllCategories();
 });
 </script>
 
@@ -122,7 +122,9 @@ onMounted(() => {
                             カテゴリー選択
                         </div>
                         <select id="main_category" v-model="form.main_category">
-                            <option value="" disabled>選択してください</option>
+                            <option :value="null" disabled>
+                                選択してください
+                            </option>
                             <option
                                 v-for="mainCategory in mainCategories"
                                 :key="mainCategory.id"

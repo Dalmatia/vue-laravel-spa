@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EnumController;
 use App\Http\Controllers\FollowController;
@@ -81,6 +82,8 @@ Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
 Route::get('/enums', [EnumController::class, 'index']);
+Route::get('/main_categories', [CategoryController::class, 'getMainCategories']); // メインカテゴリー一覧
+Route::get('/main_categories/{mainCategory_id}/sub_categories', [CategoryController::class, 'getSubCategories']); // サブカテゴリー一覧
 Route::get('/regions', [RegionController::class, 'getRegions']); // 地域一覧
 Route::get('/region/{regionId}/prefectures', [RegionController::class, 'getPrefs']); // 都道府県
 Route::get('/prefecture/{prefId}/cities', [RegionController::class, 'getCities']); // 市町村区
