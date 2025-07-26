@@ -29,12 +29,13 @@ const fetchItems = async () => {
 
 const selectItem = (item) => {
     // 選択されたアイテムのIDを親コンポーネントに伝える
-    emit('onItemSelected', item);
+    emit('onItemSelected', item, props.itemType);
+    emit('close'); // モーダルを閉じる
 };
 
 // 「選択しない」ボタンがクリックされた場合にnullを送信
 const selectNone = () => {
-    emit('onItemSelected', null);
+    emit('onItemSelected', null, props.itemType);
     emit('close'); // モーダルを閉じる
 };
 
@@ -46,6 +47,7 @@ onMounted(() => {
 <template>
     <div
         class="fixed z-50 top-0 left-0 w-full h-screen bg-[#000000] bg-opacity-60 p-3"
+        @click.self="emit('close')"
     >
         <button class="absolute right-3" @click="emit('close')">
             <Close :size="27" fillColor="#FFFFFF" />

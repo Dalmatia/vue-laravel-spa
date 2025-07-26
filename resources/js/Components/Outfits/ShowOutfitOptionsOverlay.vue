@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, toRefs, ref, onUnmounted } from 'vue';
 
-import EditOutfitOverlay from './EditOutfitOverlay.vue';
+import EditOutfitOverlay from './Edit/EditOutfitOverlay.vue';
 
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
@@ -78,6 +78,7 @@ onUnmounted(() => {
     <div
         v-if="successMessage"
         class="fixed flex items-center justify-center z-50 top-0 left-0 w-full h-screen bg-[#000000] bg-opacity-60"
+        @click="closeSuccessMessage()"
     >
         <div class="bg-white p-5 rounded-lg text-center">
             <p class="text-lg font-bold mb-4">

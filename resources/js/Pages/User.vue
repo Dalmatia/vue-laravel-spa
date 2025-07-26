@@ -80,11 +80,13 @@ watch(
 
 onMounted(() => {
     window.addEventListener('outfit-created', fetchUserData);
+    window.addEventListener('outfit-updated', fetchUserData);
     window.addEventListener('outfit-deleted', fetchUserData);
 });
 
 onUnmounted(() => {
     window.removeEventListener('outfit-created', fetchUserData);
+    window.removeEventListener('outfit-updated', fetchUserData);
     window.removeEventListener('outfit-deleted', fetchUserData);
 });
 </script>

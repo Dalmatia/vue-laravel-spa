@@ -8,7 +8,7 @@ import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 import { useItemForm } from '../../../src/composables/itemForm';
 import { useCategoryOptions } from '../../../src/composables/categoryOptions';
 import { specialColors } from '../../../src/specialColors';
-import FileUploadPreview from './FileUploadPreview.vue';
+import FileUploadPreview from '../../FileUploadPreview.vue';
 import SelectColor from '@/pages/SelectColor.vue';
 
 const emit = defineEmits(['close']);

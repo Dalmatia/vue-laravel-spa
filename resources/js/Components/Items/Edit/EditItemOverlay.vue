@@ -10,7 +10,7 @@ import { useEditItemForm } from '../../../src/composables/editItemForm';
 import { useCategoryOptions } from '../../../src/composables/categoryOptions';
 import { specialColors } from '../../../src/specialColors';
 import SelectColor from '@/pages/SelectColor.vue';
-import FileUpdatePreview from './FileUpdatePreview.vue';
+import FileUpdatePreview from '../../FileUpdatePreview.vue';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editItem: Object, required: true });
