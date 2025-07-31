@@ -5,7 +5,7 @@ import { useFollowStore } from '../../stores/follow';
 import SortDropdown from './SortDropdown.vue';
 import FilterPanel from './FilterPanel.vue';
 import OutfitList from './OutfitList.vue';
-import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import SelectColor from '../SelectColor.vue';
 import { specialColors } from '../../src/specialColors';
 

@@ -17,7 +17,7 @@ import Logout from 'vue-material-design-icons/Logout.vue';
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue';
 
 import MenuItem from '@/Components/MenuItem.vue';
-import CreateOutfitOverlay from '@/Components/Outfits/Create/CreateOutfitOverlay.vue';
+import CreateOutfitOverlay from '@/Components/Outfit/Create/CreateOutfitOverlay.vue';
 import Notifications from '../Pages/Notification/NotificationPage.vue';
 
 const authStore = useAuthStore();

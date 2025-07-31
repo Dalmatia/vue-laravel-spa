@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import ja from 'dayjs/locale/ja';
 
 import { useAuthStore } from '../stores/auth';
-import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import YearMonthPicker from './YearMonthPicker.vue';
 
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue';

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 
-import ShowOutfitOverlay from './Outfits/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from './Outfit/ShowOutfitOverlay.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import Comment from 'vue-material-design-icons/Comment.vue';

@@ -1,33 +1,35 @@
 <script setup>
-import { defineEmits, defineProps } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../../../stores/auth';
-import { useEditOutfitForm } from '../../../src/composables/useEditOutfitForm';
+import { useCreateOutfitForm } from '../../../src/composables/outfit/useCreateOutfitForm';
 import { useModal } from '../../../src/composables/useModal';
-import VueDatePicker from '@vuepic/vue-datepicker';
-
-import Close from 'vue-material-design-icons/Close.vue';
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 
 import ItemSelectionSection from '../ItemSelectionSection.vue';
 import SelectItemsOverlay from '../SelectItemsOverlay.vue';
-import FileUpdatePreview from '../../FileUpdatePreview.vue';
+import FileUploadPreview from '../../FileUploadPreview.vue';
+import Close from 'vue-material-design-icons/Close.vue';
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 
-const emit = defineEmits(['closeOverlay']);
-const props = defineProps({ editOutfit: Object, required: true });
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import axios from 'axios';
+
+const emit = defineEmits(['close']);
 const user = useAuthStore().user;
+const seasons = ref([]);
 
 const {
-    editForm,
-    itemRefs,
-    seasons,
-    error,
-    itemTypeArray,
+    form,
     fileDisplay,
     isValidFile,
+    error,
+    itemTypes,
+    createOutfit,
     getUploadedImage,
-    outfitUpdate,
     handleItemSelected,
-} = useEditOutfitForm(props, emit);
+    resetForm,
+} = useCreateOutfitForm(closeOverlay);
+const itemTypeEntries = Object.entries(itemTypes);
 
 const {
     isOpen,
@@ -36,26 +38,33 @@ const {
     openModal,
     toggleAccordion,
 } = useModal();
-isOpen.value = true;
 
-const selectNewImage = () => {
-    const fileInput = document.getElementById('file');
-    if (fileInput) {
-        fileInput.click();
+const getSeason = async () => {
+    try {
+        const response = await axios.get('/api/enums');
+        seasons.value = response.data.seasons;
+    } catch (error) {
+        console.error('Enum データの取得に失敗しました', error);
     }
 };
+
+function closeOverlay() {
+    resetForm();
+    emit('close');
+}
+
+onMounted(() => {
+    getSeason();
+});
 </script>
 
 <template>
     <div
         id="OverlaySection"
         class="fixed z-50 top-0 left-0 w-full h-screen bg-[#000000] bg-opacity-60 p-3"
-        @click.self="emit('closeOverlay')"
+        @click.self="closeOverlay()"
     >
-        <button
-            class="absolute right-3 cursor-pointer"
-            @click="emit('closeOverlay')"
-        >
+        <button class="absolute right-3 cursor-pointer" @click="closeOverlay()">
             <Close :size="27" fillColor="#FFFFFF" />
         </button>
 
@@ -69,32 +78,30 @@ const selectNewImage = () => {
                     class="cursor-pointer"
                     :size="30"
                     fillColor="#000000"
-                    @click="emit('closeOverlay')"
+                    @click="closeOverlay()"
                 />
-                <div class="text-lg font-extrabold">コーディネート編集</div>
+                <div class="text-lg font-extrabold">新規投稿</div>
                 <button
                     class="text-lg text-blue-500 hover:text-gray-900 font-extrabold"
-                    @click="outfitUpdate()"
+                    @click="createOutfit()"
                 >
-                    更新
+                    投稿
                 </button>
             </div>
 
             <div
                 class="w-full md:flex h-[calc(100%-55px)] rounded-xl overflow-auto"
             >
-                <!-- コーディネート画像編集部分 -->
-                <FileUpdatePreview
-                    :file-display="fileDisplay"
-                    :form-errors="error"
-                    :is-valid-file="isValidFile"
-                    :initial-image="editForm.file"
-                    @file-selected="getUploadedImage($event)"
+                <FileUploadPreview
+                    :fileDisplay="fileDisplay"
+                    :formErrors="error"
+                    :isValidFile="isValidFile"
+                    @file-selected="getUploadedImage"
                 />
 
                 <div
                     id="TextAreaSection"
-                    class="md:w-1/2 w-full overflow-y-auto"
+                    class="max-w-[720px] w-full relative overflow-y-auto"
                 >
                     <div class="flex items-center justify-between p-3">
                         <div class="flex items-center">
@@ -117,8 +124,10 @@ const selectNewImage = () => {
                     <div class="flex w-full max-h-[150px] bg-white border-b">
                         <textarea
                             ref="textarea"
-                            v-model="editForm.description"
+                            id="textarea"
+                            v-model="form.description"
                             placeholder="何か書く(コーディネートのポイント等)"
+                            aria-label="コーディネート説明"
                             rows="10"
                             class="placeholder-gray-500 w-full border-0 mt-2 mb-2 z-50 focus:ring-0 text-gray-600 text-[18px] outline-none"
                         ></textarea>
@@ -135,7 +144,8 @@ const selectNewImage = () => {
                             着用日
                         </div>
                         <VueDatePicker
-                            v-model="editForm.outfit_date"
+                            v-model="form.outfit_date"
+                            uid="outfit_date"
                             teleport-center
                             locale="ja"
                             format="yyyy-MM-dd"
@@ -160,7 +170,8 @@ const selectNewImage = () => {
                         </div>
                         <select
                             class="text-lg text-right font-extrabold text-gray-500 outline-none"
-                            v-model="editForm.season"
+                            id="season"
+                            v-model="form.season"
                         >
                             <option :value="null">選択してください</option>
                             <option
@@ -209,16 +220,17 @@ const selectNewImage = () => {
                         }"
                     >
                         <div class="min-h-fit p-2 grid grid-cols-2 gap-4">
+                            <!-- 着用アイテム選択セクション -->
                             <ItemSelectionSection
-                                v-for="section in itemTypeArray"
-                                :key="section.key"
-                                :item="editForm[section.key]"
-                                :image="
-                                    editForm[section.imgKey] ||
-                                    itemRefs[section.key]?.file
-                                "
-                                :label="section.label"
-                                :onClick="() => openModal(section.type)"
+                                v-for="[
+                                    type,
+                                    { key, imgKey, label },
+                                ] in itemTypeEntries"
+                                :key="type"
+                                :item="form[key]"
+                                :image="form[imgKey]"
+                                :label="label"
+                                :onClick="() => openModal(Number(type))"
                             />
                         </div>
                     </div>

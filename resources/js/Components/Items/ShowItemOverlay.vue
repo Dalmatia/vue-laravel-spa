@@ -102,17 +102,24 @@ onUnmounted(() => {
         >
             <!-- ヘッダー部分 -->
             <div
-                class="flex items-center justify-between w-full rounded-t-xl p-3 border-b border-b-gray-300"
+                class="relative flex items-center justify-between w-full rounded-t-xl p-3 border-b border-b-gray-300"
             >
                 <ArrowLeft
-                    class="cursor-pointer"
+                    class="cursor-pointer z-10"
                     :size="30"
                     fillColor="#000000"
                     @click="$emit('closeOverlay')"
                 />
-                <div class="text-lg font-extrabold">アイテム詳細</div>
+
+                <div
+                    class="absolute left-1/2 transform -translate-x-1/2 text-lg font-extrabold"
+                >
+                    アイテム詳細
+                </div>
+
                 <button
                     v-if="authStore.user.id === item.user_id"
+                    class="z-10"
                     @click="
                         deleteType = 'Item';
                         id = item.id;

@@ -1,7 +1,7 @@
 <script setup>
 import axios from 'axios';
 import { onMounted, onUnmounted, ref } from 'vue';
-import ShowOutfitOverlay from '../Components/Outfits/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from '../Components/Outfit/ShowOutfitOverlay.vue';
 
 let openOverlay = ref(false);
 let currentOutfit = ref(null);

@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFollowStore } from '../stores/follow';
 
-import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import WeatherForecast from '../Components/WeatherForecast.vue';
 
 import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';

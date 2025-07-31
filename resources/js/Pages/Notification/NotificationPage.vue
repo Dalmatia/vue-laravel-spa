@@ -5,7 +5,7 @@ import { debounce } from 'lodash';
 
 import NotificationList from './NotificationList.vue';
 import NotificationOptions from './NotificationOptions.vue';
-import ShowOutfitOverlay from '@/Components/Outfits/ShowOutfitOverlay.vue';
+import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Close from 'vue-material-design-icons/Close.vue';
