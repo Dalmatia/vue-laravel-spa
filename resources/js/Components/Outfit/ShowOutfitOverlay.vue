@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useFollowStore } from '../../stores/follow';
 import { useOutfitDetail } from '../../src/composables/outfit/useOutfitDetail';
 import { useOutfitItems } from '../../src/composables/outfit/useOutfitItems';
 import { useOutfitComments } from '../../src/composables/outfit/useOutfitComments';
@@ -17,6 +18,7 @@ let deleteType = ref(null);
 let id = ref(null);
 let commentOverlay = ref(false);
 
+const followStore = useFollowStore();
 const props = defineProps(['outfit', 'commentOverlay']);
 
 const {
