@@ -44,12 +44,12 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function item()
+    public function items()
     {
         return $this->hasMany(Item::class);
     }
 
-    public function outfit()
+    public function outfits()
     {
         return $this->hasMany(Outfit::class);
     }
@@ -82,5 +82,17 @@ class User extends Authenticatable
     public function receivesBroadcastNotificationsOn()
     {
         return 'user-notifications.' . $this->id;
+    }
+
+    public function likesReceived()
+    {
+        return $this->hasManyThrough(
+            Like::class,
+            Outfit::class,
+            'user_id',
+            'outfit_id',
+            'id',
+            'id'
+        );
     }
 }

@@ -17,6 +17,7 @@ const FollowerList = () => import('../Pages/FollowerList.vue');
 const Search = () => import('../Pages/OutfitSearch/Search.vue');
 const Notifications = () =>
     import('../Pages/Notification/NotificationPage.vue');
+const SuggestionsUsers = () => import('../Pages/SuggestionsUsers.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -105,6 +106,12 @@ const router = createRouter({
             component: Notifications,
             meta: { requiresAuth: true },
             props: (route) => ({ user: { id: route.params.id } }),
+        },
+        {
+            path: '/suggestion_users',
+            name: 'SuggestionsUsers',
+            component: SuggestionsUsers,
+            meta: { requiresAuth: true },
         },
     ],
 });

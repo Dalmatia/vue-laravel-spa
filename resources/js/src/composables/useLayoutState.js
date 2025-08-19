@@ -47,7 +47,7 @@ export function useLayoutState() {
 
     const logout = async () => {
         await authStore.logout();
-        router.push({ name: 'login' });
+        router.push({ name: 'Login' });
         if (authStore.user?.id) {
             Echo.stopListening(`user-notifications.${authStore.user.id}`);
         }
