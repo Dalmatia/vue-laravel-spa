@@ -10,7 +10,7 @@ const EditProfile = () => import('../Pages/EditProfile.vue');
 const ContentOverlay = () => import('@/Components/ContentOverlay.vue');
 const Items = () => import('../Pages/Items.vue');
 const CategoryItems = () => import('../Pages/CategoryItems.vue');
-const Calendar = () => import('../Pages/Calendar.vue');
+const Calendar = () => import('../Pages/CalendarPage/Calendar.vue');
 const Likes = () => import('../Pages/LikesPage.vue');
 const FollowList = () => import('../Pages/FollowList.vue');
 const FollowerList = () => import('../Pages/FollowerList.vue');

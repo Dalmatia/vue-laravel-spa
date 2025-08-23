@@ -76,7 +76,7 @@ onUnmounted(() => {
         </div>
 
         <SideNav
-            @open-create-post="showCreatePost"
+            @open-create-post="showCreatePost = true"
             @toggle-menu="toggleMenu"
             @logout="logout"
         />
