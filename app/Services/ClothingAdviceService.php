@@ -2,51 +2,95 @@
 
 namespace App\Services;
 
-use Gemini\Laravel\Facades\Gemini;
-use Illuminate\Support\Facades\Log;
+use App\Domain\ClothingAdvice\PromptBuilder;
+use App\Domain\ClothingAdvice\AiClient;
+use App\Domain\ClothingAdvice\ItemMatcher;
+use App\Domain\ClothingAdvice\AdviceCache;
+use App\Enums\MainCategory;
+use Carbon\Carbon;
 
 class ClothingAdviceService
 {
-  public function suggestClothing(array $weatherData): array
+  public function __construct(
+    private PromptBuilder $promptBuilder,
+    private AiClient $aiClient,
+    private ItemMatcher $itemMatcher,
+    private AdviceCache $adviceCache
+  ) {}
+
+  public function suggestClothing(array $weatherData, int $userId, ?string $targetDate = null): array
   {
-    // 取得した情報を元にプロンプトを作成
-    $prompt = <<<PROMPT
-      あなたはファッションの専門家です。以下の天気情報を元に、ユーザーが快適に過ごせる服装のアドバイスを日本語で提案してください。
+    $date = $targetDate ?? Carbon::today()->toDateString();
+    $cached = $this->adviceCache->get($userId, $date);
+    // すでにキャッシュされていれば返す
+    if ($cached) {
+      return $cached;
+    }
 
-      【天気データ】
-        - 最高気温: {$weatherData['max']}℃
-        - 最低気温: {$weatherData['min']}℃
-        - 降水確率（最大）: {$weatherData['pop']}%
-        - 降水確率（平均）: {$weatherData['avgPop']}%
-        - 平均湿度: {$weatherData['humidityAvg']}%
-        - 平均風速: {$weatherData['windAvg']} m/s
+    $text          = $this->generateAdvice($weatherData);
+    $excludeConfig = $this->buildExclusionConfig($userId);
 
-      【制約】
-        - 出力は100文字以内
-        - 読者は20代の一般的な男女
-        - 季節や気温、降水確率に基づき具体的なアイテム（例：コート、半袖、傘）を含めてください
-        - 避けた方がよい服装もあれば触れてください
-        - TPOは日常の外出を想定しています
+    $matchedItems = $this->itemMatcher->matchItems(
+      $text,
+      $userId,
+      $excludeConfig['colors'],
+      $excludeConfig['ids']
+    );
 
-      【出力例】
-        例: 「昼は暑くなりそうなので薄手のシャツを。夜は冷えるため羽織りがあると安心です。折りたたみ傘も忘れずに。」
+    // キャッシュに保存（期限は1日）
+    $result = [
+      'advice' => $text,
+      'category' => 'AIによる提案',
+      'outfit_suggestion' => $matchedItems,
+    ];
 
-      以上を踏まえて、今日の服装アドバイスをお願いします。
-    PROMPT;
+    $this->storeResult($userId, $date, $result, $matchedItems);
 
+    return $result;
+  }
 
-    $client = Gemini::generativeModel("gemini-2.0-flash-001");
-    try {
-      $response = $client->generateContent($prompt);
-      $text = $response->text();
-    } catch (\Exception $e) {
-      Log::error("Gemini APIエラー: " . $e->getMessage());
-      $text = 'アドバイスを取得できませんでした。';
+  private function generateAdvice(array $weatherData): string
+  {
+    $prompt = $this->promptBuilder->build($weatherData);
+    return $this->aiClient->getClothingAdvice($prompt);
+  }
+
+  /**
+   * 前日着用アイテムの除外条件を構築
+   */
+  private function buildExclusionConfig(int $userId): array
+  {
+    $yesterdayKey = Carbon::yesterday()->toDateString();
+
+    $excludeItemIds = $this->adviceCache->getUsedItems($userId, $yesterdayKey);
+    $alreadyUsedColors = array_fill_keys(MainCategory::cases(), []);
+
+    $yesterday = $this->adviceCache->get($userId, $yesterdayKey);
+    if ($yesterday && isset($yesterday['outfit_suggestion'])) {
+      foreach ($yesterday['outfit_suggestion'] as $cat => $data) {
+        if (!empty($data['item']['color'])) {
+          $alreadyUsedColors[$cat][] = $data['item']['color'];
+        }
+      }
     }
 
     return [
-      'advice' => $text,
-      'category' => 'AIによる提案',
+      'ids'    => $excludeItemIds,
+      'colors' => $alreadyUsedColors,
     ];
+  }
+
+  /**
+   * キャッシュ & 使用アイテムを保存
+   */
+  private function storeResult(int $userId, string $date, array $result, array $matchedItems): void
+  {
+    $this->adviceCache->put($userId, $date, $result);
+
+    $usedItemIds = array_filter(
+      array_map(fn($d) => $d['item']['id'] ?? null, $matchedItems)
+    );
+
+    $this->adviceCache->putUsedItems($userId, $date, $usedItemIds);
   }
 }

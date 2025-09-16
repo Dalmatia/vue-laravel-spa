@@ -1,8 +1,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { getEnumStore } from '../stores/enum';
 
 import SelectCity from './SelectCity.vue';
 
+const enumStore = getEnumStore();
 const showModal = ref(false);
 const selectedCity = ref(null);
 const selectedTab = ref('today');
@@ -197,9 +199,46 @@ onMounted(async () => {
                         </div>
                     </div>
                 </div>
-                <div class="mt-2 px-2">
-                    <strong>服装アドバイス:</strong>
-                    <p>{{ currentWeather.advice }}</p>
+                <div class="mt-6 border rounded-lg p-4">
+                    <h3 class="text-lg font-bold mb-2">服装アドバイス:</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        {{ currentWeather.advice }}
+                    </p>
+
+                    <div v-if="currentWeather.outfit_suggestion" class="mt-2">
+                        <h3 class="font-bold mt-4">おすすめコーディネート:</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
+                            <div
+                                v-for="(
+                                    part, mainCategory
+                                ) in currentWeather.outfit_suggestion"
+                                :key="mainCategory"
+                                class="flex flex-col items-center bg-white rounded-lg shadow p-2"
+                            >
+                                <span class="font-semibold">
+                                    {{
+                                        enumStore.getMainCategoryName(
+                                            mainCategory
+                                        )
+                                    }}
+                                </span>
+                                <div v-if="part?.item">
+                                    <img
+                                        :src="part.item.file"
+                                        class="w-24 h-24 object-cover rounded mb-2"
+                                    />
+                                    <span
+                                        class="flex flex-col items-center text-sm"
+                                    >
+                                        {{ part.keyword }}
+                                    </span>
+                                </div>
+                                <div v-else class="text-red-500 text-sm">
+                                    未登録
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

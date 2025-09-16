@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Services\WeatherService;
 use App\Services\ClothingAdviceService;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class WeatherAPIController extends Controller
 {
@@ -60,7 +61,9 @@ class WeatherAPIController extends Controller
                 continue;
             }
             $weatherInfo = $this->weatherAnalyzer->extractWeatherInfoForAdvice($weatherData, $index);
-            $advice = $this->clothingAdviceService->suggestClothing($weatherInfo);
+
+            $targetDate = Carbon::today()->addDays($index)->toDateString();
+            $advice = $this->clothingAdviceService->suggestClothing($weatherInfo, auth()->id(), $targetDate);
 
             $result[$label] = array_merge($formatted, $advice);
         }
