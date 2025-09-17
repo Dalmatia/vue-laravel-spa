@@ -82,6 +82,7 @@ Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
 Route::get('/enums', [EnumController::class, 'index']);
+Route::get('/get_genders', [EnumController::class, 'getGenders']); // 性別一覧取得
 Route::get('/main_categories', [CategoryController::class, 'getMainCategories']); // メインカテゴリー一覧
 Route::get('/main_categories/{mainCategory_id}/sub_categories', [CategoryController::class, 'getSubCategories']); // サブカテゴリー一覧
 Route::get('/regions', [RegionController::class, 'getRegions']); // 地域一覧

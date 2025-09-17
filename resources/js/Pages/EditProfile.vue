@@ -1,7 +1,8 @@
 <script setup>
-import { nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import VueDatePicker from '@vuepic/vue-datepicker';
 
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Upload from 'vue-material-design-icons/Upload.vue';
@@ -11,6 +12,7 @@ const newPassword = ref('');
 let isValidFile = ref(null);
 let fileDisplay = ref('');
 const router = useRouter();
+const genders = ref([]);
 
 // ユーザー情報の取得
 const fetchUserData = async () => {
@@ -37,7 +39,11 @@ const updateProfile = async () => {
     if (newPassword.value) {
         formData.append('password', newPassword.value);
     }
-    formData.append('file', authStore.user.file);
+    if (authStore.user.file instanceof File) {
+        formData.append('file', authStore.user.file);
+    }
+    formData.append('gender', authStore.user.gender);
+    formData.append('birthdate', authStore.user.birthdate || '');
 
     try {
         const response = await axios.post(
@@ -57,8 +63,11 @@ const updateProfile = async () => {
             router.push({ name: 'User', params: { id: authStore.user.id } });
         }
     } catch (error) {
-        console.error('プロフィール更新エラー:', error);
-        alert('プロフィールの更新に失敗しました。');
+        if (error.response && error.response.status === 422) {
+            console.log('Validation Errors:', error.response.data.errors);
+        } else {
+            console.error('プロフィール更新エラー:', error);
+        }
     }
 };
 
@@ -82,8 +91,32 @@ const getUploadedImage = (e) => {
     e.target.value = '';
 };
 
+// 性別一覧の取得
+const fetchGenders = async () => {
+    try {
+        const response = await axios.get('/api/get_genders');
+        genders.value = response.data;
+    } catch (error) {
+        console.error('性別一覧の取得に失敗しました:', error);
+    }
+};
+
+// 年齢計算
+const age = computed(() => {
+    if (!authStore.user.birthdate) return null;
+    const today = new Date();
+    const birth = new Date(authStore.user.birthdate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+});
+
 onMounted(() => {
     fetchUserData();
+    fetchGenders();
 });
 </script>
 
@@ -213,6 +246,50 @@ onMounted(() => {
                         v-model="newPassword"
                         placeholder="新しいパスワードを入力"
                     />
+                </div>
+
+                <div class="mt-4 px-4">
+                    <label
+                        for="gender"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                        性別:
+                    </label>
+                    <select
+                        id="gender"
+                        v-model="authStore.user.gender"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    >
+                        <option
+                            v-for="gender in genders"
+                            :key="gender.value"
+                            :value="gender.value"
+                        >
+                            {{ gender.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mt-4 px-4">
+                    <div class="block text-sm font-medium text-gray-700 mb-1">
+                        生年月日:
+                    </div>
+                    <VueDatePicker
+                        v-model="authStore.user.birthdate"
+                        uid="birthdate"
+                        teleport-center
+                        locale="ja"
+                        format="yyyy/MM/dd"
+                        model-type="yyyy-MM-dd"
+                        week-start="0"
+                        :enable-time-picker="false"
+                        auto-apply
+                        class="mt-1 block w-full shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+
+                    <p v-if="age !== null" class="mt-2 text-sm text-gray-600">
+                        年齢: {{ age }} 歳
+                    </p>
                 </div>
 
                 <!-- 保存ボタン（デスクトップ/タブレット用） -->

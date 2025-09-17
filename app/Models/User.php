@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Enums\Gender;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -22,6 +25,8 @@ class User extends Authenticatable
         'file',
         'email',
         'password',
+        'gender' => Gender::class,
+        'birthdate',
     ];
 
     /**
@@ -43,6 +48,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function getAgeAttribute()
+    {
+        if (!$this->birthdate) {
+            return null;
+        }
+        return Carbon::parse($this->birthdate)->age;
+    }
 
     public function items()
     {

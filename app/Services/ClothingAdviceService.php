@@ -63,7 +63,12 @@ class ClothingAdviceService
     $yesterdayKey = Carbon::yesterday()->toDateString();
 
     $excludeItemIds = $this->adviceCache->getUsedItems($userId, $yesterdayKey);
-    $alreadyUsedColors = array_fill_keys(MainCategory::cases(), []);
+    $alreadyUsedColors = [
+      MainCategory::outer => [],
+      MainCategory::tops => [],
+      MainCategory::bottoms => [],
+      MainCategory::shoes => [],
+    ];
 
     $yesterday = $this->adviceCache->get($userId, $yesterdayKey);
     if ($yesterday && isset($yesterday['outfit_suggestion'])) {
