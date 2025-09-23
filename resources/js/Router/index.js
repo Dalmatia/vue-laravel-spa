@@ -6,7 +6,7 @@ const Home = () => import('../Pages/Home.vue');
 const Login = () => import('../Pages/Auth/Login.vue');
 const Register = () => import('../Pages/Auth/Register.vue');
 const User = () => import('../Pages/User.vue');
-const EditProfile = () => import('../Pages/EditProfile.vue');
+const EditProfile = () => import('../Pages/ProfilePage/EditProfile.vue');
 const ContentOverlay = () => import('@/Components/ContentOverlay.vue');
 const Items = () => import('../Pages/Items.vue');
 const CategoryItems = () => import('../Pages/CategoryItems.vue');

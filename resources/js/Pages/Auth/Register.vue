@@ -1,15 +1,18 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import VueDatePicker from '@vuepic/vue-datepicker';
 
 const router = useRouter();
 const form = ref({
     email: '',
     name: '',
+    gender: null,
+    birthdate: null,
     password: '',
     password_confirmation: '',
 });
+const genders = ref([]);
 const errors = ref([]);
 
 const signup = async () => {
@@ -23,6 +26,33 @@ const signup = async () => {
             errors.value = reason?.response?.data?.errors ?? {};
         });
 };
+
+// 性別一覧の取得
+const fetchGenders = async () => {
+    try {
+        const response = await axios.get('/api/get_genders');
+        genders.value = response.data;
+    } catch (error) {
+        console.error('性別一覧の取得に失敗しました:', error);
+    }
+};
+
+// 年齢計算
+const age = computed(() => {
+    if (!form.value.birthdate) return null;
+    const today = new Date();
+    const birth = new Date(form.value.birthdate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+});
+
+onMounted(() => {
+    fetchGenders();
+});
 </script>
 
 <template>
@@ -48,7 +78,8 @@ const signup = async () => {
                         </label>
                         <input
                             type="text"
-                            id="username"
+                            id="name"
+                            autocomplete="name"
                             class="w-full bg-gray-50 text-gray-800 border focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"
                             v-model="form.name"
                         />
@@ -70,6 +101,7 @@ const signup = async () => {
                         <input
                             type="text"
                             id="email"
+                            autocomplete="email"
                             class="w-full bg-gray-50 text-gray-800 border focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"
                             v-model="form.email"
                         />
@@ -79,6 +111,69 @@ const signup = async () => {
                             role="alert"
                         >
                             {{ errors.email[0] }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <label
+                            for="gender"
+                            class="inline-block text-gray-800 text-sm sm:text-base mb-2"
+                            >性別:
+                        </label>
+                        <select
+                            id="gender"
+                            class="w-full bg-gray-50 text-gray-800 border focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"
+                            v-model="form.gender"
+                        >
+                            <option :value="null">選択してください</option>
+                            <option
+                                v-for="gender in genders"
+                                :key="gender.value"
+                                :value="gender.value"
+                            >
+                                {{ gender.label }}
+                            </option>
+                        </select>
+                        <span
+                            v-if="errors.gender"
+                            class="text-sm text-red-700 m-1"
+                            role="alert"
+                        >
+                            {{ errors.gender[0] }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <div
+                            class="inline-block text-gray-800 text-sm sm:text-base mb-2"
+                        >
+                            生年月日:
+                        </div>
+                        <VueDatePicker
+                            id="birthdate"
+                            uid="birthdate"
+                            v-model="form.birthdate"
+                            teleport-center
+                            locale="ja"
+                            format="yyyy/MM/dd"
+                            model-type="yyyy-MM-dd"
+                            week-start="0"
+                            :enable-time-picker="false"
+                            auto-apply
+                            class="block w-full bg-gray-50 text-gray-800 focus:ring ring-indigo-300 rounded outline-none transition duration-100"
+                        />
+                        <p
+                            v-if="age !== null"
+                            class="mt-2 text-sm text-gray-600"
+                        >
+                            年齢: {{ age }} 歳
+                        </p>
+                        <span
+                            v-if="errors.birthdate"
+                            class="text-sm text-red-700 m-1"
+                            role="alert"
+                        >
+                            {{ errors.birthdate[0] }}
                         </span>
                     </div>
 
@@ -136,7 +231,6 @@ const signup = async () => {
                 </router-link>
             </p>
         </div>
+        <div class="pb-20"></div>
     </div>
 </template>
-
-<style></style>

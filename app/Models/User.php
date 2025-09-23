@@ -25,7 +25,7 @@ class User extends Authenticatable
         'file',
         'email',
         'password',
-        'gender' => Gender::class,
+        'gender',
         'birthdate',
     ];
 
@@ -47,6 +47,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'gender' => Gender::class,
+        'birthdate' => 'date:Y-m-d',
     ];
 
     public function getAgeAttribute()
