@@ -48,6 +48,7 @@ class OutfitLiked extends Notification implements ShouldBroadcast
             'outfit_image' => $this->outfit->file,
             'message' => __("あなたの投稿にいいね!がつきました。"),
             'created_at' => Carbon::now()->format('Y/m/d'),
+            'unread_count' => $notifiable->unreadNotifications()->count(),
         ]);
     }
 }

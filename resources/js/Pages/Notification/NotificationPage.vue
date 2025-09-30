@@ -1,7 +1,11 @@
 <script setup>
-import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { reactive, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { debounce } from 'lodash';
+
+import { useNotification } from '../../src/composables/useNotification';
+import { useNotificationActions } from '../../src/composables/useNotificationActions';
+import { useOutfitOverlay } from '../../src/composables/useOutfitOverlay';
 
 import NotificationList from './NotificationList.vue';
 import NotificationOptions from './NotificationOptions.vue';
@@ -12,41 +16,52 @@ import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close-notice']);
 const props = defineProps(['user']);
-const state = reactive({
-    notifications: [],
-    selectedNotification: null,
-    isMobile: window.innerWidth <= 640,
-    openModal: false,
-    errorMessage: '',
-    currentPage: 1,
-    hasMore: true,
-    isLoading: false,
-    openOverlay: false,
-    currentOutfit: null,
-    commentOverlay: false,
-});
 const router = useRouter();
-const channel = Echo.private('user-notifications.' + props.user.id);
+
+// --- Composables ---
+const { notifications, fetchNotifications, markAsRead, stopListening } =
+    useNotification();
+const {
+    errorMessage,
+    selectedNotification,
+    openModal,
+    showDeleteModal,
+    confirmDelete,
+    openOutfitDetails,
+} = useNotificationActions(notifications);
+const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
+
+// --- Local State ---
+const state = reactive({
+    isMobile: window.innerWidth <= 640,
+});
+
+// --- Notification Action Mapping ---
 const notificationType = {
-    'App\\Notifications\\FollowedUser': (notification) => {
-        router.push({ name: 'User', params: { id: notification.follower_id } });
+    'App\\Notifications\\FollowedUser': (n) => {
+        router.push({ name: 'User', params: { id: n.follower_id } });
         emit('close-notice');
     },
-    'App\\Notifications\\OutfitLiked': async (notification) => {
-        const response = await axios.get(
-            `/api/outfit/${notification.outfit_id}`
-        );
-        toggleOutfitOverlay(response.data.outfit);
+    'App\\Notifications\\OutfitLiked': async (n) => {
+        await openOutfitDetails(n.outfit_id, false);
     },
-    'App\\Notifications\\OutfitCommented': async (notification) => {
-        const response = await axios.get(
-            `/api/outfit/${notification.outfit_id}`
-        );
-        toggleOutfitOverlay(response.data.outfit, true);
+    'App\\Notifications\\OutfitCommented': async (n) => {
+        await openOutfitDetails(n.outfit_id, true);
     },
 };
 
-// スマートフォン画面ではない時、ホーム画面に戻る
+// --- Handlers ---
+const handleNotificationAction = async (notification) => {
+    if (notificationType[notification.type]) {
+        await notificationType[notification.type](notification);
+    }
+    await markAsRead(notification);
+};
+
+const closeNotification = () => {
+    state.isMobile ? router.back() : emit('close-notice');
+};
+
 const handleResize = debounce(() => {
     const mobile = window.innerWidth <= 640;
     if (
@@ -54,263 +69,113 @@ const handleResize = debounce(() => {
         state.isMobile &&
         router.currentRoute.value.name === 'Notifications'
     ) {
-        // モバイルからデスクトップに切り替わったとき
         router.push({ name: 'Home' });
     }
-    state.isMobile = mobile; // 現在の状態を更新
+    state.isMobile = mobile;
 }, 200);
 
-const closeNotification = () => {
-    state.isMobile ? router.back() : emit('close-notice');
-};
-
-// リアルタイムで通知を受信
-let reconnectAttempts = 0;
-const setupWebSocket = () => {
-    const connect = () => {
-        channel
-            .listen(
-                '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
-                async (notification) => {
-                    await fetchPostImage(notification);
-                    state.notifications.unshift(notification);
-                }
-            )
-            .error(() => {
-                reconnectAttempts++;
-                if (reconnectAttempts <= 5) {
-                    setTimeout(connect, reconnectAttempts * 1000);
-                } else {
-                    showError(
-                        'リアルタイム更新に失敗しました。再試行を終了します。'
-                    );
-                }
-            });
-    };
-    connect();
-};
-
-// エラーメッセージを表示する
-const showError = (message) => {
-    state.errorMessage = message;
-    setTimeout(() => {
-        state.errorMessage = '';
-    }, 3000);
-};
-
-const fetchPostImage = async (notification) => {
-    if (notification.outfit_id) {
-        try {
-            const response = await axios.get(
-                `/api/outfit/${notification.outfit_id}`
-            );
-            notification.outfit_image = response.data.outfit.file; // サムネイル画像URLを設定
-        } catch (error) {
-            console.error('投稿情報の取得に失敗しました:', error);
-        }
-    }
-};
-
-// 通知を取得
-const fetchNotifications = async () => {
-    if (!state.hasMore || state.isLoading) return;
-    state.isLoading = true;
-    try {
-        const response = await axios.get(
-            `/api/notifications/${props.user.id}?page=${state.currentPage}`
-        );
-        if (response.data && response.data.notifications) {
-            const notifications = response.data.notifications;
-            // 通知タイプによって投稿画像を取得
-            await Promise.all(notifications.map(fetchPostImage));
-            state.notifications = [
-                ...state.notifications,
-                ...response.data.notifications,
-            ];
-            state.hasMore = response.data.hasMore;
-            state.currentPage++;
-        } else {
-            showError('通知の読み込みに失敗しました。');
-        }
-    } catch (error) {
-        showError('通知の読み込みに失敗しました。');
-        console.error(error);
-    } finally {
-        state.isLoading = false;
-    }
-};
-
-// 通知を既読にし、通知の種類に応じた処理を実行する
-const markAsRead = async (notification) => {
-    try {
-        await axios.post(`/api/notifications/${notification.id}/read`);
-        notification.read_at = new Date().toISOString();
-
-        // 通知の種類を判定
-        if (notificationType[notification.type]) {
-            await notificationType[notification.type](notification);
-        }
-    } catch (error) {
-        // エラー表示
-        showError('問題が発生しました。');
-        console.error(error);
-    }
-};
-
-// 通知の削除
-const deleteNotification = () => {
-    if (state.selectedNotification === null) return;
-    axios
-        .delete(`/api/notifications/${state.selectedNotification}`)
-        .then(() => {
-            state.notifications = state.notifications.filter(
-                (n) => n.id !== state.selectedNotification
-            );
-            state.selectedNotification = null;
-            state.openModal = false;
-        })
-        .catch(() => showError('通知の削除に失敗しました。'));
-};
-
-// コーディネートの削除
-const deleteOutfit = (object) => {
-    let url = '';
-    if (object.deleteType === 'Outfit') {
-        url = `/api/outfit/` + object.id;
-        axios
-            .delete(url)
-            .then((response) => {
-                console.log(response);
-                state.openOverlay = false;
-                window.dispatchEvent(new Event('outfit-deleted'));
-            })
-            .catch((error) => {
-                showError('コーディネートの削除に失敗しました。');
-                console.error(error);
-            });
-    } else {
-        showError('無効な削除タイプです。');
-    }
-};
-
-// 通知削除モーダルを表示
-const showDeleteModal = (id) => {
-    state.selectedNotification = id;
-    state.openModal = true;
-};
-
-// 投稿の詳細・コメントページを表示
-const toggleOutfitOverlay = (outfit = null, showComments = false) => {
-    state.currentOutfit = outfit;
-    state.openOverlay = !!outfit;
-    state.commentOverlay = showComments;
-    const event = outfit ? 'modal-opened' : 'modal-closed';
-    window.dispatchEvent(new Event(event));
-};
-
+// --- Watchers & Lifecycle ---
 watch(
     () => state.isMobile,
     (newValue, oldValue) => {
-        if (!newValue && oldValue) {
-            // モバイルからデスクトップに切り替わった場合
-            fetchNotifications();
-        }
+        if (!newValue && oldValue) fetchNotifications();
     }
 );
 
 onMounted(() => {
-    if (props.user && props.user.id) {
-        setupWebSocket();
-        fetchNotifications();
-    }
     window.addEventListener('resize', handleResize);
+    fetchNotifications();
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
-    channel.stopListening(
-        '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated'
-    );
+    stopListening();
 });
 </script>
 
 <template>
     <div>
+        <!-- エラーメッセージ -->
         <div
-            v-if="state.errorMessage"
+            v-if="errorMessage"
             class="fixed top-0 left-0 w-full z-50 bg-red-500 text-white p-2 text-center text-sm sm:text-base break-words"
         >
-            {{ state.errorMessage }}
+            {{ errorMessage }}
         </div>
-        <div v-if="state.isMobile">
-            <!-- モバイルレイアウト -->
-            <div class="fixed inset-0 z-20 bg-white overflow-y-auto">
-                <!-- ヘッダー -->
-                <div
-                    class="flex items-center sticky top-0 justify-between px-4 py-4 border-b bg-white"
-                >
-                    <button
-                        @click="closeNotification()"
-                        class="text-gray-600 hover:text-gray-900"
-                    >
-                        <ArrowLeft :size="24" class="cursor-pointer" />
-                    </button>
-                    <span class="text-lg font-bold">お知らせ</span>
-                    <div class="w-6"></div>
-                    <!-- Closeボタンのサイズ調整 -->
-                </div>
 
-                <NotificationList
-                    :notifications="state.notifications"
-                    @read="markAsRead"
-                    @delete="showDeleteModal"
-                />
+        <!-- モバイルレイアウト -->
+        <div
+            v-if="state.isMobile"
+            class="fixed inset-0 z-20 bg-white overflow-y-auto"
+        >
+            <div
+                class="flex items-center sticky top-0 justify-between px-4 py-4 border-b bg-white"
+            >
+                <button
+                    @click="closeNotification"
+                    class="text-gray-600 hover:text-gray-900"
+                >
+                    <ArrowLeft :size="24" class="cursor-pointer" />
+                </button>
+                <span class="text-lg font-bold">お知らせ</span>
+                <div class="w-6"></div>
             </div>
-            <ShowOutfitOverlay
-                v-if="state.openOverlay"
-                :outfit="state.currentOutfit"
-                :commentOverlay="state.commentOverlay"
-                @delete-selected="deleteOutfit($event)"
-                @close-overlay="toggleOutfitOverlay()"
+
+            <NotificationList
+                :notifications="notifications"
+                @read="handleNotificationAction"
+                @delete="showDeleteModal($event)"
             />
         </div>
 
+        <!-- デスクトップレイアウト -->
         <div
-            v-if="!state.isMobile"
-            @click.stop
-            class="absolute top-0 left-[73px] xl:left-60 z-0 w-full md:w-[397px] h-full bg-slate-100 shadow-md rounded-r-2xl border-r transition-transform duration-300"
+            v-else
+            class="absolute top-0 left-[80px] xl:left-64 z-0 w-full md:w-[397px] h-full bg-slate-100 shadow-md rounded-r-2xl border-r transition-transform duration-300 overflow-auto hidden-scrollbar"
         >
-            <!-- 通知ページヘッダー -->
             <div
                 class="flex items-center justify-between px-6 py-4 border-b bg-white"
             >
                 <span class="text-lg font-bold">お知らせ</span>
                 <button
-                    @click.stop="closeNotification()"
+                    @click.stop="closeNotification"
                     class="text-gray-600 hover:text-gray-900"
                 >
                     <Close :size="33" class="cursor-pointer" />
                 </button>
             </div>
 
-            <!-- 通知内容 -->
             <NotificationList
-                :notifications="state.notifications"
-                @read="markAsRead"
-                @delete="showDeleteModal"
-            />
-            <ShowOutfitOverlay
-                v-if="state.openOverlay"
-                :outfit="state.currentOutfit"
-                :commentOverlay="state.commentOverlay"
-                @delete-selected="deleteOutfit($event)"
-                @close-overlay="toggleOutfitOverlay()"
+                :notifications="notifications"
+                @read="handleNotificationAction"
+                @delete="showDeleteModal($event)"
             />
         </div>
+
+        <!-- コーディネート詳細ページオーバーレイ -->
+        <ShowOutfitOverlay
+            v-if="overlayState.open"
+            :outfit="overlayState.currentOutfit"
+            :commentOverlay="overlayState.commentOverlay"
+            @delete-selected="deleteOutfit($event)"
+            @close-overlay="toggleOutfitOverlay()"
+        />
+
+        <!-- 通知削除モーダル -->
+        <NotificationOptions
+            v-if="openModal"
+            @delete-selected="confirmDelete()"
+            @close="openModal = false"
+        />
     </div>
-    <NotificationOptions
-        v-if="state.openModal"
-        @delete-selected="deleteNotification()"
-        @close="state.openModal = false"
-    />
 </template>
+
+<style scoped>
+.hidden-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+</style>

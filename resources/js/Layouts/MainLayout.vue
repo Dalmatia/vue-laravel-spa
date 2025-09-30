@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRoute } from 'vue-router';
 import { useLayoutState } from '../src/composables/useLayoutState';
-import { useNotification } from '../src/composables/useNotification';
 
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue';
@@ -20,7 +19,6 @@ const route = useRoute();
 const topsNavRef = ref();
 const { isDropdownOpen, noticeOpen, account, toggleMenu, closeMenu, logout } =
     useLayoutState();
-const { unreadCount } = useNotification();
 
 let showCreatePost = ref(false);
 
@@ -55,7 +53,6 @@ onUnmounted(() => {
             <TopNavHome
                 ref="topsNavRef"
                 :is-dropdown-open="isDropdownOpen"
-                :unread-count="unreadCount"
                 @toggle-menu="toggleMenu"
                 @logout="logout"
             />
@@ -107,10 +104,7 @@ onUnmounted(() => {
     />
     <Transition name="slide" @click.self="noticeOpen = false">
         <div v-if="authStore.user && noticeOpen" class="fixed inset-0">
-            <Notifications
-                @close-notice="noticeOpen = false"
-                :user="authStore.user"
-            />
+            <Notifications @close-notice="noticeOpen = false" />
         </div>
     </Transition>
 </template>

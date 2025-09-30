@@ -6,6 +6,7 @@ const emit = defineEmits(['close', 'deleteSelected']);
     <div
         id="NotificationOptionsOverlay"
         class="fixed flex items-center z-50 top-0 left-0 w-full h-screen bg-slate-50 bg-opacity-60 p-3"
+        @click.self="$emit('close')"
     >
         <div
             class="max-w-sm w-full mx-auto mt-10 bg-white rounded-xl text-center shadow-lg"

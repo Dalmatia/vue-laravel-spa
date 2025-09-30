@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useNotification } from '../src/composables/useNotification';
 import BellOutline from 'vue-material-design-icons/BellOutline.vue';
 import HeartOutline from 'vue-material-design-icons/HeartOutline.vue';
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
@@ -9,9 +10,8 @@ import Logout from 'vue-material-design-icons/Logout.vue';
 
 const props = defineProps({
     isDropdownOpen: Boolean,
-    unreadCount: Number,
 });
-
+const { unreadCount } = useNotification();
 const emit = defineEmits(['toggle-menu', 'logout']);
 
 const authStore = useAuthStore();

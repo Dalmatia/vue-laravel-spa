@@ -43,6 +43,7 @@ class FollowedUser extends Notification implements ShouldBroadcast
             'follower_id' => $this->follower->id,
             'message' => "あなたをフォローしました。",
             'created_at' => Carbon::now()->format('Y/m/d'),
+            'unread_count' => $notifiable->unreadNotifications()->count(),
         ]);
     }
 }
