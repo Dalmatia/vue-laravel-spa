@@ -51,6 +51,7 @@ const logout = () => emit('logout');
                     >
                         <BellOutline fillColor="#000000" :size="27" />
                         <span
+                            v-if="unreadCount > 0"
                             class="absolute top-0 right-0 translate-x-1/2 translate-y-1/2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-red-100 bg-red-600 rounded-full"
                         >
                             {{ unreadCount }}

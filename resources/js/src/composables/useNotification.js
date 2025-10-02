@@ -1,4 +1,4 @@
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 export const unreadCount = ref(0);
@@ -70,6 +70,23 @@ export function useNotification() {
         }
     };
 
+    const handleOutfitDeleted = async (e) => {
+        const deletedId = e.detail?.id;
+        if (!deletedId) return;
+
+        const beforeCount = notifications.value.length;
+        notifications.value = notifications.value.filter(
+            (n) => n.outfit_id !== deletedId
+        );
+        const afterCount = notifications.value.length;
+
+        // 未読数を調整
+        const removed = beforeCount - afterCount;
+        if (removed > 0) {
+            unreadCount.value = Math.max(unreadCount.value - removed, 0);
+        }
+    };
+
     // WebSocket受信
     const listenNotifications = () => {
         if (!authStore.user?.id) return;
@@ -111,6 +128,11 @@ export function useNotification() {
             await fetchUnreadCount();
             listenNotifications();
         }
+        window.addEventListener('outfit-deleted', handleOutfitDeleted);
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('outfit-deleted', handleOutfitDeleted);
     });
 
     watch(

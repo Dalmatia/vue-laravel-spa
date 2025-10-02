@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\DatabaseNotification;
 
 class Outfit extends Model
 {
@@ -46,5 +47,13 @@ class Outfit extends Model
     public function items()
     {
         return $this->belongsToMany(Item::class, 'outfits_items', 'outfit_id', 'item_id');
+    }
+
+    protected static function booted()
+    {
+        static::deleting(function ($outfit) {
+            // outfit_id が一致する通知を削除
+            DatabaseNotification::where('data->outfit_id', $outfit->id)->delete();
+        });
     }
 }

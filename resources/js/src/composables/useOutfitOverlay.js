@@ -31,7 +31,7 @@ export function useOutfitOverlay() {
     };
 
     // コーディネートの削除
-    const deleteOutfit = async (object) => {
+    const deleteOutfit = async (object, onSuccess = null, onError = null) => {
         if (object.deleteType !== 'Outfit') {
             errorMessage.value = '無効な削除タイプです';
             return;
@@ -39,9 +39,13 @@ export function useOutfitOverlay() {
         try {
             await axios.delete(`/api/outfit/${object.id}`);
             overlayState.value.open = false;
-            window.dispatchEvent(new Event('outfit-deleted'));
+            window.dispatchEvent(
+                new CustomEvent('outfit-deleted', { detail: { id: object.id } })
+            );
+            if (onSuccess) onSuccess();
         } catch (e) {
             errorMessage.value = 'コーディネート削除に失敗しました';
+            if (onError) onError(e);
         }
     };
 
