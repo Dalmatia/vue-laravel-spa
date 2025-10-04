@@ -8,6 +8,7 @@ import OutfitList from './OutfitList.vue';
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import SelectColor from '../SelectColor.vue';
 import { specialColors } from '../../src/specialColors';
+import { useOutfitOverlay } from '../../src/composables/useOutfitOverlay';
 
 import Sort from 'vue-material-design-icons/SortVariant.vue';
 import Filter from 'vue-material-design-icons/Tune.vue';
@@ -15,11 +16,10 @@ import Close from 'vue-material-design-icons/Close.vue';
 import axios from 'axios';
 
 let openFilter = ref(false);
-let currentOutfit = ref(null);
-let openOverlay = ref(false);
 const outfits = ref([]);
 const followStore = useFollowStore();
 const { getColorClass, getColorStyle } = specialColors();
+const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 
 // 検索する項目毎のデータの取得
 const mainCategories = ref([]);
@@ -63,30 +63,6 @@ const fetchOutfits = async () => {
         console.error('コーディネート一覧の取得に失敗しました。', error);
     } finally {
         isLoading.value = false;
-    }
-};
-
-const openOutfitOverlay = (outfit) => {
-    currentOutfit.value = outfit;
-    openOverlay.value = true;
-};
-
-// コーディネートの削除
-const deleteOutfit = (object) => {
-    let url = '';
-    if (object.deleteType === 'Outfit') {
-        url = `/api/outfit/` + object.id;
-        axios
-            .delete(url)
-            .then((response) => {
-                console.log(response);
-                openOverlay.value = false;
-                window.dispatchEvent(new Event('outfit-deleted'));
-                fetchOutfits();
-            })
-            .catch((error) => {
-                console.error(error);
-            });
     }
 };
 
@@ -135,12 +111,14 @@ onMounted(async () => {
 
     window.addEventListener('outfit-created', fetchOutfits);
     window.addEventListener('outfit-updated', fetchOutfits);
+    window.addEventListener('outfit-deleted', fetchOutfits);
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
     window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
+    window.removeEventListener('outfit-deleted', fetchOutfits);
 });
 </script>
 
@@ -213,7 +191,7 @@ onUnmounted(() => {
                 <OutfitList
                     :isLoading="isLoading"
                     :outfits="outfits"
-                    @openOutfitOverlay="openOutfitOverlay($event)"
+                    @openOutfitOverlay="toggleOutfitOverlay($event)"
                 />
             </div>
             <!-- コーディネート表示部分ここまで -->
@@ -277,17 +255,17 @@ onUnmounted(() => {
                 <OutfitList
                     :isLoading="isLoading"
                     :outfits="outfits"
-                    @openOutfitOverlay="openOutfitOverlay($event)"
+                    @openOutfitOverlay="toggleOutfitOverlay($event)"
                 />
             </div>
             <!-- コーディネート表示部分ここまで -->
         </div>
     </div>
     <ShowOutfitOverlay
-        v-if="openOverlay"
-        :outfit="currentOutfit"
+        v-if="overlayState.open"
+        :outfit="overlayState.currentOutfit"
         @delete-selected="deleteOutfit($event)"
-        @close-overlay="openOverlay = false"
+        @close-overlay="toggleOutfitOverlay(null)"
     />
     <SelectColor
         v-if="openModal"

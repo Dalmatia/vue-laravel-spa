@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFollowStore } from '../stores/follow';
+import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import WeatherForecast from '../Components/WeatherForecast.vue';
@@ -10,13 +11,11 @@ import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';
 import unFollow from 'vue-material-design-icons/AccountCheckOutline.vue';
 
 let wWidth = ref(window.innerWidth);
-let currentOutfit = ref(null);
-let openOverlay = ref(false);
-
 const outfits = ref([]);
 const authStore = useAuthStore();
 const user = computed(() => (authStore.user ? authStore.user.id : null));
 const followStore = useFollowStore();
+const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 
 const resizeHandler = () => {
     wWidth.value = window.innerWidth;
@@ -34,35 +33,6 @@ const fetchOutfits = async () => {
     } catch (error) {
         console.error('コーディネート一覧の取得に失敗しました。', error);
     }
-};
-
-// コーディネートの削除
-const deleteOutfit = (object) => {
-    let url = '';
-    if (object.deleteType === 'Outfit') {
-        url = `/api/outfit/` + object.id;
-        axios
-            .delete(url)
-            .then((response) => {
-                console.log(response);
-                openOverlay.value = false;
-                fetchOutfits();
-                window.dispatchEvent(
-                    new CustomEvent('outfit-deleted', {
-                        detail: { id: object.id },
-                    })
-                );
-            })
-            .catch((error) => {
-                console.error(error);
-                alert('コーディネートの削除に失敗しました。');
-            });
-    }
-};
-
-const openOutfitOverlay = (outfit) => {
-    currentOutfit.value = outfit;
-    openOverlay.value = true;
 };
 
 const followUser = async (userId) => {
@@ -89,12 +59,14 @@ onMounted(() => {
     fetchOutfits();
     window.addEventListener('outfit-created', fetchOutfits);
     window.addEventListener('outfit-updated', fetchOutfits);
+    window.addEventListener('outfit-deleted', fetchOutfits);
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', resizeHandler);
     window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
+    window.removeEventListener('outfit-deleted', fetchOutfits);
 });
 </script>
 
@@ -109,7 +81,7 @@ onUnmounted(() => {
                 v-for="outfit in outfits"
                 :key="outfit.id"
             >
-                <a @click="openOutfitOverlay(outfit)">
+                <a @click="toggleOutfitOverlay(outfit)">
                     <img
                         class="block h-[193px] w-[177px] md:h-[300px] md:w-full"
                         :src="outfit.file"
@@ -164,9 +136,9 @@ onUnmounted(() => {
     </div>
 
     <ShowOutfitOverlay
-        v-if="openOverlay"
-        :outfit="currentOutfit"
+        v-if="overlayState.open"
+        :outfit="overlayState.currentOutfit"
         @delete-selected="deleteOutfit($event)"
-        @close-overlay="openOverlay = false"
+        @close-overlay="toggleOutfitOverlay(null)"
     />
 </template>

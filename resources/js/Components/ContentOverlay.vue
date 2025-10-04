@@ -1,13 +1,13 @@
 <script setup>
 import { ref, watch } from 'vue';
+import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 
 import ShowOutfitOverlay from './Outfit/ShowOutfitOverlay.vue';
 
 import Heart from 'vue-material-design-icons/Heart.vue';
 import Comment from 'vue-material-design-icons/Comment.vue';
 
-let currentOutfit = ref(null);
-let openOverlay = ref(false);
+const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 const props = defineProps({
     outfits: {
         type: Array,
@@ -19,30 +19,6 @@ const props = defineProps({
     },
 });
 const isHover = ref([]);
-
-const openOutfitOverlay = (outfit) => {
-    currentOutfit.value = outfit;
-    openOverlay.value = true;
-    return currentOutfit.value;
-};
-
-// コーディネートの削除
-const deleteOutfit = (object) => {
-    let url = '';
-    if (object.deleteType === 'Outfit') {
-        url = `/api/outfit/` + object.id;
-        axios
-            .delete(url)
-            .then((response) => {
-                console.log(response);
-                openOverlay.value = false;
-                window.dispatchEvent(new Event('outfit-deleted'));
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }
-};
 
 watch(
     props.outfits,
@@ -59,7 +35,7 @@ watch(
             class="flex items-center justify-center cursor-pointer relative"
             v-for="(outfit, index) in props.outfits"
             :key="outfit.id"
-            @click="openOutfitOverlay(outfit)"
+            @click="toggleOutfitOverlay(outfit)"
             @mouseenter="isHover[index] = true"
             @mouseleave="isHover[index] = false"
         >
@@ -92,9 +68,9 @@ watch(
         </div>
     </div>
     <ShowOutfitOverlay
-        v-if="openOverlay"
-        :outfit="currentOutfit"
+        v-if="overlayState.open"
+        :outfit="overlayState.currentOutfit"
         @delete-selected="deleteOutfit($event)"
-        @close-overlay="openOverlay = false"
+        @close-overlay="toggleOutfitOverlay(null)"
     />
 </template>

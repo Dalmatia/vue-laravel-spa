@@ -3,6 +3,7 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import dayjs from 'dayjs';
 
 import { useAuthStore } from '../../stores/auth';
+import { useOutfitOverlay } from '../../src/composables/useOutfitOverlay';
 import { useCalendar } from '../../src/composables/useCalendar';
 import CalendarHeader from './CalendarHeader.vue';
 import CalendarDayCell from './CalendarDayCell.vue';
@@ -11,9 +12,8 @@ import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import YearMonthPicker from './YearMonthPicker.vue';
 import CreateOutfitOverlay from '@/Components/Outfit/Create/CreateOutfitOverlay.vue';
 
-let currentOutfit = ref(null);
-let openOverlay = ref(false);
 const authStore = useAuthStore();
+const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 const outfits = ref([]);
 const outfitImgMap = ref(new Map());
 const showMonthPicker = ref(false);
@@ -36,9 +36,12 @@ const {
     currentMonth,
     selectDay,
 } = useCalendar(outfitImgMap);
+const loading = ref(false);
 
 // ユーザーが投稿したコーディネートの取得
 const fetchOutfits = async () => {
+    if (loading.value) return;
+    loading.value = true;
     try {
         await authStore.fetchUserData();
         const response = await axios.get(`/api/users/${authStore.user.id}`);
@@ -48,16 +51,19 @@ const fetchOutfits = async () => {
         );
     } catch (error) {
         console.error(error);
+    } finally {
+        loading.value = false;
     }
 };
 
-// コーディネートの詳細ページのオーバーレイを開く関数
+// 日付をクリックした際、その日に紐づくコーディネートを開く
 const openOutfitOverlay = (date) => {
     currentDate.value = dayjs(date);
     viewMode.value = 'week';
     const outfit = outfits.value.find((outfit) => outfit.outfit_date === date);
-    currentOutfit.value = outfit;
-    openOverlay.value = true;
+    if (outfit) {
+        toggleOutfitOverlay(outfit);
+    }
 };
 
 const selectedOutfit = computed(() => {
@@ -67,34 +73,17 @@ const selectedOutfit = computed(() => {
     );
 });
 
-// コーディネートの削除
-const deleteOutfit = (object) => {
-    let url = '';
-    if (object.deleteType === 'Outfit') {
-        url = `/api/outfit/` + object.id;
-        axios
-            .delete(url)
-            .then((response) => {
-                console.log(response);
-                openOverlay.value = false;
-                fetchOutfits();
-                window.dispatchEvent(new Event('outfit-deleted'));
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-    }
-};
-
 onMounted(() => {
     fetchOutfits();
     window.addEventListener('outfit-created', fetchOutfits);
     window.addEventListener('outfit-updated', fetchOutfits);
+    window.addEventListener('outfit-deleted', fetchOutfits);
 });
 
 onUnmounted(() => {
     window.removeEventListener('outfit-created', fetchOutfits);
     window.removeEventListener('outfit-updated', fetchOutfits);
+    window.removeEventListener('outfit-deleted', fetchOutfits);
 });
 </script>
 
@@ -181,10 +170,10 @@ onUnmounted(() => {
     </div>
     <!-- コーディネートの詳細ページ -->
     <ShowOutfitOverlay
-        v-if="openOverlay"
-        :outfit="currentOutfit"
+        v-if="overlayState.open"
+        :outfit="overlayState.currentOutfit"
         @delete-selected="deleteOutfit($event)"
-        @close-overlay="openOverlay = false"
+        @close-overlay="toggleOutfitOverlay(null)"
     />
     <!-- コーディネートの投稿オーバーレイ -->
     <CreateOutfitOverlay
