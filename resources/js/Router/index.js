@@ -4,7 +4,7 @@ import { computed } from 'vue';
 
 const Home = () => import('../Pages/Home.vue');
 const Login = () => import('../Pages/Auth/Login.vue');
-const Register = () => import('../Pages/Auth/Register.vue');
+const Register = () => import('../Pages/Auth/RegisterPage/RegisterForm.vue');
 const User = () => import('../Pages/User.vue');
 const EditProfile = () => import('../Pages/ProfilePage/EditProfile.vue');
 const ContentOverlay = () => import('@/Components/ContentOverlay.vue');
