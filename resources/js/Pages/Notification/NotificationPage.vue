@@ -5,7 +5,6 @@ import { debounce } from 'lodash';
 
 import { useNotification } from '../../src/composables/useNotification';
 import { useNotificationActions } from '../../src/composables/useNotificationActions';
-import { useOutfitOverlay } from '../../src/composables/useOutfitOverlay';
 
 import NotificationList from './NotificationList.vue';
 import NotificationOptions from './NotificationOptions.vue';
@@ -15,7 +14,6 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close-notice']);
-const props = defineProps(['user']);
 const router = useRouter();
 
 // --- Composables ---
@@ -28,8 +26,10 @@ const {
     showDeleteModal,
     confirmDelete,
     openOutfitDetails,
+    overlayState,
+    toggleOutfitOverlay,
+    deleteOutfit,
 } = useNotificationActions(notifications);
-const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 
 // --- Local State ---
 const state = reactive({
@@ -131,7 +131,7 @@ onUnmounted(() => {
         <!-- デスクトップレイアウト -->
         <div
             v-else
-            class="absolute top-0 left-[80px] xl:left-64 z-0 w-full md:w-[397px] h-full bg-slate-100 shadow-md rounded-r-2xl border-r transition-transform duration-300 overflow-auto hidden-scrollbar"
+            class="absolute top-0 left-[80px] xl:left-64 z-10 w-full md:w-[397px] h-full bg-slate-100 shadow-md rounded-r-2xl border-r transition-transform duration-300 overflow-auto hidden-scrollbar"
         >
             <div
                 class="flex items-center justify-between px-6 py-4 border-b bg-white"

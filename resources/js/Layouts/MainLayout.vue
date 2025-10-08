@@ -102,28 +102,17 @@ onUnmounted(() => {
         v-if="showCreatePost"
         @close="showCreatePost = false"
     />
-    <Transition name="slide" @click.self="noticeOpen = false">
+    <Transition
+        enter-active-class="transition-transform duration-300 ease-out"
+        enter-from-class="-translate-x-full"
+        enter-to-class="translate-x-0"
+        leave-active-class="transition-transform duration-300 ease-in"
+        leave-from-class="translate-x-0"
+        leave-to-class="-translate-x-full"
+        @click.self="noticeOpen = false"
+    >
         <div v-if="authStore.user && noticeOpen" class="fixed inset-0">
             <Notifications @close-notice="noticeOpen = false" />
         </div>
     </Transition>
 </template>
-
-<style scoped>
-.slide-enter-active,
-.slide-leave-active {
-    transition: transform 0.3s ease;
-}
-.slide-enter-from {
-    transform: translateX(-100%);
-}
-.slide-enter-to {
-    transform: translateX(0);
-}
-.slide-leave-from {
-    transform: translateX(0);
-}
-.slide-leave-to {
-    transform: translateX(-100%);
-}
-</style>

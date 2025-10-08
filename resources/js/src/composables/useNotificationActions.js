@@ -2,18 +2,17 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useOutfitOverlay } from './useOutfitOverlay';
 
-export const errorMessage = ref('');
-
 export function useNotificationActions(notifications) {
-    const { openOutfitById } = useOutfitOverlay();
+    const {
+        openOutfitById,
+        overlayState,
+        toggleOutfitOverlay,
+        deleteOutfit,
+        errorMessage,
+        showError,
+    } = useOutfitOverlay();
     const selectedNotification = ref(null);
     const openModal = ref(false);
-
-    // エラーメッセージを表示する
-    const showError = (msg) => {
-        errorMessage.value = msg;
-        setTimeout(() => (errorMessage.value = ''), 3000);
-    };
 
     // 通知削除モーダルを表示
     const showDeleteModal = (id) => {
@@ -40,6 +39,7 @@ export function useNotificationActions(notifications) {
         openModal.value = false;
     };
 
+    // 通知からオーバーレイを開く
     const openOutfitDetails = async (outfitId, showComments = false) => {
         try {
             await openOutfitById(outfitId, showComments);
@@ -56,6 +56,9 @@ export function useNotificationActions(notifications) {
         deleteNotification,
         confirmDelete,
         openOutfitDetails,
+        overlayState,
+        toggleOutfitOverlay,
+        deleteOutfit,
         showError,
     };
 }

@@ -1,21 +1,20 @@
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
 import axios from 'axios';
 
-export const overlayState = ref({
-    open: false,
-    currentOutfit: null,
-    commentOverlay: false,
-});
-export const errorMessage = ref('');
-
 export function useOutfitOverlay() {
+    const overlayState = reactive({
+        open: false,
+        currentOutfit: null,
+        commentOverlay: false,
+    });
+
+    const errorMessage = ref('');
+
     // 投稿の詳細・コメントページを表示
     const toggleOutfitOverlay = (outfit = null, showComments = false) => {
-        overlayState.value = {
-            open: !!outfit,
-            currentOutfit: outfit,
-            commentOverlay: showComments,
-        };
+        overlayState.open = !!outfit;
+        overlayState.currentOutfit = outfit;
+        overlayState.commentOverlay = showComments;
         window.dispatchEvent(
             new Event(outfit ? 'modal-opened' : 'modal-closed')
         );
@@ -25,7 +24,7 @@ export function useOutfitOverlay() {
         try {
             const res = await axios.get(`/api/outfit/${id}`);
             toggleOutfitOverlay(res.data.outfit, showComments);
-        } catch {
+        } catch (e) {
             showError('投稿取得に失敗しました');
         }
     };
@@ -38,7 +37,7 @@ export function useOutfitOverlay() {
         }
         try {
             await axios.delete(`/api/outfit/${object.id}`);
-            overlayState.value.open = false;
+            toggleOutfitOverlay(); // 閉じる
             window.dispatchEvent(
                 new CustomEvent('outfit-deleted', { detail: { id: object.id } })
             );
@@ -49,10 +48,17 @@ export function useOutfitOverlay() {
         }
     };
 
+    const showError = (msg) => {
+        errorMessage.value = msg;
+        setTimeout(() => (errorMessage.value = ''), 3000);
+    };
+
     return {
         overlayState,
         toggleOutfitOverlay,
         openOutfitById,
         deleteOutfit,
+        errorMessage,
+        showError,
     };
 }
