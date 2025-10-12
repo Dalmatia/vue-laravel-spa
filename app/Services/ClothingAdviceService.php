@@ -7,6 +7,7 @@ use App\Domain\ClothingAdvice\AiClient;
 use App\Domain\ClothingAdvice\ItemMatcher;
 use App\Domain\ClothingAdvice\AdviceCache;
 use App\Enums\MainCategory;
+use App\Models\User;
 use Carbon\Carbon;
 
 class ClothingAdviceService
@@ -18,16 +19,17 @@ class ClothingAdviceService
     private AdviceCache $adviceCache
   ) {}
 
-  public function suggestClothing(array $weatherData, int $userId, ?string $targetDate = null): array
+  public function suggestClothing(array $weatherData, int $userId, ?string $targetDate = null, ?string $tpo = null): array
   {
     $date = $targetDate ?? Carbon::today()->toDateString();
-    $cached = $this->adviceCache->get($userId, $date);
+    $cached = $this->adviceCache->get($userId, $date . "_{$tpo}");
     // すでにキャッシュされていれば返す
     if ($cached) {
       return $cached;
     }
 
-    $text          = $this->generateAdvice($weatherData);
+    $user = User::find($userId);
+    $text = $this->generateAdvice($weatherData, $user, $tpo);
     $excludeConfig = $this->buildExclusionConfig($userId);
 
     $matchedItems = $this->itemMatcher->matchItems(
@@ -44,14 +46,14 @@ class ClothingAdviceService
       'outfit_suggestion' => $matchedItems,
     ];
 
-    $this->storeResult($userId, $date, $result, $matchedItems);
+    $this->storeResult($userId, $date . "_{$tpo}", $result, $matchedItems);
 
     return $result;
   }
 
-  private function generateAdvice(array $weatherData): string
+  private function generateAdvice(array $weatherData, User $user, ?string $tpo = null): string
   {
-    $prompt = $this->promptBuilder->build($weatherData);
+    $prompt = $this->promptBuilder->build($weatherData, $user, $tpo);
     return $this->aiClient->getClothingAdvice($prompt);
   }
 
@@ -88,9 +90,9 @@ class ClothingAdviceService
   /**
    * キャッシュ & 使用アイテムを保存
    */
-  private function storeResult(int $userId, string $date, array $result, array $matchedItems): void
+  private function storeResult(int $userId, string $date, array $result, array $matchedItems, ?string $tpo = null): void
   {
-    $this->adviceCache->put($userId, $date, $result);
+    $this->adviceCache->put($userId, $date, $result, $tpo);
 
     $usedItemIds = array_filter(
       array_map(fn($d) => $d['item']['id'] ?? null, $matchedItems)

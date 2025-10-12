@@ -21,7 +21,7 @@ class WeatherFormatter
     $weatherIcon = WeatherCode::weatherIcon($weatherCode);
 
     return [
-      'date' => date('n/j', strtotime($data['daily']['time'][$index])),
+      'date' => date('Y-m-d', strtotime($data['daily']['time'][$index])),
       'description' => $weatherDescribe,
       'weather_icon' => $weatherIcon,
       'max_temp' => isset($data['daily']['temperature_2m_max'][$index]) ? round($data['daily']['temperature_2m_max'][$index]) : '不明',

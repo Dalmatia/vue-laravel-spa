@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClothingAdviceController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EnumController;
 use App\Http\Controllers\FollowController;
@@ -90,5 +91,6 @@ Route::get('/region/{regionId}/prefectures', [RegionController::class, 'getPrefs
 Route::get('/prefecture/{prefId}/cities', [RegionController::class, 'getCities']); // 市町村区
 Route::post('/save_selected_location', [RegionController::class, 'saveSelectedLocation']); // 選択した地域、都道府県、市区町村を保存
 Route::get('/get_saved_location', [RegionController::class, 'getSavedLocation']); // 保存した地域、都道府県、市区町村を取得
-Route::get('/weather', [WeatherAPIController::class, 'fetchWeatherWithAdvice']);
+Route::get('/weather', [WeatherAPIController::class, 'fetchWeather']);
+Route::post('/clothing_advice', [ClothingAdviceController::class, 'generateAdvice']);
 Route::get('/suggestion_users', [HomeController::class, 'suggestionUsers'])->name('home.suggestion_users');
