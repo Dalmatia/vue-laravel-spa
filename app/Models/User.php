@@ -59,6 +59,14 @@ class User extends Authenticatable
         return Carbon::parse($this->birthdate)->age;
     }
 
+    public function getProfileHashAttribute()
+    {
+        return hash('sha256', json_encode([
+            'gender' => $this->gender,
+            'age' => $this->age,
+        ]));
+    }
+
     public function items()
     {
         return $this->hasMany(Item::class);

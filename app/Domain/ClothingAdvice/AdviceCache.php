@@ -6,29 +6,42 @@ use Illuminate\Support\Facades\Cache;
 
 class AdviceCache
 {
-  public function get(string $userId, string $date, ?string $tpo = null): ?array
+  public function get(string $userId, string $date, ?string $tpo = null, ?string $cityId = null, ?string $profileHash = null): ?array
   {
-    return Cache::get($this->buildKey($userId, $date, $tpo));
+    return Cache::get($this->buildKey($userId, $date, $tpo, $cityId, $profileHash));
   }
 
-  public function put(string $userId, string $date, array $data, ?string $tpo = null): void
+  public function put(string $userId, string $date, array $data, ?string $tpo = null, ?string $cityId = null, ?string $profileHash = null): void
   {
-    Cache::put($this->buildKey($userId, $date, $tpo), $data, now()->endOfDay());
+    Cache::put($this->buildKey($userId, $date, $tpo, $cityId, $profileHash), $data, now()->endOfDay());
   }
 
-  public function getUsedItems(string $userId, string $date): array
+  public function getUsedItems(string $userId, string $date, ?string $cityId = null): array
   {
-    return Cache::get("clothing_advice_items_{$userId}_{$date}", []);
+    return Cache::get($this->buildUsedItemsKey($userId, $date, $cityId), []);
   }
 
-  public function putUsedItems(string $userId, string $date, array $itemIds): void
+  public function putUsedItems(string $userId, string $date, array $itemIds, ?string $cityId = null): void
   {
-    Cache::put("clothing_advice_items_{$userId}_{$date}", $itemIds, now()->endOfDay());
+    Cache::put($this->buildUsedItemsKey($userId, $date, $cityId), $itemIds, now()->endOfDay());
   }
 
-  private function buildKey(string $userId, string $date, ?string $tpo = null): string
+  private function buildKey(string $userId, string $date, ?string $tpo = null, $cityId = null, ?string $profileHash = null): string
   {
-    $suffix = $tpo ? "_{$tpo}" : '';
-    return "clothing_advice_{$userId}_{$date}{$suffix}";
+    $parts = [
+      'clothing_advice',
+      $userId,
+      $date,
+    ];
+
+    if ($cityId) $parts[] = "city_{$cityId}";
+    if ($tpo) $parts[] = "tpo_{$tpo}";
+    if ($profileHash) $parts[] = "hash_" . substr($profileHash, 0, 10);
+    return implode('_', $parts);
+  }
+
+  private function buildUsedItemsKey(string $userId, string $date, ?string $cityId = null): string
+  {
+    return "clothing_advice_items_{$userId}_{$date}" . ($cityId ? "_city_{$cityId}" : '');
   }
 }

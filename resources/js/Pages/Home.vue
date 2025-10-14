@@ -5,7 +5,7 @@ import { useFollowStore } from '../stores/follow';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
-import WeatherForecast from '../Components/WeatherForecast.vue';
+import WeatherForecast from './WeatherForecast.vue';
 
 import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';
 import unFollow from 'vue-material-design-icons/AccountCheckOutline.vue';

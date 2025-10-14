@@ -23,6 +23,7 @@ class ClothingAdviceController extends Controller
             'weatherData' => 'required|array',
             'tpo' => 'nullable|string',
             'targetDate' => 'nullable|date',
+            'cityId' => 'nullable|integer',
         ]);
 
         $userId = Auth::id();
@@ -32,7 +33,8 @@ class ClothingAdviceController extends Controller
                 $validated['weatherData'],
                 $userId,
                 $validated['targetDate'] ?? now()->toDateString(),
-                $validated['tpo'] ?? null
+                $validated['tpo'] ?? null,
+                $validated['cityId'] ?? null
             );
 
             return response()->json($advice);
@@ -40,6 +42,7 @@ class ClothingAdviceController extends Controller
             Log::error('服装アドバイス生成エラー: ' . $e->getMessage(), [
                 'user_id' => $userId,
                 'tpo' => $validated['tpo'] ?? null,
+                'city_id' => $validated['cityId'] ?? null,
             ]);
 
             return response()->json([

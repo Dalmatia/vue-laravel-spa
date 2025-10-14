@@ -19,18 +19,21 @@ class ClothingAdviceService
     private AdviceCache $adviceCache
   ) {}
 
-  public function suggestClothing(array $weatherData, int $userId, ?string $targetDate = null, ?string $tpo = null): array
+  public function suggestClothing(array $weatherData, int $userId, ?string $targetDate = null, ?string $tpo = null, ?string $cityId = null): array
   {
     $date = $targetDate ?? Carbon::today()->toDateString();
-    $cached = $this->adviceCache->get($userId, $date . "_{$tpo}");
+
+    $user = User::findOrFail($userId);
+    $profileHash = $user->profile_hash;
+
+    $cached = $this->adviceCache->get($userId, $date, $tpo, $cityId, $profileHash);
     // すでにキャッシュされていれば返す
     if ($cached) {
       return $cached;
     }
 
-    $user = User::find($userId);
     $text = $this->generateAdvice($weatherData, $user, $tpo);
-    $excludeConfig = $this->buildExclusionConfig($userId);
+    $excludeConfig = $this->buildExclusionConfig($userId, $cityId);
 
     $matchedItems = $this->itemMatcher->matchItems(
       $text,
@@ -46,7 +49,7 @@ class ClothingAdviceService
       'outfit_suggestion' => $matchedItems,
     ];
 
-    $this->storeResult($userId, $date . "_{$tpo}", $result, $matchedItems);
+    $this->storeResult($userId, $date, $result, $matchedItems, $tpo, $cityId, $profileHash);
 
     return $result;
   }
@@ -60,11 +63,11 @@ class ClothingAdviceService
   /**
    * 前日着用アイテムの除外条件を構築
    */
-  private function buildExclusionConfig(int $userId): array
+  private function buildExclusionConfig(int $userId, ?string $cityId = null): array
   {
     $yesterdayKey = Carbon::yesterday()->toDateString();
 
-    $excludeItemIds = $this->adviceCache->getUsedItems($userId, $yesterdayKey);
+    $excludeItemIds = $this->adviceCache->getUsedItems($userId, $yesterdayKey, $cityId);
     $alreadyUsedColors = [
       MainCategory::outer => [],
       MainCategory::tops => [],
@@ -72,7 +75,7 @@ class ClothingAdviceService
       MainCategory::shoes => [],
     ];
 
-    $yesterday = $this->adviceCache->get($userId, $yesterdayKey);
+    $yesterday = $this->adviceCache->get($userId, $yesterdayKey, null, $cityId);
     if ($yesterday && isset($yesterday['outfit_suggestion'])) {
       foreach ($yesterday['outfit_suggestion'] as $cat => $data) {
         if (!empty($data['item']['color'])) {
@@ -90,14 +93,14 @@ class ClothingAdviceService
   /**
    * キャッシュ & 使用アイテムを保存
    */
-  private function storeResult(int $userId, string $date, array $result, array $matchedItems, ?string $tpo = null): void
+  private function storeResult(int $userId, string $date, array $result, array $matchedItems, ?string $tpo = null, ?string $cityId = null, ?string $profileHash = null): void
   {
-    $this->adviceCache->put($userId, $date, $result, $tpo);
+    $this->adviceCache->put($userId, $date, $result, $tpo, $cityId, $profileHash);
 
     $usedItemIds = array_filter(
       array_map(fn($d) => $d['item']['id'] ?? null, $matchedItems)
     );
 
-    $this->adviceCache->putUsedItems($userId, $date, $usedItemIds);
+    $this->adviceCache->putUsedItems($userId, $date, $usedItemIds, $cityId);
   }
 }

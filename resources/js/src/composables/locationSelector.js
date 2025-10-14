@@ -129,7 +129,10 @@ export function useLocationSelector(emit) {
             emit('city-saved', {
                 region: selectedRegion.value.id,
                 prefecture: selectedPrefecture.value.id,
-                city: selectedCity.value,
+                city_id: selectedCity.value.id,
+                name: selectedCity.value.name,
+                latitude: selectedCity.value.latitude,
+                longitude: selectedCity.value.longitude,
             });
         } catch (error) {
             errorMessage.value = '地域情報の保存に失敗しました。';
