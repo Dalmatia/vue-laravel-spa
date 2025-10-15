@@ -39,7 +39,8 @@ class ClothingAdviceService
       $text,
       $userId,
       $excludeConfig['colors'],
-      $excludeConfig['ids']
+      $excludeConfig['ids'],
+      $tpo
     );
 
     // キャッシュに保存（期限は1日）

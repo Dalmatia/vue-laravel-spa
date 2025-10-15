@@ -86,6 +86,26 @@ final class Color extends Enum
         self::other => '#d4d4d4',
     ];
 
+    // 柄系判定メソッド
+    public static function isPattern(int $colorId): bool
+    {
+        return in_array($colorId, [self::border, self::patterned], true);
+    }
+
+    public static function isAccentColor(int $colorId): bool
+    {
+        $accentColors = [
+            self::red,
+            self::yellow,
+            self::orange,
+            self::pink,
+            self::neon,
+            self::purple,
+            self::gold,
+        ];
+
+        return in_array($colorId, $accentColors, true);
+    }
 
     public static function getDescription($value): string
     {
