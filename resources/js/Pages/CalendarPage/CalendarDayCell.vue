@@ -1,7 +1,8 @@
 <script setup>
+import { computed } from 'vue';
 import dayjs from 'dayjs';
 
-defineProps({
+const props = defineProps({
     day: {
         type: Object,
         required: true,
@@ -18,6 +19,9 @@ defineProps({
 });
 
 const emit = defineEmits(['select']);
+const isToday = computed(() =>
+    dayjs().isSame(dayjs(props.day.fullDate), 'day')
+);
 </script>
 
 <template>
@@ -26,14 +30,42 @@ const emit = defineEmits(['select']);
         :class="[
             // 月表示: 当月以外をグレー
             { 'bg-gray-200': !isWeekMode && currentMonth !== day.month },
-            // 日曜 → 赤
-            { 'text-red-500': dayjs(day.fullDate).day() === 0 },
-            // 土曜 → 青
-            { 'text-blue-500': dayjs(day.fullDate).day() === 6 },
         ]"
         @click="emit('select', day.fullDate)"
     >
-        {{ day.day }}
+        <span class="relative inline-flex items-center justify-center w-full">
+            <!-- 今日マーク（丸背景） -->
+            <span
+                v-if="isToday"
+                class="absolute rounded-full bg-gray-300 h-6 w-6 md:h-8 md:w-8"
+            ></span>
+
+            <!-- 日付 -->
+            <span
+                class="z-10 font-medium"
+                :class="[
+                    // 今日が日曜の場合
+                    isToday && dayjs(day.fullDate).day() === 0
+                        ? 'text-red-500'
+                        : // 今日が土曜の場合
+                        isToday && dayjs(day.fullDate).day() === 6
+                        ? 'text-blue-500'
+                        : // 今日（平日）
+                        isToday
+                        ? 'text-gray-900'
+                        : // 今日以外 → 通常の曜日色
+                        dayjs(day.fullDate).day() === 0
+                        ? 'text-red-500'
+                        : dayjs(day.fullDate).day() === 6
+                        ? 'text-blue-500'
+                        : 'text-gray-900',
+                ]"
+            >
+                {{ day.day }}
+            </span>
+        </span>
+
+        <!-- コーディネート画像 -->
         <a v-if="day.outfit" role="button" tabindex="0">
             <img
                 class="w-20 h-24 my-auto mx-auto"
