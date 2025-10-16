@@ -3,7 +3,7 @@ import Upload from 'vue-material-design-icons/Upload.vue';
 
 const props = defineProps({
     fileDisplay: {
-        type: String,
+        type: [String, File, null],
         default: null,
     },
     userFile: {
@@ -28,15 +28,17 @@ const emit = defineEmits(['change']);
         </div>
 
         <!-- 編集ボタン（画像アップロード用） -->
-        <input
-            type="file"
-            class="absolute bottom-2 right-2 opacity-0 w-full h-full cursor-pointer"
-            @change="emit('change', $event)"
-        />
         <button
-            class="absolute bottom-2 right-2 bg-white border border-gray-300 rounded-full p-2 shadow hover:shadow-lg"
+            type="button"
+            class="absolute bottom-2 right-2 bg-white border border-gray-300 rounded-full p-2 shadow hover:shadow-lg pointer-events-none"
         >
             <Upload fill="none" class="h-6 w-6 text-gray-700" />
         </button>
+
+        <input
+            type="file"
+            class="absolute inset-0 opacity-0 cursor-pointer"
+            @change="emit('change', $event)"
+        />
     </div>
 </template>

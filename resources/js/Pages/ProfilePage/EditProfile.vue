@@ -24,7 +24,7 @@ const {
     <main class="max-w-[880px] lg:ml-0 md:pl-20 px-4 w-[100vw] md:w-[84.5vw]">
         <!-- ヘッダー部分(モバイル用) -->
         <div
-            class="fixed top-0 left-0 w-full bg-white border-b border-gray-300 flex items-center justify-between h-[53px] px-4 md:hidden"
+            class="fixed top-0 left-0 w-full bg-white border-b border-gray-300 flex items-center justify-between h-[53px] px-4 md:hidden z-10"
         >
             <!-- 戻るボタン -->
             <button
