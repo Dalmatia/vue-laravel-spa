@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { getEnumStore } from '../stores/enum';
+import { useCategoryData } from '../src/composables/useCategoryData';
 
 import ShowItemOverlay from '../Components/Items/ShowItemOverlay.vue';
 
@@ -16,9 +16,17 @@ let openOverlay = ref(false);
 const emit = defineEmits(['close']);
 const authStore = useAuthStore();
 const route = useRoute();
+const {
+    subCategoriesMap,
+    fetchSubCategories,
+    getMainCategoryName,
+    getSubCategoryName,
+    initEnums,
+} = useCategoryData();
+
 const items = ref([]);
-const mainCategoryName = ref('');
-const getCategoryName = getEnumStore();
+const mainCategoryId = ref(null);
+const subCategories = ref([]);
 
 // カテゴリごとのアイテムを格納するためのデータ構造
 const categorizedItems = reactive({});
@@ -76,11 +84,15 @@ const deleteItem = (object) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     // ページ遷移時にパラメータを取得
     const routeParams = route.params;
+    await initEnums();
     if (routeParams.mainCategory) {
-        mainCategoryName.value = routeParams.mainCategory;
+        mainCategoryId.value = parseInt(routeParams.mainCategory);
+        await fetchSubCategories(mainCategoryId.value);
+        subCategories.value =
+            subCategoriesMap.value[mainCategoryId.value] || [];
     }
 
     fetchItems();
@@ -144,11 +156,7 @@ onUnmounted(() => {
                     class="pt-[9px] pr-[12px] pb-0 pl-[12px] relative z-[2]"
                 >
                     <h1 id="title" class="text-xl font-bold leading-[1.2]">
-                        {{
-                            getCategoryName.getMainCategoryName(
-                                mainCategoryName
-                            )
-                        }}
+                        {{ getMainCategoryName(mainCategoryId) }}
                     </h1>
                     <div
                         id="itemCount"
@@ -164,9 +172,7 @@ onUnmounted(() => {
                             />
                         </p>
                         <p class="text-xs font-bold leading-[1.2] mb-4">
-                            {{
-                                categorizedItems[mainCategoryName]?.length || 0
-                            }}
+                            {{ categorizedItems[mainCategoryId]?.length || 0 }}
                         </p>
                     </div>
                 </div>
@@ -179,8 +185,8 @@ onUnmounted(() => {
                     >
                         <div
                             class="pt-0 pr-[6px] pb-[5px] pl-[6px] w-full"
-                            v-for="item in categorizedItems[mainCategoryName]"
-                            :key="item.id + item.main_category"
+                            v-for="item in categorizedItems[mainCategoryId]"
+                            :key="item.id"
                         >
                             <!-- アイテム画像表示 -->
                             <div id="imgContainer" class="relative">
@@ -200,7 +206,8 @@ onUnmounted(() => {
                                     class="text-[10px] font-bold leading-[1.2] w-full whitespace-nowrap overflow-hidden text-ellipsis"
                                 >
                                     {{
-                                        getCategoryName.getSubCategoryName(
+                                        getSubCategoryName(
+                                            mainCategoryId,
                                             item.sub_category
                                         )
                                     }}

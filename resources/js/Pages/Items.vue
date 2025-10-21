@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
-import axios from 'axios';
-import { getEnumStore } from '../stores/enum';
 import { useRoute, useRouter } from 'vue-router';
+import { useCategoryData } from '../src/composables/useCategoryData';
 
 const router = useRouter();
 const route = useRoute();
@@ -11,7 +10,7 @@ const items = ref([]);
 
 // カテゴリごとにアイテムを分類するためのデータ構造
 const categorizedItems = reactive({});
-const getCategoryName = getEnumStore();
+const { getMainCategoryName, initEnums } = useCategoryData();
 
 // 登録アイテムの表示
 const fetchItems = async () => {
@@ -49,6 +48,7 @@ const navigateToCategory = (mainCategoryName) => {
 };
 
 onMounted(() => {
+    initEnums();
     fetchItems();
     window.addEventListener('item-registered', fetchItems);
     window.addEventListener('item-updated', fetchItems);
@@ -64,17 +64,17 @@ onUnmounted(() => {
     <div class="grid md:gap-4 gap-1 grid-cols-2 relative">
         <!-- カテゴリごとにアイテムを表示 -->
         <div
-            v-for="(mainCategoryItems, mainCategoryName) in categorizedItems"
-            :key="mainCategoryName"
+            v-for="(mainCategoryItems, mainCategoryId) in categorizedItems"
+            :key="mainCategoryId"
         >
             <h2 class="text-xs mb-1 font-semibold">
-                {{ getCategoryName.getMainCategoryName(mainCategoryName) }}
+                {{ getMainCategoryName(mainCategoryId) }}
             </h2>
             <!-- カテゴリー毎にフォルダー分け -->
             <div class="border border-gray-300 p-2 rounded-md mb-4">
                 <div
                     class="grid grid-cols-3 items-center justify-center cursor-pointer relative"
-                    @click="navigateToCategory(mainCategoryName)"
+                    @click="navigateToCategory(mainCategoryId)"
                 >
                     <div
                         v-for="item in mainCategoryItems.slice(0, 6)"

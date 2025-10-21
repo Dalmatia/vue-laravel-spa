@@ -11,42 +11,129 @@ use BenSampo\Enum\Enum;
  */
 final class SubCategory extends Enum
 {
+    // トップス
     const tShirt = 1;
-    const shirt = 2;
-    const poloShirt = 3;
-    const parka = 4;
-    const sweatshirt = 5;
-    const knit = 6;
-    const pants = 7;
-    const denimPants = 8;
-    const skirt = 9;
-    const jacket = 10;
-    const coat = 11;
-    const sneaker = 12;
-    const leather_shoes = 13;
-    const boots = 14;
-    const formal_suit = 15;
-    const other = 16;
+    const longSleeveTee = 2;
+    const shirt = 3;
+    const poloShirt = 4;
+    const parka = 5;
+    const sweatshirt = 6;
+    const knit = 7;
+    const cardigan = 8;
+    const vest = 9;
+    const blouse = 10;
+    const thermalShirt = 11;
+
+    // ボトムス
+    const pants = 12;
+    const denimPants = 13;
+    const slacks = 14;
+    const chinoPants = 15;
+    const cargoPants = 16;
+    const sweatPants = 17;
+    const widePants = 18;
+    const shorts = 19;
+    const skirt = 20;
+    const pleatedSkirt = 21;
+    const longSkirt = 22;
+
+    // アウター
+    const tailoredJacket = 23;
+    const blazer = 24;
+    const blouson = 25;
+    const coat = 26;
+    const trenchCoat = 27;
+    const downJacket = 28;
+    const windbreaker = 29;
+    const cardiganJacket = 30;
+    const vestOuter = 31;
+    const formal_suit = 32;
+
+    // シューズ
+    const sneaker = 33;
+    const leather_shoes = 34;
+    const boots = 35;
+    const loafers = 36;
+    const sandals = 37;
+    const runningShoes = 38;
+    const pumps = 39;
+    const heels = 40;
+    const slippers = 41;
+
+    // 小物・アクセサリー
+    const cap = 42;
+    const beanie = 43;
+    const scarf = 44;
+    const gloves = 45;
+    const necktie = 46;
+    const bag = 47;
+    const belt = 48;
+
+    // その他
+    const other = 49;
 
     protected static $labels = [
+        // トップス
         self::tShirt => 'Tシャツ',
+        self::longSleeveTee => 'ロンT',
         self::shirt => 'シャツ',
         self::poloShirt => 'ポロシャツ',
         self::parka => 'パーカー',
         self::sweatshirt => 'スウェット',
         self::knit => 'ニット',
+        self::cardigan => 'カーディガン',
+        self::vest => 'ベスト',
+        self::blouse => 'ブラウス',
+        self::thermalShirt => 'サーマルシャツ',
+
+        // ボトムス
         self::pants => 'パンツ',
         self::denimPants => 'デニムパンツ',
+        self::slacks => 'スラックス',
+        self::chinoPants => 'チノパン',
+        self::cargoPants => 'カーゴパンツ',
+        self::sweatPants => 'スウェットパンツ',
+        self::widePants => 'ワイドパンツ',
+        self::shorts => 'ショートパンツ',
         self::skirt => 'スカート',
-        self::jacket => 'ジャケット/ブルゾン',
+        self::pleatedSkirt => 'プリーツスカート',
+        self::longSkirt => 'ロングスカート',
+
+        // アウター
+        self::tailoredJacket => 'テーラードジャケット',
+        self::blouson => 'ブルゾン',
+        self::blazer => 'ブレザー',
         self::coat => 'コート',
+        self::trenchCoat => 'トレンチコート',
+        self::downJacket => 'ダウンジャケット',
+        self::windbreaker => 'ウィンドブレーカー',
+        self::cardiganJacket => 'カーディガンジャケット',
+        self::vestOuter => 'ダウンベスト',
+        self::formal_suit => 'フォーマルスーツ',
+
+        // シューズ
         self::sneaker => 'スニーカー',
         self::leather_shoes => '革靴',
         self::boots => 'ブーツ',
-        self::formal_suit => 'フォーマルスーツ',
+        self::loafers => 'ローファー',
+        self::sandals => 'サンダル',
+        self::runningShoes => 'ランニングシューズ',
+        self::pumps => 'パンプス',
+        self::heels => 'ヒール',
+        self::slippers => 'スリッパ',
+
+        // 小物・アクセサリー
+        self::cap => 'キャップ',
+        self::beanie => 'ニット帽',
+        self::scarf => 'マフラー',
+        self::gloves => '手袋',
+        self::necktie => 'ネクタイ',
+        self::bag => 'バッグ',
+        self::belt => 'ベルト',
+
+        // その他
         self::other => 'その他',
     ];
-
 
     public static function getDescription($value): string
     {
@@ -55,26 +142,8 @@ final class SubCategory extends Enum
 
     public static function getValue($key): ?int
     {
-        $keyValueMap = [
-            'Tシャツ' => self::tShirt,
-            'シャツ' => self::shirt,
-            'ポロシャツ' => self::poloShirt,
-            'パーカー' => self::parka,
-            'スウェット' => self::sweatshirt,
-            'ニット' => self::knit,
-            'パンツ' => self::pants,
-            'デニムパンツ' => self::denimPants,
-            'スカート' => self::skirt,
-            'ジャケット/ブルゾン' => self::jacket,
-            'コート' => self::coat,
-            'スニーカー' => self::sneaker,
-            '革靴' => self::leather_shoes,
-            'ブーツ' => self::boots,
-            'フォーマルスーツ' => self::formal_suit,
-            'その他' => self::other,
-        ];
-
-        return $keyValueMap[$key] ?? null;
+        $flipped = array_flip(static::$labels);
+        return $flipped[$key] ?? null;
     }
 
     public static function toSelectArray(): array

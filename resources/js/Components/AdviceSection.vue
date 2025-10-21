@@ -1,10 +1,9 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, onMounted } from 'vue';
+import { useCategoryData } from '../src/composables/useCategoryData';
 import PaletteOutline from 'vue-material-design-icons/PaletteOutline.vue';
-import { getEnumStore } from '@/stores/enum';
 
-const enumStore = getEnumStore();
-
+const { getMainCategoryName, initEnums } = useCategoryData();
 const props = defineProps({
     advice: { type: Object, default: null },
     selectedTpo: { type: String, required: true },
@@ -19,6 +18,10 @@ const tpoOptions = [
     { key: 'office', label: 'オフィス' },
     { key: 'outdoor', label: 'アウトドア' },
 ];
+
+onMounted(() => {
+    initEnums();
+});
 </script>
 
 <template>
@@ -96,7 +99,7 @@ const tpoOptions = [
                     class="flex flex-col items-center bg-gray-50 rounded-lg shadow-sm p-2"
                 >
                     <span class="font-semibold mb-1">
-                        {{ enumStore.getMainCategoryName(mainCategory) }}
+                        {{ getMainCategoryName(mainCategory) }}
                     </span>
                     <img
                         v-if="part?.item"
