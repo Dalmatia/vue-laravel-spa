@@ -57,27 +57,12 @@ onMounted(() => {
             v-if="isAdviceLoading"
             class="flex justify-center items-center py-10"
         >
-            <svg
-                class="animate-spin h-6 w-6 text-blue-400 mr-2"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-            >
-                <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                ></circle>
-                <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"
-                ></path>
-            </svg>
-            <span class="text-gray-500">服装アドバイスを生成中...</span>
+            <div class="flex justify-center items-center py-10">
+                <div
+                    class="h-6 w-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mr-2"
+                ></div>
+                <span class="text-gray-500">服装アドバイスを生成中...</span>
+            </div>
         </div>
 
         <p v-else-if="advice?.error" class="text-red-500 text-center py-10">
@@ -101,15 +86,26 @@ onMounted(() => {
                     <span class="font-semibold mb-1">
                         {{ getMainCategoryName(mainCategory) }}
                     </span>
-                    <img
-                        v-if="part?.item"
-                        :src="part.item.file"
-                        class="w-24 h-24 object-cover rounded mb-2"
-                    />
-                    <span v-if="part?.keyword" class="text-sm text-gray-700">
-                        {{ part.keyword }}
-                    </span>
-                    <div v-else class="text-red-500 text-sm">未登録</div>
+
+                    <template v-if="part?.item">
+                        <img
+                            :src="part.item.file"
+                            class="w-24 h-24 object-cover rounded mb-2"
+                        />
+                        <span v-if="part.keyword" class="text-sm text-gray-700">
+                            {{ part.keyword }}
+                        </span>
+                    </template>
+
+                    <template v-else>
+                        <div
+                            class="flex flex-col items-center justify-center h-32 w-full"
+                        >
+                            <span class="text-red-500 text-sm font-semibold">
+                                未登録
+                            </span>
+                        </div>
+                    </template>
                 </div>
             </div>
         </template>

@@ -2,17 +2,22 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Enums\Color;
 use App\Enums\Gender;
 use App\Models\User;
 
 class PromptBuilder
 {
-  public function build(array $weatherData, ?User $user = null, ?string $tpo = null): string
+  public function build(array $weatherData, ?User $user = null, ?string $tpo = null, ?array $matchedItems = []): string
   {
     $genderType = Gender::coerce($user?->gender);
     $genderText = $this->mapGenderToText($genderType);
     $ageText = $this->mapAgeToText($user?->age);
     $tpoText = $this->mapTpoToText($tpo);
+
+    // 柄・カラー構成分析
+    $combination = $this->analyzeItemCombination($matchedItems);
+    $styleSummary = $this->buildStyleSummary($combination, $tpo);
 
     // 取得した天気情報を元にプロンプトを作成
     return <<<PROMPT
@@ -33,11 +38,14 @@ class PromptBuilder
         - 平均湿度: {$weatherData['humidityAvg']}%
         - 平均風速: {$weatherData['windAvg']} m/s
 
+      【服装バランスのヒント】
+        {$styleSummary}
+
       【制約】
         - 出力は150文字以内
         - 性別・年齢・シーンに合ったファッション提案にすること
         - 柄×柄などのミスマッチを避ける
-        - 必ず以下の4カテゴリについて触れてください（それぞれTPOに合った内容にしてください）:
+        - 以下の4カテゴリに言及すること（必要に応じて省略可）:
         - 例：オフィスではテーラードジャケット・革靴、アウトドアではシェルジャケット・スニーカーなど
           1. トップス
           2. ボトムス
@@ -88,5 +96,59 @@ class PromptBuilder
       'outdoor'  => 'アウトドア',
       default    => '特に指定なし',
     };
+  }
+
+  private function analyzeItemCombination(array $matchedItems): array
+  {
+    $patterns = 0;
+    $accents = 0;
+    $neutrals = 0;
+
+    foreach ($matchedItems as $matched) {
+      if (!isset($matched['item'])) continue;
+      $color = $matched['item']->color;
+
+      if (Color::isPattern($color)) $patterns++;
+      if (Color::isAccentColor($color)) $accents++;
+      if (Color::isNeutralColor($color)) $neutrals++;
+    }
+
+    return [
+      'patterns' => $patterns,
+      'accents' => $accents,
+      'neutrals' => $neutrals,
+    ];
+  }
+
+  private function buildStyleSummary(array $combination, ?string $tpo): string
+  {
+    $patterns = $combination['patterns'];
+    $accents = $combination['accents'];
+    $neutrals = $combination['neutrals'];
+
+    $styleHints = [];
+
+    // 柄
+    if ($patterns > 1) {
+      $styleHints[] = "柄物が複数あるため、全体のバランスに注意してください。";
+    } elseif ($patterns === 1) {
+      $styleHints[] = "柄物は1点に絞り、他はシンプルにまとめるのがおすすめです。";
+    }
+
+    // アクセントカラー
+    if ($accents > 1) {
+      $styleHints[] = "強調色が多い場合は、トーンを揃えるとまとまりやすいです。";
+    } elseif ($accents === 1 && $neutrals >= 2) {
+      $styleHints[] = "ベースを中間色でまとめ、アクセントカラーで引き締めましょう。";
+    }
+
+    // TPOによる補足
+    if ($tpo === 'office') {
+      $styleHints[] = "オフィスでは派手な柄や強い色味を避け、落ち着いた印象を意識してください。";
+    } elseif ($tpo === 'date') {
+      $styleHints[] = "デートでは清潔感を重視し、全体に柔らかい印象を心がけましょう。";
+    }
+
+    return implode(' ', $styleHints);
   }
 }

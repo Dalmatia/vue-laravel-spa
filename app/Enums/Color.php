@@ -86,6 +86,19 @@ final class Color extends Enum
         self::other => '#d4d4d4',
     ];
 
+    public static function isNeutralColor(int $colorId): bool
+    {
+        $neutralColors = [
+            self::white,
+            self::black,
+            self::gray,
+            self::beige,
+            self::navy,
+        ];
+
+        return in_array($colorId, $neutralColors, true);
+    }
+
     // 柄系判定メソッド
     public static function isPattern(int $colorId): bool
     {
@@ -150,7 +163,7 @@ final class Color extends Enum
             $selectArray[] = [
                 'id' => $value,
                 'name' => static::getDescription($value),
-                'hex' => static::$hexCodes[$value] ?? '#cccccc', // fallback color
+                'hex' => static::$hexCodes[$value] ?? '#cccccc',
             ];
         }
 
