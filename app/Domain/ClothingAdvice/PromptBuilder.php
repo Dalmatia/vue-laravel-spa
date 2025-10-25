@@ -94,7 +94,7 @@ class PromptBuilder
       'date'     => 'デート',
       'office' => 'オフィスカジュアル',
       'outdoor'  => 'アウトドア',
-      default    => '特に指定なし',
+      default    => 'カジュアル',
     };
   }
 
@@ -125,6 +125,17 @@ class PromptBuilder
     $patterns = $combination['patterns'];
     $accents = $combination['accents'];
     $neutrals = $combination['neutrals'];
+
+    // --- フォールバック（matchedItemsが空だった場合） ---
+    if ($patterns === 0 && $accents === 0 && $neutrals === 0) {
+      return match ($tpo) {
+        'office' => 'オフィスでは落ち着いた色味とシンプルなアイテムを選びましょう。',
+        'date'   => 'デートでは清潔感のある装いを意識すると好印象です。',
+        'outdoor' => 'アウトドアでは動きやすく機能性の高い服装を心がけましょう。',
+        default  => '季節や気温に合わせて快適でバランスの取れたコーディネートを心がけましょう。',
+      };
+    }
+    // --------------------------------------------------
 
     $styleHints = [];
 
