@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { computed } from 'vue';
 
 const Home = () => import('../Pages/Home.vue');
 const Login = () => import('../Pages/Auth/Login.vue');
@@ -18,6 +17,7 @@ const Search = () => import('../Pages/OutfitSearch/Search.vue');
 const Notifications = () =>
     import('../Pages/Notification/NotificationPage.vue');
 const SuggestionsUsers = () => import('../Pages/SuggestionsUsers.vue');
+const Settings = () => import('../Pages/Settings.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -78,6 +78,12 @@ const router = createRouter({
             meta: { requiresAuth: true },
         },
         {
+            path: '/user/:id/settings',
+            name: 'Settings',
+            component: Settings,
+            meta: { requiresAuth: true },
+        },
+        {
             path: '/likes',
             name: 'Likes',
             component: Likes,
@@ -134,9 +140,6 @@ router.beforeEach(async (to, from, next) => {
     const userId = authStore.authUser?.id;
     const routeUserId = Number(to.params.id);
 
-    if (to.meta.requiresGuest && authenticated) {
-        return next({ name: 'Home' });
-    }
     if (to.meta.requiresAuth && !authenticated) {
         return next({ name: 'Login' });
     }

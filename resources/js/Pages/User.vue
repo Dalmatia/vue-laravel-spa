@@ -135,7 +135,12 @@ onUnmounted(() => {
                     >
                         プロフィール編集
                     </router-link>
-                    <Cog :size="28" class="cursor-pointer" v-if="authUser" />
+                    <router-link
+                        v-if="authUser"
+                        :to="{ name: 'Settings', params: { id: user.id } }"
+                    >
+                        <Cog :size="28" class="cursor-pointer" />
+                    </router-link>
                 </div>
                 <router-link
                     class="md:hidden mr-6 p-1 px-4 max-w-[260px] w-full rounded-lg text-[17px] font-extrabold bg-gray-100 hover:bg-gray-200"

@@ -33,7 +33,9 @@ const isToday = computed(() =>
         ]"
         @click="emit('select', day.fullDate)"
     >
-        <span class="relative inline-flex items-center justify-center w-full">
+        <span
+            class="relative inline-flex items-center justify-center w-full z-0"
+        >
             <!-- 今日マーク（丸背景） -->
             <span
                 v-if="isToday"

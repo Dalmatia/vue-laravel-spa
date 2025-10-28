@@ -99,12 +99,16 @@ const logout = () => emit('logout');
                             <li
                                 class="px-4 py-2 hover:bg-gray-50 transition-colors duration-200"
                             >
-                                <div
+                                <router-link
+                                    :to="{
+                                        name: 'Settings',
+                                        params: { id: authStore.user.id },
+                                    }"
                                     class="flex items-center space-x-2 text-gray-700"
                                 >
                                     <Setting class="w-5 h-5" />
                                     <span>設定</span>
-                                </div>
+                                </router-link>
                             </li>
                             <li
                                 class="px-4 py-2 hover:bg-gray-50 transition-colors duration-200"
