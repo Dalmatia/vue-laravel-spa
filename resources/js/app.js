@@ -6,7 +6,9 @@ import router from './Router';
 import { createPinia } from 'pinia';
 
 import App from '../js/App.vue';
+import { useThemeStore } from './stores/theme';
 
 const pinia = createPinia();
 
 createApp(App).use(router).use(pinia).mount('#app');
+useThemeStore().initTheme();

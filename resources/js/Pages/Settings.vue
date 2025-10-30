@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import ThemeToggle from '../Components/ThemeToggle.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -66,13 +67,7 @@ const deleteAccount = () => {
         </section>
 
         <!-- テーマ設定 -->
-        <section class="border rounded-lg p-4 bg-white shadow-sm">
-            <h2 class="text-lg font-semibold mb-3">テーマ</h2>
-            <label class="flex items-center space-x-2">
-                <input type="checkbox" v-model="settings.darkMode" />
-                <span>ダークモードを有効にする</span>
-            </label>
-        </section>
+        <ThemeToggle />
 
         <!-- アカウント設定 -->
         <section class="border rounded-lg p-4 bg-white shadow-sm">
