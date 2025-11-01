@@ -8,7 +8,6 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 
 const {
     authStore,
-    newPassword,
     genders,
     age,
     fileDisplay,
@@ -108,23 +107,6 @@ const {
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         v-model="authStore.user.email"
                         placeholder="新しいメールアドレスを入力"
-                    />
-                </div>
-
-                <!-- パスワード編集欄 -->
-                <div class="mt-4 px-4">
-                    <label
-                        for="password"
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                        パスワード:
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        v-model="newPassword"
-                        placeholder="新しいパスワードを入力"
                     />
                 </div>
 

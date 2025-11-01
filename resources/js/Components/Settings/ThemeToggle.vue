@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, watch } from 'vue';
-import { useThemeStore } from '../stores/theme';
+import { useThemeStore } from '../../stores/theme';
 
 import Light from 'vue-material-design-icons/WeatherSunny.vue';
 import Dark from 'vue-material-design-icons/WeatherNight.vue';

@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import ThemeToggle from '../Components/ThemeToggle.vue';
+import ThemeToggle from '../Components/Settings/ThemeToggle.vue';
+import PasswordChangeForm from '../Components/Settings/PasswordChangeForm.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -72,20 +73,20 @@ const deleteAccount = () => {
         <!-- アカウント設定 -->
         <section class="border rounded-lg p-4 bg-white shadow-sm">
             <h2 class="text-lg font-semibold mb-3">アカウント</h2>
-            <div class="space-y-3">
-                <button
-                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                    @click="deleteAccount"
-                >
-                    アカウント削除
-                </button>
-                <button
-                    class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                    @click="logout()"
-                >
-                    ログアウト
-                </button>
-            </div>
+
+            <PasswordChangeForm />
+            <button
+                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                @click="deleteAccount"
+            >
+                アカウント削除
+            </button>
+            <button
+                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                @click="logout()"
+            >
+                ログアウト
+            </button>
         </section>
     </div>
 </template>

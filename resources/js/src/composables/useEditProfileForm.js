@@ -8,7 +8,6 @@ export function useEditProfileForm() {
     const router = useRouter();
 
     // 入力状態
-    const newPassword = ref('');
     const genders = ref([]);
     const { fileDisplay, isValidFile, getUploadedImage } = useFileUploader();
 
@@ -52,9 +51,6 @@ export function useEditProfileForm() {
         formData.append('name', authStore.user.name);
         formData.append('email', authStore.user.email);
 
-        if (newPassword.value) {
-            formData.append('password', newPassword.value);
-        }
         if (authStore.user.file instanceof File) {
             formData.append('file', authStore.user.file);
         }
@@ -107,7 +103,6 @@ export function useEditProfileForm() {
 
     return {
         authStore,
-        newPassword,
         genders,
         age,
         fileDisplay,

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
@@ -62,14 +63,6 @@ class UserController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request)
@@ -80,7 +73,6 @@ class UserController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $user->id, // 他のユーザーと重複しないように
-                'password' => 'nullable|min:8', // パスワードは必須ではなく、長さのチェック
                 'file' => 'nullable|mimes:jpg,jpeg,png|max:2048', // ファイルは必須ではなく、サイズの制限を追加
                 'gender' => 'nullable|integer|in:0,1,2,3',
                 'birthdate' => 'nullable|date',
@@ -94,10 +86,6 @@ class UserController extends Controller
 
             $user->name = $validated['name'];
             $user->email = $validated['email'];
-            // パスワードが入力された場合のみハッシュ化して保存
-            if (!empty($rule['password'])) {
-                $user->password = bcrypt($validated['password']);
-            }
             $user->gender = $validated['gender'] ?? null;
             $user->birthdate = $validated['birthdate'] ?: null;
             $user->save();
@@ -110,6 +98,26 @@ class UserController extends Controller
             ]);
             return response()->json(['message' => 'プロフィールの更新に失敗しました'], 500);
         }
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        // 現在のパスワード確認
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => '現在のパスワードが正しくありません'], 422);
+        }
+        // パスワードが入力された場合のみハッシュ化して保存
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        return response()->json(['message' => 'パスワードの更新が完了しました'], 200);
     }
 
     /**

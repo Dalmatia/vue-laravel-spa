@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy']);
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
     Route::post('/user/{id}/update', [UserController::class, 'update'])->name('users.update');
+    Route::post('/user/password', [UserController::class, 'updatePassword'])->name('users.update_password');
 
     // クローゼットアイテム関連
     Route::post('items', [ItemController::class, 'store']);
