@@ -2,12 +2,15 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import Toast from '@/components/Toast.vue';
 import ThemeToggle from '../Components/Settings/ThemeToggle.vue';
 import PasswordChangeForm from '../Components/Settings/PasswordChangeForm.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const authUser = authStore.user;
+const toastRef = ref();
+const showToast = (msg) => toastRef.value.show(msg);
 
 // モック設定データ
 const settings = ref({
@@ -29,6 +32,7 @@ const deleteAccount = () => {
 </script>
 
 <template>
+    <Toast ref="toastRef" />
     <div
         class="max-w-2xl mx-auto md:w-[90vw] lg:ml-0 md:ml-20 p-6 space-y-8 pb-20"
     >
@@ -74,7 +78,8 @@ const deleteAccount = () => {
         <section class="border rounded-lg p-4 bg-white shadow-sm">
             <h2 class="text-lg font-semibold mb-3">アカウント</h2>
 
-            <PasswordChangeForm />
+            <PasswordChangeForm @success="showToast" @error="showToast" />
+
             <button
                 class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                 @click="deleteAccount"

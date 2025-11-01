@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 
+const emit = defineEmits(['success', 'error']);
 const currentPassword = ref('');
 const newPassword = ref('');
 const confirmPassword = ref('');
@@ -12,13 +13,13 @@ const changePassword = async () => {
             password: newPassword.value,
             password_confirmation: confirmPassword.value,
         });
-        alert('パスワードが正常に変更されました。');
+        emit('success', 'パスワード更新しました。');
         currentPassword.value = '';
         newPassword.value = '';
         confirmPassword.value = '';
     } catch (error) {
         console.error(error);
-        alert('パスワードの変更中にエラーが発生しました。');
+        emit('error', 'パスワードの変更中にエラーが発生しました。');
     }
 };
 </script>
