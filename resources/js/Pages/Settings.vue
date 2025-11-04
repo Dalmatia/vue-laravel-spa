@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import Toast from '@/components/Toast.vue';
 import ThemeToggle from '../Components/Settings/ThemeToggle.vue';
 import PasswordChangeForm from '../Components/Settings/PasswordChangeForm.vue';
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -80,18 +81,25 @@ const deleteAccount = () => {
 
             <PasswordChangeForm @success="showToast" @error="showToast" />
 
-            <button
-                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                @click="deleteAccount"
-            >
-                アカウント削除
-            </button>
-            <button
-                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                @click="logout()"
-            >
-                ログアウト
-            </button>
+            <div class="mt-4 leading-none border">
+                <router-link
+                    class="py-3 px-4 bg-white items-center flex box-border"
+                    :to="{ name: 'DeleteAccountConfirm' }"
+                >
+                    退会する
+                    <div class="ml-auto">
+                        <ChevronRight :size="20" />
+                    </div>
+                </router-link>
+            </div>
+            <div class="mt-4 flex items-center justify-center">
+                <button
+                    class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                    @click="logout()"
+                >
+                    ログアウト
+                </button>
+            </div>
         </section>
     </div>
 </template>

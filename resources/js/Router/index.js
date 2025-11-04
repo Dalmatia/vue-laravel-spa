@@ -18,6 +18,7 @@ const Notifications = () =>
     import('../Pages/Notification/NotificationPage.vue');
 const SuggestionsUsers = () => import('../Pages/SuggestionsUsers.vue');
 const Settings = () => import('../Pages/Settings.vue');
+const DeleteAccountConfirm = () => import('../Pages/DeleteAccountConfirm.vue');
 
 const router = createRouter({
     history: createWebHistory(),
@@ -75,6 +76,12 @@ const router = createRouter({
             path: '/user/:id/items/:mainCategory',
             name: 'CategoryItems',
             component: CategoryItems,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/settings/delete_account',
+            name: 'DeleteAccountConfirm',
+            component: DeleteAccountConfirm,
             meta: { requiresAuth: true },
         },
         {

@@ -23,21 +23,23 @@ const handleEvent = (message, slideTransition = false) => {
 const onCreateOutfit = () => handleEvent('コーディネートを投稿しました!');
 const onDeleteOutfit = () => handleEvent('コーディネートを削除しました!');
 const onUpdateProfile = () => handleEvent('プロフィールを更新しました!', true);
+const onUserDeleted = () => handleEvent('アカウントを削除しました。');
+const onUserDeleteError = () => handleEvent('アカウント削除に失敗しました。');
 
 onMounted(() => {
     window.addEventListener('outfit-created', onCreateOutfit);
-
     window.addEventListener('outfit-deleted', onDeleteOutfit);
-
     window.addEventListener('profile-updated', onUpdateProfile);
+    window.addEventListener('user-deleted', onUserDeleted);
+    window.addEventListener('user-delete-error', onUserDeleteError);
 });
 
 onUnmounted(() => {
     window.removeEventListener('outfit-created', onCreateOutfit);
-
     window.removeEventListener('outfit-deleted', onDeleteOutfit);
-
     window.removeEventListener('profile-updated', onUpdateProfile);
+    window.removeEventListener('user-deleted', onUserDeleted);
+    window.removeEventListener('user-delete-error', onUserDeleteError);
 });
 </script>
 
