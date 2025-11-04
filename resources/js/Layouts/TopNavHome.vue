@@ -102,7 +102,6 @@ const logout = () => emit('logout');
                                 <router-link
                                     :to="{
                                         name: 'Settings',
-                                        params: { id: authStore.user.id },
                                     }"
                                     class="flex items-center space-x-2 text-gray-700"
                                 >
