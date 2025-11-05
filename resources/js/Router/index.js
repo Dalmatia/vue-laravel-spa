@@ -137,22 +137,13 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
-
-    if (!authStore.authUser) {
-        try {
-            await authStore.fetchUserData();
-        } catch (error) {
-            console.error('ユーザー情報の取得に失敗:', error);
-            if (to.meta.requiresAuth) {
-                return next({ name: 'Login' });
-            }
-        }
-    }
-
-    const authenticated = !!authStore.authUser;
-    const userId = authStore.authUser?.id;
+    const authenticated = !!authStore.user;
+    const userId = authStore.user?.id;
     const routeUserId = Number(to.params.id);
 
+    if (to.meta.requiresGuest && authenticated) {
+        return next({ name: 'Home' });
+    }
     if (to.meta.requiresAuth && !authenticated) {
         return next({ name: 'Login' });
     }

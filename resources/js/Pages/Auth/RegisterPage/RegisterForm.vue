@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../../stores/auth';
 
 import RegisterFields from './RegisterFields.vue';
 
+const authStore = useAuthStore();
 const router = useRouter();
 const form = ref({
     email: '',
@@ -18,14 +20,13 @@ const errors = ref([]);
 
 const signup = async () => {
     await axios.get('/sanctum/csrf-cookie');
-    await axios
-        .post('/api/register', form.value)
-        .then(() => {
-            router.push('/login');
-        })
-        .catch((reason) => {
-            errors.value = reason?.response?.data?.errors ?? {};
-        });
+    try {
+        await axios.post('/api/register', form.value);
+        await authStore.fetchUserData();
+        router.push({ name: 'Home' });
+    } catch (reason) {
+        errors.value = reason?.response?.data?.errors ?? {};
+    }
 };
 
 // 性別一覧の取得

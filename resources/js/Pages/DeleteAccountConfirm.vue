@@ -13,9 +13,9 @@ const agreed = ref(false);
 const deleteAccount = async () => {
     try {
         await axios.delete('/api/user/delete');
-        await authStore.logout();
-        window.dispatchEvent(new Event('user-deleted'));
+        authStore.$reset();
         router.push({ name: 'DeleteAccountSuccess' });
+        window.dispatchEvent(new Event('user-deleted'));
     } catch (e) {
         console.error(e);
         window.dispatchEvent(new Event('user-delete-error'));

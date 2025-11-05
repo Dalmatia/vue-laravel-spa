@@ -4,11 +4,17 @@ import '../css/app.css';
 import { createApp } from 'vue';
 import router from './Router';
 import { createPinia } from 'pinia';
+import { useAuthStore } from './stores/auth';
 
 import App from '../js/App.vue';
 import { useThemeStore } from './stores/theme';
 
-const pinia = createPinia();
+const app = createApp(App);
+app.use(createPinia());
 
-createApp(App).use(router).use(pinia).mount('#app');
-useThemeStore().initTheme();
+const authStore = useAuthStore();
+
+authStore.fetchUserData().finally(() => {
+    app.use(router).mount('#app');
+    useThemeStore().initTheme();
+});
