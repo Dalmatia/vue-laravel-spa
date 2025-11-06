@@ -4,14 +4,11 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import Toast from '@/components/Toast.vue';
 import ThemeToggle from '../Components/Settings/ThemeToggle.vue';
-import PasswordChangeForm from '../Components/Settings/PasswordChangeForm.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const authUser = authStore.user;
-const toastRef = ref();
-const showToast = (msg) => toastRef.value.show(msg);
 
 // モック設定データ
 const settings = ref({
@@ -23,12 +20,6 @@ const settings = ref({
 const logout = async () => {
     await authStore.logout();
     router.push({ name: 'Login' });
-};
-
-const deleteAccount = () => {
-    if (confirm('本当に削除しますか？')) {
-        alert('アカウント削除処理を実装予定です。');
-    }
 };
 </script>
 
@@ -79,7 +70,17 @@ const deleteAccount = () => {
         <section class="border rounded-lg p-4 bg-white shadow-sm">
             <h2 class="text-lg font-semibold mb-3">アカウント</h2>
 
-            <PasswordChangeForm @success="showToast" @error="showToast" />
+            <div class="mt-4 leading-none border">
+                <router-link
+                    class="py-3 px-4 bg-white items-center flex box-border"
+                    :to="{ name: 'PasswordChangeForm' }"
+                >
+                    パスワードを変更
+                    <div class="ml-auto">
+                        <ChevronRight :size="20" />
+                    </div>
+                </router-link>
+            </div>
 
             <div class="mt-4 leading-none border">
                 <router-link

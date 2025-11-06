@@ -18,6 +18,7 @@ const Notifications = () =>
     import('../Pages/Notification/NotificationPage.vue');
 const SuggestionsUsers = () => import('../Pages/SuggestionsUsers.vue');
 const Settings = () => import('../Pages/Settings.vue');
+const PasswordChangeForm = () => import('../Pages/PasswordChangeForm.vue');
 const DeleteAccountConfirm = () => import('../Pages/DeleteAccountConfirm.vue');
 const DeleteAccountSuccess = () => import('../Pages/DeleteAccountSuccess.vue');
 
@@ -83,6 +84,12 @@ const router = createRouter({
             path: '/settings',
             name: 'Settings',
             component: Settings,
+            meta: { requiresAuth: true },
+        },
+        {
+            path: '/settings/change_password',
+            name: 'PasswordChangeForm',
+            component: PasswordChangeForm,
             meta: { requiresAuth: true },
         },
         {
