@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import FormPasswordField from '../Components/Settings/FormPasswordField.vue';
+import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 
+const router = useRouter();
 const emit = defineEmits(['success', 'error']);
 const currentPassword = ref('');
 const newPassword = ref('');
@@ -13,10 +17,13 @@ const changePassword = async () => {
             password: newPassword.value,
             password_confirmation: confirmPassword.value,
         });
-        window.dispatchEvent(new Event('password-changed'));
+        window.dispatchEvent(
+            new CustomEvent('password-changed', { detail: { slide: true } })
+        );
         currentPassword.value = '';
         newPassword.value = '';
         confirmPassword.value = '';
+        router.push({ name: 'Settings' });
     } catch (error) {
         console.error(error);
         window.dispatchEvent(new Event('password-change-error'));
@@ -25,96 +32,81 @@ const changePassword = async () => {
 </script>
 
 <template>
-    <form
-        @submit.prevent="changePassword"
-        class="flex flex-col items-center gap-y-10 pb-[60px] xl:p-0"
-    >
-        <section
-            class="w-full border-gray-300 bg-white xl:divide-y xl:divide-gray-300 xl:overflow-hidden xl:rounded-[5px] border-b xl:border"
+    <div class="max-w-2xl mx-auto w-[100vw] lg:ml-0 md:ml-20 space-y-8 pb-20">
+        <!-- スマホ時の戻るボタン + タイトル -->
+        <div
+            class="relative flex items-center justify-center gap-2 px-4 py-4 xl:hidden"
         >
-            <div class="bg-white py-8 xl:border-none xl:pb-[26px] xl:pt-[14px]">
-                <h1
-                    class="text-center text-[18px] font-bold leading-normal xl:mx-auto xl:w-[990px] xl:text-left xl:text-[22px] xl:leading-[1.8]"
+            <router-link
+                :to="{ name: 'Settings' }"
+                class="absolute left-4 flex items-center text-blue-500 hover:opacity-70"
+            >
+                <ChevronLeft :size="24" />
+            </router-link>
+            <h1 class="text-[18px] font-bold leading-normal text-center">
+                パスワードの変更
+            </h1>
+        </div>
+
+        <!-- PC時の戻るリンク -->
+        <router-link
+            :to="{ name: 'Settings' }"
+            class="hidden xl:flex items-center gap-x-1 py-4 px-4 xl:px-0 text-[14px] text-blue-500 hover:opacity-70"
+        >
+            <ChevronLeft :size="20" /> 設定に戻る
+        </router-link>
+        <form
+            @submit.prevent="changePassword"
+            class="flex flex-col items-center gap-y-10 pb-[60px] xl:p-0"
+        >
+            <section
+                class="w-full border-gray-300 bg-white xl:divide-y xl:divide-gray-300 xl:overflow-hidden xl:rounded-[5px] border-b xl:border"
+            >
+                <div
+                    class="hidden xl:block bg-white py-8 xl:border-none xl:pb-[26px] xl:pt-[14px]"
                 >
-                    パスワードの変更
-                </h1>
-            </div>
-            <div>
-                <div class="flex flex-col gap-[17px] xl:gap-8 xl:p-8">
-                    <div
-                        class="grid grid-cols-1 xl:grid-cols-[auto_1fr] xl:items-start xl:gap-x-8 xl:gap-y-6"
+                    <h1
+                        class="text-center text-[18px] font-bold leading-normal xl:mx-auto xl:w-[990px] xl:text-left xl:text-[22px] xl:leading-[1.8]"
                     >
-                        <!-- 現在のパスワード -->
-                        <div class="xl:flex xl:items-center xl:pt-[7px]">
-                            <label
-                                class="flex w-full items-center border-y border-gray-300 bg-gray-50 px-[15px] py-[5px] text-[12px] text-gray-900/60 xl:border-none xl:bg-transparent xl:p-0 xl:text-[14px] xl:leading-normal xl:text-black-400 after:text-red-500 after:content-['必須'] xl:after:text-[10px] gap-1"
-                            >
-                                現在のパスワード:
-                            </label>
-                        </div>
-                        <div class="px-4 xl:p-0 py-3">
-                            <div class="flex flex-col gap-y-2 xl:gap-y-[9px]">
-                                <input
-                                    type="password"
-                                    class="h-9 w-full rounded-[8px] border border-gray-300 px-3 text-[13px] placeholder:text-gray-500 focus:border-blue-400 focus:outline-0 xl:rounded-[4px] xl:text-[14px]"
-                                    v-model="currentPassword"
-                                    placeholder="現在のパスワードを入力"
-                                />
-                                <p
-                                    class="text-[11px] leading-none text-red-300 empty:hidden xl:text-[12px]"
-                                ></p>
-                            </div>
-                        </div>
-                        <div class="xl:flex xl:items-center xl:pt-[7px]">
-                            <label
-                                class="flex w-full items-center border-y border-gray-300 bg-gray-50 px-[15px] py-[5px] text-[12px] text-gray-900/60 xl:border-none xl:bg-transparent xl:p-0 xl:text-[14px] xl:leading-normal xl:text-black-400 after:text-red-500 after:content-['必須'] xl:after:text-[10px] gap-1"
-                            >
-                                新しいパスワード:
-                            </label>
-                        </div>
-                        <div class="px-4 xl:p-0 py-3">
-                            <div class="flex flex-col gap-y-2 xl:gap-y-[9px]">
-                                <input
-                                    type="password"
-                                    class="h-9 w-full rounded-[8px] border border-gray-300 px-3 text-[13px] placeholder:text-gray-500 focus:border-blue-400 focus:outline-0 xl:rounded-[4px] xl:text-[14px]"
-                                    v-model="newPassword"
-                                    placeholder="新しいパスワードを入力"
-                                />
-                                <p
-                                    class="text-[11px] leading-none text-red-300 empty:hidden xl:text-[12px]"
-                                ></p>
-                            </div>
-                        </div>
-                        <div class="xl:flex xl:items-center xl:pt-[7px]">
-                            <label
-                                class="flex w-full items-center border-y border-gray-300 bg-gray-50 px-[15px] py-[5px] text-[12px] text-gray-900/60 xl:border-none xl:bg-transparent xl:p-0 xl:text-[14px] xl:leading-normal xl:text-black-400 after:text-red-500 after:content-['必須'] xl:after:text-[10px] gap-1"
-                            >
-                                新しいパスワード(確認用):
-                            </label>
-                        </div>
-                        <div class="px-4 xl:p-0 py-3">
-                            <div class="flex flex-col gap-y-2 xl:gap-y-[9px]">
-                                <input
-                                    type="password"
-                                    class="h-9 w-full rounded-[8px] border border-gray-300 px-3 text-[13px] placeholder:text-gray-500 focus:border-blue-400 focus:outline-0 xl:rounded-[4px] xl:text-[14px]"
-                                    v-model="confirmPassword"
-                                    placeholder="確認のためもう一度入力"
-                                />
-                                <p
-                                    class="text-[11px] leading-none text-red-300 empty:hidden xl:text-[12px]"
-                                ></p>
-                            </div>
+                        パスワードの変更
+                    </h1>
+                </div>
+                <div>
+                    <div class="flex flex-col gap-[17px] xl:gap-8 xl:p-8">
+                        <div
+                            class="grid grid-cols-1 xl:grid-cols-[auto_1fr] xl:items-start xl:gap-x-8 xl:gap-y-6"
+                        >
+                            <!-- 現在のパスワード -->
+                            <FormPasswordField
+                                label="現在のパスワード:"
+                                v-model="currentPassword"
+                                placeholder="現在のパスワードを入力"
+                            />
+
+                            <!-- 新しいパスワード -->
+                            <FormPasswordField
+                                label="新しいパスワード:"
+                                v-model="newPassword"
+                                placeholder="新しいパスワードを入力"
+                            />
+
+                            <!-- 新しいパスワード(確認用) -->
+                            <FormPasswordField
+                                label="新しいパスワード(確認用):"
+                                v-model="confirmPassword"
+                                placeholder="確認のためもう一度入力"
+                            />
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <button
-            type="submit"
-            class="h-12 w-[260px] rounded-full bg-blue-400 text-[14px] font-bold text-white disabled:bg-blue-200 xl:w-[280px] xl:text-[16px] xl:hover:opacity-70"
-        >
-            パスワードを変更
-        </button>
-    </form>
+            <button
+                type="submit"
+                class="h-12 w-[260px] rounded-full bg-blue-400 text-[14px] font-bold text-white disabled:bg-blue-200 xl:w-[280px] xl:text-[16px] xl:hover:opacity-70"
+            >
+                パスワードを変更
+            </button>
+        </form>
+    </div>
 </template>

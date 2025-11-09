@@ -79,14 +79,12 @@ onUnmounted(() => {
         />
 
         <div
-            class="flex lg:justify-between bg-white h-full overflow-auto pl-0 md:pl-[80px] xl:pl-[255px]"
+            class="flex lg:justify-between bg-white h-full w-[100%-280px] xl:pl-[280px] lg:pl-[100px] overflow-auto"
         >
             <div
                 class="mx-auto md:pt-6 pt-20"
                 :class="
-                    route.path === '/'
-                        ? 'lg:w-8/12 w-full'
-                        : 'max-w-[800px] w-full'
+                    route.path === '/' ? 'lg:w-8/12 w-full' : 'max-w-[1200px]'
                 "
             >
                 <main class="container">

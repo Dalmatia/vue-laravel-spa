@@ -23,7 +23,8 @@ const handleEvent = (message, slideTransition = false) => {
 const onCreateOutfit = () => handleEvent('コーディネートを投稿しました!');
 const onDeleteOutfit = () => handleEvent('コーディネートを削除しました!');
 const onUpdateProfile = () => handleEvent('プロフィールを更新しました!', true);
-const changePasswordSuccess = () => handleEvent('パスワードを変更しました。');
+const changePasswordSuccess = (e) =>
+    handleEvent('パスワードを変更しました。', e.detail?.slide);
 const changePasswordError = () =>
     handleEvent('パスワードの変更に失敗しました。');
 const onUserDeleted = () => handleEvent('アカウントを削除しました。');
