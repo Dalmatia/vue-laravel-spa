@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRoute } from 'vue-router';
 import { useLayoutState } from '../src/composables/useLayoutState';
+import { useNotification } from '../src/composables/useNotification';
+import { useNotificationActions } from '../src/composables/useNotificationActions';
 
 import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue';
@@ -12,15 +14,33 @@ import SideNav from './SideNav.vue';
 import SuggestionsSection from './SuggestionsSection.vue';
 import BottomNav from './BottomNav.vue';
 import CreateOutfitOverlay from '@/Components/Outfit/Create/CreateOutfitOverlay.vue';
-import Notifications from '../Pages/Notification/NotificationPage.vue';
-
-const authStore = useAuthStore();
-const route = useRoute();
-const topsNavRef = ref();
-const { isDropdownOpen, noticeOpen, account, toggleMenu, closeMenu, logout } =
-    useLayoutState();
+import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
+import NotificationPanel from '../Components/NotificationPanel.vue';
 
 let showCreatePost = ref(false);
+const authStore = useAuthStore();
+const route = useRoute();
+const { notifications, fetchNotifications, markAsRead, stopListening } =
+    useNotification();
+const {
+    handleNotificationAction,
+    showDeleteModal,
+    confirmDelete,
+    overlayState,
+    toggleOutfitOverlay,
+    deleteOutfit,
+} = useNotificationActions(notifications);
+
+const {
+    isDropdownOpen,
+    noticeOpen,
+    isMobile,
+    account,
+    toggleMenu,
+    closeMenu,
+    logout,
+} = useLayoutState();
+const topsNavRef = ref();
 
 const isUserNavVisible = computed(
     () =>
@@ -40,6 +60,7 @@ onMounted(() => {
         account.value = topsNavRef.value.account;
     }
     document.addEventListener('click', closeMenu);
+    fetchNotifications();
 });
 
 onUnmounted(() => {
@@ -48,7 +69,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="MainLayout" class="w-full h-screen">
+    <div id="MainLayout" class="w-full h-screen" @click="noticeOpen = false">
         <div v-show="route.path == '/'">
             <TopNavHome
                 ref="topsNavRef"
@@ -102,6 +123,15 @@ onUnmounted(() => {
         v-if="showCreatePost"
         @close="showCreatePost = false"
     />
+
+    <ShowOutfitOverlay
+        v-if="overlayState.open"
+        :outfit="overlayState.currentOutfit"
+        :commentOverlay="overlayState.commentOverlay"
+        @delete-selected="deleteOutfit($event)"
+        @close-overlay="toggleOutfitOverlay()"
+    />
+
     <Transition
         enter-active-class="transition-transform duration-300 ease-out"
         enter-from-class="-translate-x-full"
@@ -109,10 +139,15 @@ onUnmounted(() => {
         leave-active-class="transition-transform duration-300 ease-in"
         leave-from-class="translate-x-0"
         leave-to-class="-translate-x-full"
-        @click.self="noticeOpen = false"
     >
-        <div v-if="authStore.user && noticeOpen" class="fixed inset-0">
-            <Notifications @close-notice="noticeOpen = false" />
-        </div>
+        <NotificationPanel
+            v-if="!isMobile && noticeOpen"
+            :notifications="notifications"
+            :onRead="handleNotificationAction"
+            :onDelete="showDeleteModal"
+            :onClose="() => (noticeOpen = false)"
+            @click.stop
+            class="fixed top-0 left-[80px] xl:left-64 z-20 h-full"
+        />
     </Transition>
 </template>

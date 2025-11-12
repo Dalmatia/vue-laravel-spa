@@ -1,13 +1,11 @@
 <script setup>
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import { useLayoutState } from '@/src/composables/useLayoutState';
 import MenuItem from '@/Components/MenuItem.vue';
 
 const emit = defineEmits(['open-create-post', 'toggle-menu', 'logout']);
 
 const authStore = useAuthStore();
-const { sideNavZIndex } = useLayoutState();
 
 const notifications = ref(null);
 
@@ -22,8 +20,7 @@ const logout = () => emit('logout');
 <template>
     <div
         id="SideNav"
-        class="fixed h-full bg-white xl:w-[255px] w-[80px] md:block hidden border-r border-r-gray-300 z-10"
-        :style="{ zIndex: sideNavZIndex }"
+        class="fixed h-full bg-white xl:w-[255px] w-[80px] md:block hidden border-r border-r-gray-300 z-40"
     >
         <router-link :to="{ name: 'Home' }">
             <img

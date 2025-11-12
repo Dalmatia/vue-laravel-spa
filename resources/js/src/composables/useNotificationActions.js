@@ -1,8 +1,13 @@
 import { ref } from 'vue';
-import axios from 'axios';
+import { useRouter } from 'vue-router';
+import { useLayoutState } from './useLayoutState';
+import { useNotification } from './useNotification';
 import { useOutfitOverlay } from './useOutfitOverlay';
 
 export function useNotificationActions(notifications) {
+    const router = useRouter();
+    const { noticeOpen } = useLayoutState();
+    const { markAsRead } = useNotification();
     const {
         openOutfitById,
         overlayState,
@@ -13,6 +18,26 @@ export function useNotificationActions(notifications) {
     } = useOutfitOverlay();
     const selectedNotification = ref(null);
     const openModal = ref(false);
+
+    const notificationType = {
+        'App\\Notifications\\FollowedUser': (n) => {
+            router.push({ name: 'User', params: { id: n.follower_id } });
+            noticeOpen.value = false;
+        },
+        'App\\Notifications\\OutfitLiked': async (n) => {
+            await openOutfitDetails(n.outfit_id, false);
+        },
+        'App\\Notifications\\OutfitCommented': async (n) => {
+            await openOutfitDetails(n.outfit_id, true);
+        },
+    };
+
+    const handleNotificationAction = async (notification) => {
+        if (notificationType[notification.type]) {
+            await notificationType[notification.type](notification);
+        }
+        await markAsRead(notification);
+    };
 
     // 通知削除モーダルを表示
     const showDeleteModal = (id) => {
@@ -52,6 +77,7 @@ export function useNotificationActions(notifications) {
         errorMessage,
         selectedNotification,
         openModal,
+        handleNotificationAction,
         showDeleteModal,
         deleteNotification,
         confirmDelete,
