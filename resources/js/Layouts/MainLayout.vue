@@ -79,20 +79,6 @@ onUnmounted(() => {
             />
         </div>
 
-        <div
-            v-show="isUserNavVisible"
-            id="TopNavUser"
-            class="md:hidden fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
-        >
-            <router-link :to="{ name: 'Home' }" class="px-4">
-                <ChevronLeft :size="30" class="cursor-pointer"></ChevronLeft>
-            </router-link>
-            <div class="font-extrabold text-lg" v-if="authStore.user">
-                {{ authStore.user.name }}
-            </div>
-            <AccountPlusOutline :size="30" class="px-4"></AccountPlusOutline>
-        </div>
-
         <SideNav
             @open-create-post="showCreatePost = true"
             @toggle-menu="toggleMenu"

@@ -1,5 +1,6 @@
 <script setup>
 import { useEditProfileForm } from '../../src/composables/useEditProfileForm';
+import TopNavUser from '../../Layouts/TopNavUser.vue';
 import ProfileImageUploader from './ProfileImageUploader.vue';
 import ProfileSelectGender from './ProfileSelectGender.vue';
 import ProfileDatePicker from './ProfileDatePicker.vue';
@@ -20,36 +21,23 @@ const {
 </script>
 
 <template>
-    <main class="max-w-[880px] lg:ml-0 md:pl-20 px-4 w-[100vw] md:w-[84.5vw]">
-        <!-- ヘッダー部分(モバイル用) -->
-        <div
-            class="fixed top-0 left-0 w-full bg-white border-b border-gray-300 flex items-center justify-between h-[53px] px-4 md:hidden z-10"
-        >
-            <!-- 戻るボタン -->
-            <button
-                class="duration-[0.2s] min-h-[36px] min-w-[36px] cursor-pointer flex items-center"
-                @click="$router.back()"
-            >
-                <ArrowLeft
-                    class="h-[20px] w-[20px] text-gray-900"
-                    fillColor="#000000"
-                />
-            </button>
-
-            <!-- ページタイトル -->
-            <h2 class="text-base font-bold text-center flex-grow text-black">
-                プロフィールを編集
-            </h2>
-
-            <!-- 保存ボタン -->
+    <!-- ヘッダー部分(モバイル用) -->
+    <TopNavUser
+        class="md:hidden"
+        title="プロフィールを編集"
+        :showBackButton="true"
+    >
+        <!-- 右側の保存ボタン -->
+        <template #right>
             <button
                 class="bg-black duration-[0.2s] min-w-[56px] min-h-[32px] px-4 rounded-full border border-solid border-gray-300 flex items-center justify-center"
                 @click.prevent="updateProfile()"
             >
                 <span class="text-white font-bold text-base">保存</span>
             </button>
-        </div>
-
+        </template>
+    </TopNavUser>
+    <main class="max-w-[880px] lg:ml-0 md:pl-20 px-4 w-[100vw] md:w-[84.5vw]">
         <!-- デスクトップ/タブレットのヘッダー -->
         <div class="hidden md:flex items-center justify-between py-6">
             <div class="flex items-center space-x-2">

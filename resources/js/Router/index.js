@@ -72,7 +72,12 @@ const router = createRouter({
             path: '/user/:id/editProfile',
             name: 'EditProfile',
             component: EditProfile,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'プロフィールを編集',
+                backRoute: { name: 'User', params: { id: ':id' } },
+            },
         },
         {
             path: '/user/:id/items/:mainCategory',
@@ -84,7 +89,7 @@ const router = createRouter({
             path: '/settings',
             name: 'Settings',
             component: Settings,
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: true, title: '設定', showTopNav: true },
         },
         {
             path: '/settings/change_password',
@@ -130,7 +135,7 @@ const router = createRouter({
             path: '/user/:id/notifications',
             name: 'Notifications',
             component: Notifications,
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: true, title: 'お知らせ', showTopNav: true },
             props: (route) => ({ user: { id: route.params.id } }),
         },
         {

@@ -1,6 +1,7 @@
 <script setup>
-import { reactive, onMounted, onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { debounce } from 'lodash';
 
 import { useNotification } from '../../src/composables/useNotification';
 import { useNotificationActions } from '../../src/composables/useNotificationActions';
@@ -9,11 +10,8 @@ import NotificationList from './NotificationList.vue';
 import NotificationOptions from './NotificationOptions.vue';
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
-
 const router = useRouter();
-
-// --- Composables ---
+const isMobile = ref(window.innerWidth <= 640);
 const { notifications, fetchNotifications, markAsRead, stopListening } =
     useNotification();
 const {
@@ -29,15 +27,25 @@ const {
     deleteOutfit,
 } = useNotificationActions(notifications);
 
-const closeNotification = () => {
-    router.back();
-};
+const handleResize = debounce(() => {
+    const mobile = window.innerWidth <= 640;
+    if (
+        !mobile &&
+        isMobile.value &&
+        router.currentRoute.value.name === 'Notifications'
+    ) {
+        router.push({ name: 'Home' });
+    }
+    isMobile.value = mobile;
+}, 200);
 
 onMounted(() => {
+    window.addEventListener('resize', handleResize);
     fetchNotifications();
 });
 
 onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
     stopListening();
 });
 </script>
@@ -54,20 +62,8 @@ onUnmounted(() => {
 
         <!-- モバイルレイアウト -->
         <div class="fixed inset-0 z-20 bg-white overflow-y-auto">
-            <div
-                class="flex items-center sticky top-0 justify-between px-4 py-4 border-b bg-white"
-            >
-                <button
-                    @click="closeNotification"
-                    class="text-gray-600 hover:text-gray-900"
-                >
-                    <ArrowLeft :size="24" class="cursor-pointer" />
-                </button>
-                <span class="text-lg font-bold">お知らせ</span>
-                <div class="w-6"></div>
-            </div>
-
             <NotificationList
+                class="pt-[61px]"
                 :notifications="notifications"
                 @read="handleNotificationAction"
                 @delete="showDeleteModal($event)"

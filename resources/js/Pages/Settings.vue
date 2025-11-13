@@ -28,7 +28,7 @@ const logout = async () => {
     <div
         class="max-w-2xl mx-auto md:w-[90vw] lg:ml-0 md:ml-20 p-6 space-y-8 pb-20"
     >
-        <h1 class="text-2xl font-bold mb-4">設定</h1>
+        <h1 class="hidden md:block text-2xl font-bold mb-4">設定</h1>
 
         <!-- プロフィール -->
         <section class="border rounded-lg p-4 bg-white shadow-sm">

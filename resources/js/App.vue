@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 
+import TopNavUser from './Layouts/TopNavUser.vue';
 import MainLayout from '@/Layouts/MainLayout.vue';
 import Toast from './Components/Toast.vue';
 import { useRoute } from 'vue-router';
@@ -52,7 +53,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Home" />
+    <TopNavUser
+        class="md:hidden"
+        v-if="route.meta.showTopNav"
+        :title="route.meta.title || ''"
+        :showBackButton="true"
+        :backRoute="null"
+    />
 
     <MainLayout>
         <Toast ref="toastRef" />
