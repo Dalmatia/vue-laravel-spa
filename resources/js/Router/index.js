@@ -95,13 +95,23 @@ const router = createRouter({
             path: '/settings/change_password',
             name: 'PasswordChangeForm',
             component: PasswordChangeForm,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'パスワードの変更',
+                backRoute: { name: 'Settings' },
+            },
         },
         {
             path: '/settings/delete_account',
             name: 'DeleteAccountConfirm',
             component: DeleteAccountConfirm,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: '退会確認',
+                backRoute: { name: 'Settings' },
+            },
         },
         {
             path: '/settings/delete_account/success',

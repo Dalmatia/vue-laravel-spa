@@ -35,7 +35,7 @@ const changePassword = async () => {
     <div class="max-w-2xl mx-auto w-[100vw] lg:ml-0 md:ml-20 space-y-8 pb-20">
         <!-- スマホ時の戻るボタン + タイトル -->
         <div
-            class="relative flex items-center justify-center gap-2 px-4 py-4 xl:hidden"
+            class="relative md:flex xl:hidden items-center justify-center gap-2 px-4 py-4 hidden"
         >
             <router-link
                 :to="{ name: 'Settings' }"
