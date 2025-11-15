@@ -9,6 +9,7 @@ import Grid from 'vue-material-design-icons/Grid.vue';
 import Hanger from 'vue-material-design-icons/Hanger.vue';
 import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
+import TopNavUser from '../Layouts/TopNavUser.vue';
 import CreateItemOverlay from '@/Components/Items/Register/CreateItemOverlay.vue';
 
 let showCreateItem = ref(false);
@@ -17,6 +18,7 @@ let prevUserId = ref(null);
 const authStore = useAuthStore();
 const followStore = useFollowStore();
 const user = ref(null);
+const username = ref('');
 const outfits = ref([]);
 const outfit_count = ref(0);
 const route = useRoute();
@@ -29,6 +31,7 @@ const fetchUser = async () => {
     try {
         const response = await axios.get(`/api/users/${userId.value}`);
         user.value = response.data.user;
+        username.value = user.value.name;
         outfits.value = response.data.outfits;
         outfit_count.value = response.data.outfit_count;
     } catch (error) {
@@ -67,6 +70,15 @@ const toggleFollow = async () => {
     }
 };
 
+const userBackRoute = computed(() => {
+    const backRoute = history.state?.backRoute;
+
+    if (backRoute) {
+        return backRoute;
+    }
+    return null;
+});
+
 watch(
     () => route.params.id,
     (newId, oldId) => {
@@ -92,6 +104,12 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <TopNavUser
+        class="md:hidden"
+        :title="username"
+        :showBackButton="!authUser"
+        :backRoute="userBackRoute"
+    />
     <div class="mt-2 md:pt-6"></div>
     <div
         class="max-w-[880px] lg:ml-0 md:ml-[80px] md:pl-20 px-4 w-[100vw] md:w-[84.5vw]"

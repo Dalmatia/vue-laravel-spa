@@ -127,10 +127,20 @@ watch(
                                         >
                                             <router-link
                                                 class="min-w-0 max-w-full flex-col self-center box-border flex shrink-0 relative z-0"
+                                                replace
                                                 :to="{
                                                     name: 'User',
                                                     params: {
                                                         id: user.id,
+                                                    },
+                                                    state: {
+                                                        backRoute: {
+                                                            name: 'FollowerList',
+                                                            params: {
+                                                                id: route.params
+                                                                    .id,
+                                                            },
+                                                        },
                                                     },
                                                 }"
                                             >
@@ -153,10 +163,20 @@ watch(
                                             </router-link>
                                             <router-link
                                                 class="min-w-0 shrink basis-auto box-border flex items-center justify-between flex-row relative z-0 grow flex-wrap"
+                                                replace
                                                 :to="{
                                                     name: 'User',
                                                     params: {
                                                         id: user.id,
+                                                    },
+                                                    state: {
+                                                        backRoute: {
+                                                            name: 'FollowerList',
+                                                            params: {
+                                                                id: route.params
+                                                                    .id,
+                                                            },
+                                                        },
                                                     },
                                                 }"
                                             >

@@ -52,7 +52,11 @@ const router = createRouter({
         {
             path: '/user/:id',
             component: User,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                showBackButton: false,
+            },
             children: [
                 {
                     path: '',
@@ -64,7 +68,7 @@ const router = createRouter({
                     path: 'items',
                     name: 'Items',
                     component: Items,
-                    meta: { requiresAuth: true },
+                    meta: { requiresAuth: true, ownerOnly: true },
                 },
             ],
         },
@@ -74,16 +78,28 @@ const router = createRouter({
             component: EditProfile,
             meta: {
                 requiresAuth: true,
+                ownerOnly: true,
                 showTopNav: true,
                 title: 'プロフィールを編集',
-                backRoute: { name: 'User', params: { id: ':id' } },
             },
+            backRoute: (route) => ({
+                name: 'User',
+                params: { id: route.params.id },
+            }),
         },
         {
             path: '/user/:id/items/:mainCategory',
             name: 'CategoryItems',
             component: CategoryItems,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'カテゴリ別アイテム',
+            },
+            backRoute: (route) => ({
+                name: 'Items',
+                params: { id: route.params.id },
+            }),
         },
         {
             path: '/settings',
@@ -128,13 +144,25 @@ const router = createRouter({
             path: '/user/:id/follow_list',
             name: 'FollowList',
             component: FollowList,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'フォロー中',
+            },
+            backRoute: (route) => ({
+                name: 'User',
+                params: { id: route.params.id },
+            }),
         },
         {
             path: '/user/:id/follower_list',
             name: 'FollowerList',
             component: FollowerList,
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: true, showTopNav: true, title: 'フォロワー' },
+            backRoute: (route) => ({
+                name: 'User',
+                params: { id: route.params.id },
+            }),
         },
         {
             path: '/search',
@@ -145,7 +173,12 @@ const router = createRouter({
             path: '/user/:id/notifications',
             name: 'Notifications',
             component: Notifications,
-            meta: { requiresAuth: true, title: 'お知らせ', showTopNav: true },
+            meta: {
+                requiresAuth: true,
+                ownerOnly: true,
+                title: 'お知らせ',
+                showTopNav: true,
+            },
             props: (route) => ({ user: { id: route.params.id } }),
         },
         {
@@ -169,11 +202,7 @@ router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresAuth && !authenticated) {
         return next({ name: 'Login' });
     }
-    if (
-        to.meta.requiresAuth &&
-        ['Items', 'EditProfile', 'Notifications'].includes(to.name) &&
-        routeUserId !== userId
-    ) {
+    if (to.meta.ownerOnly && routeUserId !== userId) {
         return next({ name: 'Home' });
     }
 

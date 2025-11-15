@@ -6,7 +6,7 @@ import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
 const props = defineProps({
     title: { type: String, default: '' },
     showBackButton: { type: Boolean, default: true },
-    backRoute: { type: [String, Object, null], default: null },
+    backRoute: { type: [String, Object, Function, null], default: null },
     sticky: { type: Boolean, default: true },
 });
 
@@ -14,7 +14,7 @@ const router = useRouter();
 
 const goBack = () => {
     if (props.backRoute) {
-        router.push(props.backRoute);
+        router.replace(props.backRoute);
     } else {
         router.back();
     }

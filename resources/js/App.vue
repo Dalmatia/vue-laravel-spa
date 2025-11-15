@@ -57,8 +57,8 @@ onUnmounted(() => {
         class="md:hidden"
         v-if="route.meta.showTopNav"
         :title="route.meta.title || ''"
-        :showBackButton="true"
-        :backRoute="null"
+        :showBackButton="route.meta.showBackButton ?? true"
+        :backRoute="route.meta.backRoute ?? null"
     />
 
     <MainLayout>
