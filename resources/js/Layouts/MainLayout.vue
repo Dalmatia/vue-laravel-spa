@@ -1,13 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useAuthStore } from '../stores/auth';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useLayoutState } from '../src/composables/useLayoutState';
 import { useNotification } from '../src/composables/useNotification';
 import { useNotificationActions } from '../src/composables/useNotificationActions';
-
-import ChevronLeft from 'vue-material-design-icons/ChevronLeft.vue';
-import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue';
 
 import TopNavHome from './TopNavHome.vue';
 import SideNav from './SideNav.vue';
@@ -18,7 +14,6 @@ import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import NotificationPanel from '../Components/NotificationPanel.vue';
 
 let showCreatePost = ref(false);
-const authStore = useAuthStore();
 const route = useRoute();
 const { notifications, fetchNotifications, markAsRead, stopListening } =
     useNotification();
@@ -41,19 +36,6 @@ const {
     logout,
 } = useLayoutState();
 const topsNavRef = ref();
-
-const isUserNavVisible = computed(
-    () =>
-        authStore.user &&
-        ![
-            '/',
-            `/user/${authStore.user.id}/editProfile`,
-            `/user/${authStore.user.id}/follow_list`,
-            `/user/${authStore.user.id}/follower_list`,
-            '/search',
-            `/user/${authStore.user.id}/notifications`,
-        ].includes(route.path)
-);
 
 onMounted(() => {
     if (topsNavRef.value?.account) {

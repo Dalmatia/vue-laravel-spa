@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useFollowStore } from '../../stores/follow';
 
+import TopNavUser from '../../Layouts/TopNavUser.vue';
 import SortDropdown from './SortDropdown.vue';
 import FilterPanel from './FilterPanel.vue';
 import OutfitList from './OutfitList.vue';
@@ -203,10 +204,9 @@ onUnmounted(() => {
                 <header
                     class="bg-white flex flex-wrap text-[16px] font-semibold left-0 md:left-20 xl:left-64 fixed right-0 top-0 z-[1] border-b border-solid md:pl-0 xl:pl-0"
                 >
-                    <div
-                        class="fixed flex items-center justify-between z-30 w-full bg-white h-[61px] border-b border-b-gray-300"
-                    >
-                        <div class="items-center flex basis-8 flex-row">
+                    <TopNavUser class="md:hidden" :title="'コーディネート検索'">
+                        <!-- 左側にSortDropdown -->
+                        <template #left>
                             <SortDropdown
                                 v-model:sortOrder="sortOrder"
                                 :sortOptions="sortOptions"
@@ -216,20 +216,20 @@ onUnmounted(() => {
                                     <Sort :size="27" />
                                 </template>
                             </SortDropdown>
-                        </div>
-                        <h1 class="text-center">コーディネート検索</h1>
-                        <div class="flex items-center">
+                        </template>
+
+                        <!-- 右側にFilter/Close -->
+                        <template #right>
                             <button
                                 class="p-0 bg-transparent border-none cursor-pointer flex items-center"
                                 type="button"
                                 @click="openFilter = !openFilter"
                             >
                                 <Filter v-if="!openFilter" :size="27" />
-
-                                <Close v-if="openFilter" :size="27" />
+                                <Close v-else :size="27" />
                             </button>
-                        </div>
-                    </div>
+                        </template>
+                    </TopNavUser>
                 </header>
             </nav>
             <!-- ヘッダーここまで -->

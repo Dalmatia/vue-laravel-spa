@@ -47,7 +47,12 @@ const router = createRouter({
             path: '/calendar',
             name: 'Calendar',
             component: Calendar,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'マイコーデカレンダー',
+                showBackButton: false,
+            },
         },
         {
             path: '/user/:id',
@@ -138,7 +143,12 @@ const router = createRouter({
             path: '/likes',
             name: 'Likes',
             component: Likes,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'お気に入りコーディネート',
+                showBackButton: false,
+            },
         },
         {
             path: '/user/:id/follow_list',
@@ -185,7 +195,12 @@ const router = createRouter({
             path: '/suggestion_users',
             name: 'SuggestionsUsers',
             component: SuggestionsUsers,
-            meta: { requiresAuth: true },
+            meta: {
+                requiresAuth: true,
+                showTopNav: true,
+                title: 'おすすめユーザー',
+                backRoute: { name: 'Home' },
+            },
         },
     ],
 });
