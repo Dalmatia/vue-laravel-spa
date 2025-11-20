@@ -13,7 +13,7 @@ const Calendar = () => import('../Pages/CalendarPage/Calendar.vue');
 const Likes = () => import('../Pages/LikesPage.vue');
 const FollowList = () => import('../Pages/FollowList.vue');
 const FollowerList = () => import('../Pages/FollowerList.vue');
-const Search = () => import('../Pages/OutfitSearch/Search.vue');
+const Search = () => import('@/Pages/Search.vue');
 const Notifications = () =>
     import('../Pages/Notification/NotificationPage.vue');
 const SuggestionsUsers = () => import('../Pages/SuggestionsUsers.vue');
