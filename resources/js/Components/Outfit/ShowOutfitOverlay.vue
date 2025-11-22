@@ -27,10 +27,10 @@ const {
     fetchOutfit,
 } = useOutfitDetail(props.outfit);
 
-const { selectData, outfitItems, fetchItems } = useOutfitItems();
+const { enumStore, outfitItems, fetchItems } = useOutfitItems();
 
 // 選択したシーズン情報の取得
-const season = computed(() => selectData.getSeason(outfit.value.season));
+const season = computed(() => enumStore.getSeason(outfit.value.season));
 
 const { comments, isLoading, fetchComments } = useOutfitComments();
 
@@ -72,6 +72,11 @@ const openCommentOverlay = () => {
     commentOverlay.value = true;
 };
 
+const refreshOutfitData = async () => {
+    await fetchOutfit();
+    await fetchItems(outfit.value);
+};
+
 onMounted(async () => {
     await Promise.all([
         fetchOutfit(),
@@ -79,7 +84,8 @@ onMounted(async () => {
         fetchComments(outfit.value.id),
     ]);
     await fetchItems(outfit.value);
-    window.addEventListener('outfit-updated', fetchOutfit);
+
+    window.addEventListener('outfit-updated', refreshOutfitData);
     window.addEventListener('comment-posted', fetchComments);
 
     if (props.commentOverlay) {
@@ -88,7 +94,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-    window.removeEventListener('outfit-updated', fetchOutfit);
+    window.removeEventListener('outfit-updated', refreshOutfitData);
     window.removeEventListener('comment-posted', fetchComments);
 });
 </script>
@@ -158,7 +164,7 @@ onUnmounted(() => {
                         <LikesSection
                             v-if="outfit"
                             :outfit="outfit"
-                            @like="updateLike($event)"
+                            @like="$emit('updateLike', $event)"
                         />
                     </div>
 

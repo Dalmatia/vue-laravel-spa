@@ -156,6 +156,7 @@ export function useEditOutfitForm(props, emit) {
             editForm.value[itemType.imgKey] = selectedItem
                 ? selectedItem.file
                 : null;
+            itemRefs.value[itemType.key] = selectedItem ? selectedItem : {};
         }
     };
 

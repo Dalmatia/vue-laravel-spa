@@ -1,75 +1,45 @@
 import { defineStore } from 'pinia';
+import axios from 'axios';
 
-export const getEnumStore = defineStore('enum', {
+export const useEnumStore = defineStore('enum', {
     state: () => ({
-        mainCategory: {
-            1: 'アウター',
-            2: 'トップス',
-            3: 'ボトムス',
-            4: 'シューズ',
-            5: 'アクセサリー',
-        },
-        subCategory: {
-            1: 'Tシャツ',
-            2: 'シャツ',
-            3: 'ポロシャツ',
-            4: 'パーカー',
-            5: 'スウェット',
-            6: 'ニット',
-            7: 'パンツ',
-            8: 'デニムパンツ',
-            9: 'スカート',
-            10: 'ジャケット/ブルゾン',
-            11: 'コート',
-            12: 'スニーカー',
-            13: '革靴',
-            14: 'ブーツ',
-            15: 'フォーマルスーツ',
-            16: 'その他',
-        },
-        itemColor: {
-            1: 'ブラック',
-            2: 'ホワイト',
-            3: 'グレー',
-            4: 'レッド',
-            5: 'ネイビー',
-            6: 'ブルー',
-            7: 'ライトブルー',
-            8: 'グリーン',
-            9: 'オリーブ',
-            10: 'ブラウン',
-            11: 'ベージュ',
-            12: 'パープル',
-            13: 'イエロー',
-            14: 'オレンジ',
-            15: 'ピンク',
-            16: 'ネオン',
-            17: 'ボーダー柄',
-            18: 'パターン柄',
-            19: 'デニム',
-            20: 'シルバー',
-            21: 'ゴールド',
-            22: 'その他',
-        },
-        itemSeason: {
-            1: '春',
-            2: '夏',
-            3: '秋',
-            4: '冬',
-        },
+        colors: [],
+        seasons: [],
+        genders: [],
+        loaded: false,
     }),
-    getters: {
-        getMainCategoryName: (state) => (main_category) => {
-            return state.mainCategory[main_category] || '指定なし';
+
+    actions: {
+        async fetchEnums() {
+            if (this.loaded) return;
+
+            // まとめて取得するなら /api/enums が便利
+            const { data } = await axios.get('/api/enums');
+
+            this.colors = data.colors;
+            this.seasons = data.seasons;
+
+            // genders は endpoint が別
+            const genderRes = await axios.get('/api/get_genders');
+            this.genders = genderRes.data;
+
+            this.loaded = true;
         },
-        getSubCategoryName: (state) => (sub_category) => {
-            return state.subCategory[sub_category] || '指定なし';
+
+        // --- 名前変換ヘルパー ---
+        getColor(id) {
+            const item = this.colors.find((c) => c.id === Number(id));
+            return item ? item.name : '未選択';
         },
-        getColor: (state) => (color) => {
-            return state.itemColor[color] || '指定なし';
+
+        getSeason(id) {
+            const item = this.seasons.find((s) => s.id === Number(id));
+            return item ? item.name : '未選択';
         },
-        getSeason: (state) => (season) => {
-            return state.itemSeason[season] || '指定なし';
+
+        getGender(id) {
+            const item = this.genders.find((g) => g.value === Number(id));
+            return item ? item.label : '未選択';
         },
     },
 });
