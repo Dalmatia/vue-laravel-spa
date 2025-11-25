@@ -11,6 +11,7 @@ use App\Http\Controllers\LikeController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\OutfitController;
 use App\Http\Controllers\RegionController;
+use App\Http\Controllers\UserSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WeatherAPIController;
 use Illuminate\Http\Request;
@@ -36,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy']);
     Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
     Route::post('/user/{id}/update', [UserController::class, 'update'])->name('users.update');
+    Route::get('/settings', [UserSettingController::class, 'show']);
+    Route::put('/settings', [UserSettingController::class, 'update']);
     Route::post('/user/password', [UserController::class, 'updatePassword'])->name('users.update_password');
     Route::delete('/user/delete', [UserController::class, 'destroy'])->name('users.destroy');
 

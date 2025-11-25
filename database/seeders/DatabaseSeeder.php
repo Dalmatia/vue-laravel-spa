@@ -12,6 +12,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(SelectedCitySeeder::class);
+        $this->call([
+            SelectedCitySeeder::class,
+            GenerateSettingsForExistingUsersSeeder::class,
+        ]);
     }
 }

@@ -118,4 +118,9 @@ class User extends Authenticatable
             'id'
         );
     }
+
+    public function setting()
+    {
+        return $this->hasOne(UserSetting::class);
+    }
 }

@@ -23,7 +23,20 @@ class FollowedUser extends Notification implements ShouldBroadcast
 
     public function via(object $notifiable)
     {
-        return ['database', 'broadcast'];
+        $channels = [];
+
+        // DB 通知
+        if ($notifiable->setting->inapp_follow) {
+            $channels[] = 'database';
+            $channels[] = 'broadcast';
+        }
+
+        // メール通知を追加するならここで分岐
+        // if ($notifiable->setting->email_registration) {
+        //     $channels[] = 'mail';
+        // }
+
+        return $channels;
     }
 
     public function toDatabase($notifiable)

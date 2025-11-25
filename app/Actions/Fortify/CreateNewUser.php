@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Models\User;
 use App\Enums\Gender;
+use App\Models\UserSetting;
 use BenSampo\Enum\Rules\EnumValue;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -35,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
             'birthdate' => ['nullable', 'date'],
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'file' => '/user-placeholder.png',
             'email' => $input['email'],
@@ -43,5 +44,11 @@ class CreateNewUser implements CreatesNewUsers
             'gender' => $input['gender'] ?? Gender::NotSet,
             'birthdate' => $input['birthdate'] ?? null,
         ]);
+
+        UserSetting::create([
+            'user_id' => $user->id,
+        ]);
+
+        return $user;
     }
 }
