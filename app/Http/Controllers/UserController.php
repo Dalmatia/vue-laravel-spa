@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PasswordResetCompleted;
+use App\Events\UserWithdrawn;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
@@ -91,6 +93,7 @@ class UserController extends Controller
         // パスワードが入力された場合のみハッシュ化して保存
         $user->password = bcrypt($request->password);
         $user->save();
+        event(new PasswordResetCompleted($user));
 
         return response()->json(['message' => 'パスワードの更新が完了しました'], 200);
     }
@@ -98,6 +101,7 @@ class UserController extends Controller
     public function destroy(Request $request)
     {
         $user = $request->user();
+        event(new UserWithdrawn($user));
         $user->delete();
         return response()->noContent();
     }

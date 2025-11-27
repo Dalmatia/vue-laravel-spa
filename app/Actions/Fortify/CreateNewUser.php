@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Models\User;
 use App\Enums\Gender;
+use App\Events\UserRegistered;
 use App\Models\UserSetting;
 use BenSampo\Enum\Rules\EnumValue;
 use Illuminate\Support\Facades\Hash;
@@ -48,6 +49,7 @@ class CreateNewUser implements CreatesNewUsers
         UserSetting::create([
             'user_id' => $user->id,
         ]);
+        event(new UserRegistered($user));
 
         return $user;
     }

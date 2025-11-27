@@ -116,7 +116,9 @@ return [
 
     'markdown' => [
         'theme' => 'default',
-
+        'colors' => [
+            'primary' => '#4F46E5',
+        ],
         'paths' => [
             resource_path('views/vendor/mail'),
         ],
