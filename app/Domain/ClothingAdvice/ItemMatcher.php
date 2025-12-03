@@ -5,13 +5,15 @@ namespace App\Domain\ClothingAdvice;
 use App\Enums\MainCategory;
 use App\Enums\SubCategory;
 use App\Enums\Color;
+use App\Enums\Season;
 use App\Models\KeywordMapping;
 use App\Models\Item;
+use Carbon\Carbon;
 
 class ItemMatcher
 {
   // テキスト解析結果をもとに、ユーザーのアイテムをマッチングする。
-  public function matchItems(string $text, int $userId, array $excludeColorsByCategory = [], array $excludeItemIds = [], ?string $tpo = null): array
+  public function matchItems(string $text, int $userId, array $excludeColorsByCategory = [], array $excludeItemIds = [], ?string $tpo = null, ?string $targetDate = null): array
   {
     $matchedItems = array_fill_keys(
       [MainCategory::outer, MainCategory::tops, MainCategory::bottoms, MainCategory::shoes],
@@ -46,6 +48,20 @@ class ItemMatcher
         $query->whereNotIn('color', $excludeColorsByCategory[$category]);
       }
 
+      // 季節フィルタ追加
+      $season = $this->seasonFromDate($targetDate);
+      $query->where(function ($q) use ($season) {
+        $q->whereNull('season')
+          ->orWhere('season', 0) // 未設定を許可
+          ->orWhere('season', $season);
+      });
+
+      // カテゴリ別の除外色
+      $category = $kw->main_category;
+      if (!empty($excludeColorsByCategory[$category])) {
+        $query->whereNotIn('color', $excludeColorsByCategory[$category]);
+      }
+
       $userItem = $query->inRandomOrder()->first();
 
       // TPOフィルター適用
@@ -56,7 +72,7 @@ class ItemMatcher
       // 柄・アクセントの制御
       $colorTolerance = $this->getColorTolerance($tpo);
       $patternAllowance = $this->getPatternAllowance($tpo);
-      if ($userItem && $this->shouldSkipCombination($matchedItems, $userItem, $colorTolerance, $patternAllowance)) {
+      if ($userItem && $this->shouldSkipCombination($matchedItems, $userItem, $colorTolerance, $patternAllowance, $tpo)) {
         continue;
       }
 
@@ -125,7 +141,7 @@ class ItemMatcher
     };
   }
 
-  private function shouldSkipCombination(array $matchedItems, Item $candidate, int $patternAllowance = 1, ?string $tpo = null, int $colorTolerance = 1): bool
+  private function shouldSkipCombination(array $matchedItems, Item $candidate, int $colorTolerance = 1, int $patternAllowance = 1, ?string $tpo = null): bool
   {
     $candidateColor = $candidate->color;
     $isCandidatePattern = Color::isPattern($candidateColor);
@@ -147,20 +163,28 @@ class ItemMatcher
         }
       }
       // 柄×柄禁止
-      if ($isCandidatePattern && Color::isPattern($matchedColor)) continue;
+      if ($isCandidatePattern && Color::isPattern($matchedColor)) return true;
       // 柄×強調色禁止
       if (($isCandidatePattern && Color::isAccentColor($matchedColor)) ||
         (Color::isPattern($matchedColor) && $isCandidateAccent)
       ) continue;
       // 柄×カラー制限
-      if ($isCandidatePattern && !Color::isNeutralColor($matchedColor) && $colorTolerance <= 1) continue;
+      if ($isCandidatePattern && !Color::isNeutralColor($matchedColor) && $colorTolerance <= 1) return true;
 
       if (Color::isPattern($matchedColor)) {
         $patternCount++;
       }
     }
     // 柄許容数を超えたらスキップ
-    return $isCandidatePattern && $patternCount >= $patternAllowance;
+    if ($isCandidatePattern && $patternCount >= $patternAllowance) {
+      return true;
+    }
+    // 同色が多すぎる場合の最終チェック（任意の閾値、ここでは2）
+    if ($sameColorCount >= 2) {
+      return true;
+    }
+
+    return false;
   }
 
   private function getColorTolerance(?string $tpo): int
@@ -182,6 +206,18 @@ class ItemMatcher
       'casual', 'date' => 1,
       'outdoor' => 2,
       default => 1,
+    };
+  }
+
+  private function seasonFromDate(?string $date): int
+  {
+    $month = Carbon::parse($date)->month;
+
+    return match (true) {
+      $month >= 3 && $month <= 5 => Season::spring,
+      $month >= 6 && $month <= 8 => Season::summer,
+      $month >= 9 && $month <= 11 => Season::fall,
+      default => Season::winter,
     };
   }
 }

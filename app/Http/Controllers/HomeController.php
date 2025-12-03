@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
@@ -18,7 +19,7 @@ class HomeController extends Controller
 
     public function suggestionUsers()
     {
-        $authUserId = auth()->id();
+        $authUserId = Auth::id();
 
         $limit = request()->get('limit', 5);
 

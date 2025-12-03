@@ -43,6 +43,8 @@ class ClothingAdviceController extends Controller
                 'user_id' => $userId,
                 'tpo' => $validated['tpo'] ?? null,
                 'city_id' => $validated['cityId'] ?? null,
+                'targetDate' => $validated['targetDate'] ?? null,
+                'stack' => $e->getTraceAsString(),
             ]);
 
             return response()->json([

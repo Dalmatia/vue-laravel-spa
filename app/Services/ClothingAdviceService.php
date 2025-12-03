@@ -9,6 +9,7 @@ use App\Domain\ClothingAdvice\AdviceCache;
 use App\Enums\MainCategory;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ClothingAdviceService
 {
@@ -26,11 +27,11 @@ class ClothingAdviceService
     $user = User::findOrFail($userId);
     $profileHash = $user->profile_hash;
 
-    $cached = $this->adviceCache->get($userId, $date, $tpo, $cityId, $profileHash);
-    // すでにキャッシュされていれば返す
-    if ($cached) {
-      return $cached;
-    }
+    // $cached = $this->adviceCache->get($userId, $date, $tpo, $cityId, $profileHash);
+    // // すでにキャッシュされていれば返す
+    // if ($cached) {
+    //   return $cached;
+    // }
 
     $text = $this->generateAdvice($weatherData, $user, $tpo);
     $excludeConfig = $this->buildExclusionConfig($userId, $cityId);
@@ -40,7 +41,8 @@ class ClothingAdviceService
       $userId,
       $excludeConfig['colors'],
       $excludeConfig['ids'],
-      $tpo
+      $tpo,
+      $date
     );
 
     // キャッシュに保存（期限は1日）
@@ -58,7 +60,24 @@ class ClothingAdviceService
   private function generateAdvice(array $weatherData, User $user, ?string $tpo = null): string
   {
     $prompt = $this->promptBuilder->build($weatherData, $user, $tpo);
-    return $this->aiClient->getClothingAdvice($prompt);
+    try {
+      $reply = $this->aiClient->getClothingAdvice($prompt);
+      if (!is_string($reply) || trim($reply) === '') {
+        // 空応答は例外扱いしてフォールバック
+        throw new \RuntimeException('AI returned empty response');
+      }
+      return $reply;
+    } catch (\Throwable $e) {
+      // ログに詳細を残す（コントローラでも記録しているがここでも）
+      Log::error('AI服装アドバイス取得エラー: ' . $e->getMessage(), [
+        'user_id' => $user->id,
+        'tpo' => $tpo,
+        'stack' => $e->getTraceAsString(),
+      ]);
+
+      // フォールバックメッセージ（短め）
+      return '服装アドバイスを取得できませんでした。基本的な季節にあった服装をおすすめします：天候に合わせてアウターの有無を調整してください。';
+    }
   }
 
   /**
@@ -69,6 +88,15 @@ class ClothingAdviceService
     $yesterdayKey = Carbon::yesterday()->toDateString();
 
     $excludeItemIds = $this->adviceCache->getUsedItems($userId, $yesterdayKey, $cityId);
+    // getUsedItems がカテゴリ別に返す場合は統合して id の平坦配列にする
+    if (!empty($excludeItemIds) && is_array($excludeItemIds)) {
+      $flat = [];
+      array_walk_recursive($excludeItemIds, function ($v) use (&$flat) {
+        $flat[] = $v;
+      });
+      $excludeItemIds = array_values(array_filter(array_unique($flat)));
+    }
+
     $alreadyUsedColors = [
       MainCategory::outer => [],
       MainCategory::tops => [],
@@ -76,8 +104,8 @@ class ClothingAdviceService
       MainCategory::shoes => [],
     ];
 
-    $yesterday = $this->adviceCache->get($userId, $yesterdayKey, null, $cityId);
-    if ($yesterday && isset($yesterday['outfit_suggestion'])) {
+    $yesterday = $this->adviceCache->get($userId, $yesterdayKey, null, $cityId) ?? [];
+    if (!empty($yesterday['outfit_suggestion'])) {
       foreach ($yesterday['outfit_suggestion'] as $cat => $data) {
         if (!empty($data['item']['color'])) {
           $alreadyUsedColors[$cat][] = $data['item']['color'];
@@ -96,12 +124,31 @@ class ClothingAdviceService
    */
   private function storeResult(int $userId, string $date, array $result, array $matchedItems, ?string $tpo = null, ?string $cityId = null, ?string $profileHash = null): void
   {
-    $this->adviceCache->put($userId, $date, $result, $tpo, $cityId, $profileHash);
+    // $this->adviceCache->put($userId, $date, $result, $tpo, $cityId, $profileHash);
 
-    $usedItemIds = array_filter(
-      array_map(fn($d) => $d['item']['id'] ?? null, $matchedItems)
-    );
+    $usedItemIds = [];
+    foreach ($matchedItems as $cat => $data) {
+      $item = $data['item'] ?? null;
+
+      if (is_object($item) && isset($item->id)) {
+        $usedItemIds[] = $item->id;
+      } elseif (is_array($item) && isset($item['id'])) {
+        $usedItemIds[] = $item['id'];
+      }
+    }
+
+    if (empty($usedItemIds)) {
+      Log::info("USED ITEMS NOT SAVED (no match)", [
+        'date' => $date,
+        'matchedItems' => $matchedItems,
+      ]);
+      return;
+    }
 
     $this->adviceCache->putUsedItems($userId, $date, $usedItemIds, $cityId);
+    Log::info("USED ITEMS SAVED", [
+      'date' => $date,
+      'usedItemIds' => $usedItemIds,
+    ]);
   }
 }

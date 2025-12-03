@@ -106,7 +106,7 @@ class PromptBuilder
 
     foreach ($matchedItems as $matched) {
       if (!isset($matched['item'])) continue;
-      $color = $matched['item']->color;
+      $color = is_object($matched['item']) ? $matched['item']->color : ($matched['item']['color'] ?? null);
 
       if (Color::isPattern($color)) $patterns++;
       if (Color::isAccentColor($color)) $accents++;
