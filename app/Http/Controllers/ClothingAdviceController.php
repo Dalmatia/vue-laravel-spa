@@ -22,34 +22,24 @@ class ClothingAdviceController extends Controller
         $validated = $request->validate([
             'weatherData' => 'required|array',
             'tpo' => 'nullable|string',
-            'targetDate' => 'nullable|date',
-            'cityId' => 'nullable|integer',
+            'useJson' => 'nullable|boolean',
         ]);
 
         $userId = Auth::id();
 
-        try {
-            $advice = $this->clothingAdviceService->suggestClothing(
+        $result = !empty($validated['useJson'])
+            ? $this->clothingAdviceService->suggestClothingJson(
                 $validated['weatherData'],
                 $userId,
-                $validated['targetDate'] ?? now()->toDateString(),
-                $validated['tpo'] ?? null,
-                $validated['cityId'] ?? null
+                $validated['tpo'] ?? null
+            )
+            : $this->clothingAdviceService->suggestClothing(
+                $validated['weatherData'],
+                $userId,
+                null,
+                $validated['tpo'] ?? null
             );
 
-            return response()->json($advice);
-        } catch (\Throwable $e) {
-            Log::error('服装アドバイス生成エラー: ' . $e->getMessage(), [
-                'user_id' => $userId,
-                'tpo' => $validated['tpo'] ?? null,
-                'city_id' => $validated['cityId'] ?? null,
-                'targetDate' => $validated['targetDate'] ?? null,
-                'stack' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'error' => '服装アドバイスの生成に失敗しました。',
-            ], 500);
-        }
+        return response()->json($result);
     }
 }

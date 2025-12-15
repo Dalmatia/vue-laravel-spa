@@ -87,6 +87,85 @@ class ItemMatcher
     return $matchedItems;
   }
 
+  public function matchItemsFromJson(
+    array $itemsByCategory,
+    int $userId,
+    array $excludeColorsByCategory = [],
+    array $excludeItemIds = [],
+    ?string $tpo = null,
+    ?string $targetDate = null
+  ): array {
+    $matchedItems = array_fill_keys(
+      [MainCategory::outer, MainCategory::tops, MainCategory::bottoms, MainCategory::shoes],
+      null
+    );
+
+    foreach ($itemsByCategory as $categoryKey => $keywords) {
+      $category = MainCategory::tryFrom($categoryKey);
+      if (!$category || empty($keywords)) {
+        continue;
+      }
+
+      if ($matchedItems[$category]) {
+        continue;
+      }
+
+      $query = Item::where('user_id', $userId)
+        ->where('main_category', $category);
+
+      // キーワードベースで絞り込み
+      $query->where(function ($q) use ($keywords) {
+        foreach ($keywords as $kw) {
+          $q->orWhereHas(
+            'keywordMappings',
+            fn($m) =>
+            $m->where('keyword', 'LIKE', "%{$kw}%")
+          );
+        }
+      });
+
+      if (!empty($excludeItemIds)) {
+        $query->whereNotIn('id', $excludeItemIds);
+      }
+
+      if (!empty($excludeColorsByCategory[$category])) {
+        $query->whereNotIn('color', $excludeColorsByCategory[$category]);
+      }
+
+      // 季節
+      $season = $this->seasonFromDate($targetDate);
+      $query->where(function ($q) use ($season) {
+        $q->whereNull('season')
+          ->orWhere('season', 0)
+          ->orWhere('season', $season);
+      });
+
+      $candidate = $query->inRandomOrder()->first();
+
+      if (!$candidate) continue;
+      if (!$this->applyTpoFilter($candidate, $tpo)) continue;
+
+      if ($this->shouldSkipCombination(
+        $matchedItems,
+        $candidate,
+        $this->getColorTolerance($tpo),
+        $this->getPatternAllowance($tpo),
+        $tpo
+      )) {
+        continue;
+      }
+
+      $matchedItems[$category] = [
+        'source' => 'json',
+        'keywords' => $keywords,
+        'item' => $candidate,
+      ];
+    }
+
+    return $matchedItems;
+  }
+
+
   // TPOに応じたフィルター
   private function applyTpoFilter(Item $item, ?string $tpo): bool
   {

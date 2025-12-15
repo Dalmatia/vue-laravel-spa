@@ -59,6 +59,53 @@ class PromptBuilder
     PROMPT;
   }
 
+  public function buildJson(
+    array $weatherData,
+    ?User $user = null,
+    ?string $tpo = null
+  ): string {
+    $genderText = $this->mapGenderToText(Gender::coerce($user?->gender));
+    $ageText = $this->mapAgeToText($user?->age);
+    $tpoText = $this->mapTpoToText($tpo);
+
+    return <<<PROMPT
+      あなたはファッションの専門家です。
+      **必ず有効なJSONのみを返してください。説明文や前置きは禁止です。**
+
+      以下のJSONスキーマを厳守してください。
+
+      {
+        "summary": "string",
+        "items": {
+          "tops": ["string"],
+          "bottoms": ["string"],
+          "shoes": ["string"],
+          "outer": ["string"]
+        },
+        "notes": ["string"]
+      }
+
+      【ユーザー情報】
+      - 性別: {$genderText}
+      - 年齢: {$ageText}
+
+      【シーン】
+      - {$tpoText}
+
+      【天気】
+      - 最高気温: {$weatherData['max']}℃
+      - 最低気温: {$weatherData['min']}℃
+      - 降水確率: {$weatherData['pop']}%
+      - 湿度: {$weatherData['humidityAvg']}%
+      - 風速: {$weatherData['windAvg']} m/s
+
+      制約:
+      - JSON以外は出力しない
+      - 150文字以内の内容に収める
+    PROMPT;
+  }
+
+
   private function mapGenderToText(?Gender $gender): string
   {
     if (!$gender instanceof Gender) {

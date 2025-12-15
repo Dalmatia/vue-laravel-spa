@@ -33,7 +33,7 @@ class ClothingAdviceService
     //   return $cached;
     // }
 
-    $text = $this->generateAdvice($weatherData, $user, $tpo);
+    $text = $this->generateAiResponse($weatherData, $user, $tpo);
     $excludeConfig = $this->buildExclusionConfig($userId, $cityId);
 
     $matchedItems = $this->itemMatcher->matchItems(
@@ -57,7 +57,7 @@ class ClothingAdviceService
     return $result;
   }
 
-  private function generateAdvice(array $weatherData, User $user, ?string $tpo = null): string
+  private function generateAiResponse(array $weatherData, User $user, ?string $tpo = null): string
   {
     $prompt = $this->promptBuilder->build($weatherData, $user, $tpo);
     try {
@@ -78,6 +78,31 @@ class ClothingAdviceService
       // フォールバックメッセージ（短め）
       return '服装アドバイスを取得できませんでした。基本的な季節にあった服装をおすすめします：天候に合わせてアウターの有無を調整してください。';
     }
+  }
+
+  public function suggestClothingJson(array $weatherData, int $userId, ?string $tpo = null): array
+  {
+    $user = User::findOrFail($userId);
+
+    $prompt = $this->promptBuilder->buildJson($weatherData, $user, $tpo);
+    $json = $this->aiClient->getClothingAdviceJson($prompt);
+
+    $excludeConfig = $this->buildExclusionConfig($userId);
+
+    $matchedItems = $this->itemMatcher->matchItemsFromJson(
+      $json['items'] ?? [],
+      $userId,
+      $excludeConfig['colors'],
+      $excludeConfig['ids'],
+      $tpo,
+      now()->toDateString()
+    );
+
+    return [
+      'category' => 'AIによる提案',
+      'advice' => $json,
+      'outfit_suggestion' => $matchedItems,
+    ];
   }
 
   /**
