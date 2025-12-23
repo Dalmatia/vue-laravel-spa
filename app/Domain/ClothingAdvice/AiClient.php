@@ -26,24 +26,20 @@ class AiClient
       $response = $client->generateContent($prompt);
       $text = $response->text();
 
-      $json = $this->extractJson($text);
+      $jsonText = $this->extractJson($text);
+      $json = json_decode($jsonText, true, 512, JSON_THROW_ON_ERROR);
 
-      return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+      if (!isset($json['items']) || !is_array($json['items'])) {
+        throw new \RuntimeException('Invalid AI JSON structure');
+      }
+
+      return $json;
     } catch (\Throwable $e) {
       Log::error('Gemini JSON parse error', [
         'error' => $e->getMessage(),
       ]);
 
-      return [
-        'summary' => '服装アドバイスを生成できませんでした。',
-        'items' => [
-          'tops' => [],
-          'bottoms' => [],
-          'shoes' => [],
-          'outer' => [],
-        ],
-        'notes' => [],
-      ];
+      throw $e;
     }
   }
 

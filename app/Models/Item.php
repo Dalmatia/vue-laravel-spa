@@ -30,4 +30,9 @@ class Item extends Model
     {
         return $this->belongsToMany(Outfit::class, 'outfits_items');
     }
+
+    public function keywordMappings()
+    {
+        return $this->hasMany(KeywordMapping::class);
+    }
 }

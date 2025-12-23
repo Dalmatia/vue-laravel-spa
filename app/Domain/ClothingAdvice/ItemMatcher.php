@@ -10,126 +10,52 @@ use App\Models\KeywordMapping;
 use App\Models\Item;
 use Carbon\Carbon;
 
+use function Symfony\Component\Clock\now;
+
 class ItemMatcher
 {
-  // テキスト解析結果をもとに、ユーザーのアイテムをマッチングする。
-  public function matchItems(string $text, int $userId, array $excludeColorsByCategory = [], array $excludeItemIds = [], ?string $tpo = null, ?string $targetDate = null): array
+  public function matchItemsFromJson(array $itemsByCategory, int $userId, array $excludeColorsByCategory = [], array $excludeItemIds = [], ?string $tpo = null, ?string $targetDate = null): array
   {
-    $matchedItems = array_fill_keys(
-      [MainCategory::outer, MainCategory::tops, MainCategory::bottoms, MainCategory::shoes],
-      null
-    );
-
-    $keywords = KeywordMapping::all();
-
-    foreach ($keywords as $kw) {
-      if (mb_stripos($text, $kw->keyword) === false) {
-        continue;
-      }
-
-      $query = Item::where('user_id', $userId);
-
-      if ($kw->main_category) {
-        $query->where('main_category', $kw->main_category);
-      }
-      if ($kw->sub_category) {
-        $query->where('sub_category', $kw->sub_category);
-      }
-      if ($kw->color) {
-        $query->where('color', $kw->color);
-      }
-      if (!empty($excludeItemIds)) {
-        $query->whereNotIn('id', $excludeItemIds);
-      }
-
-      // カテゴリ別の除外色を適用
-      $category = $kw->main_category;
-      if (!empty($excludeColorsByCategory[$category])) {
-        $query->whereNotIn('color', $excludeColorsByCategory[$category]);
-      }
-
-      // 季節フィルタ追加
-      $season = $this->seasonFromDate($targetDate);
-      $query->where(function ($q) use ($season) {
-        $q->whereNull('season')
-          ->orWhere('season', 0) // 未設定を許可
-          ->orWhere('season', $season);
-      });
-
-      // カテゴリ別の除外色
-      $category = $kw->main_category;
-      if (!empty($excludeColorsByCategory[$category])) {
-        $query->whereNotIn('color', $excludeColorsByCategory[$category]);
-      }
-
-      $userItem = $query->inRandomOrder()->first();
-
-      // TPOフィルター適用
-      if ($userItem && !$this->applyTpoFilter($userItem, $tpo)) {
-        continue;
-      }
-
-      // 柄・アクセントの制御
-      $colorTolerance = $this->getColorTolerance($tpo);
-      $patternAllowance = $this->getPatternAllowance($tpo);
-      if ($userItem && $this->shouldSkipCombination($matchedItems, $userItem, $colorTolerance, $patternAllowance, $tpo)) {
-        continue;
-      }
-
-      if ($category && !$matchedItems[$category]) {
-        $matchedItems[$category] = [
-          'keyword' => $kw->keyword,
-          'item'    => $userItem,
-        ];
-      }
-    }
-
-    return $matchedItems;
-  }
-
-  public function matchItemsFromJson(
-    array $itemsByCategory,
-    int $userId,
-    array $excludeColorsByCategory = [],
-    array $excludeItemIds = [],
-    ?string $tpo = null,
-    ?string $targetDate = null
-  ): array {
-    $matchedItems = array_fill_keys(
-      [MainCategory::outer, MainCategory::tops, MainCategory::bottoms, MainCategory::shoes],
-      null
-    );
+    $matchedItems = [
+      MainCategory::outer   => null,
+      MainCategory::tops    => null,
+      MainCategory::bottoms => null,
+      MainCategory::shoes   => null,
+    ];
 
     foreach ($itemsByCategory as $categoryKey => $keywords) {
-      $category = MainCategory::tryFrom($categoryKey);
-      if (!$category || empty($keywords)) {
+      $categoryValue = $this->resolveMainCategory($categoryKey);
+      if (!$categoryValue === null) {
+        logger()->warning('Invalid category key from AI', [
+          'categoryKey' => $categoryKey,
+        ]);
         continue;
       }
 
-      if ($matchedItems[$category]) {
+      if ($matchedItems[$categoryValue] !== null) {
         continue;
       }
 
       $query = Item::where('user_id', $userId)
-        ->where('main_category', $category);
+        ->where('main_category', $categoryValue);
 
       // キーワードベースで絞り込み
-      $query->where(function ($q) use ($keywords) {
-        foreach ($keywords as $kw) {
-          $q->orWhereHas(
-            'keywordMappings',
-            fn($m) =>
-            $m->where('keyword', 'LIKE', "%{$kw}%")
-          );
-        }
-      });
+      // $query->where(function ($q) use ($keywords) {
+      //   foreach ($keywords as $kw) {
+      //     $q->orWhereHas(
+      //       'keywordMappings',
+      //       fn($m) =>
+      //       $m->where('keyword', 'LIKE', "%{$kw}%")
+      //     );
+      //   }
+      // });
 
       if (!empty($excludeItemIds)) {
         $query->whereNotIn('id', $excludeItemIds);
       }
 
-      if (!empty($excludeColorsByCategory[$category])) {
-        $query->whereNotIn('color', $excludeColorsByCategory[$category]);
+      if (!empty($excludeColorsByCategory[$categoryValue])) {
+        $query->whereNotIn('color', $excludeColorsByCategory[$categoryValue]);
       }
 
       // 季節
@@ -155,7 +81,7 @@ class ItemMatcher
         continue;
       }
 
-      $matchedItems[$category] = [
+      $matchedItems[$categoryValue] = [
         'source' => 'json',
         'keywords' => $keywords,
         'item' => $candidate,
@@ -165,6 +91,16 @@ class ItemMatcher
     return $matchedItems;
   }
 
+  private function resolveMainCategory(string $key): ?int
+  {
+    return match ($key) {
+      'outer'   => MainCategory::outer,
+      'tops'    => MainCategory::tops,
+      'bottoms' => MainCategory::bottoms,
+      'shoes'   => MainCategory::shoes,
+      default   => null,
+    };
+  }
 
   // TPOに応じたフィルター
   private function applyTpoFilter(Item $item, ?string $tpo): bool
@@ -290,7 +226,7 @@ class ItemMatcher
 
   private function seasonFromDate(?string $date): int
   {
-    $month = Carbon::parse($date)->month;
+    $month = Carbon::parse($date ?? now())->month;
 
     return match (true) {
       $month >= 3 && $month <= 5 => Season::spring,

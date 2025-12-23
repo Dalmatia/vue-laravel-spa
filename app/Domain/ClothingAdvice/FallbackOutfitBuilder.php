@@ -16,7 +16,7 @@ class FallbackOutfitBuilder
    */
   public function fillMissingItems(array $matchedItems, int $userId, ?string $tpo = null, ?string $targetDate = null): array
   {
-    foreach ($matchedItems as $category => $data) {
+    foreach ($matchedItems as $categoryValue => $data) {
       if (!empty($data['item'])) {
         continue;
       }
@@ -24,13 +24,13 @@ class FallbackOutfitBuilder
       $filled = $this->findBestCandidate(
         $matchedItems,
         $userId,
-        $category,
+        $categoryValue,
         $tpo,
         $targetDate
       );
 
       if ($filled) {
-        $matchedItems[$category] = [
+        $matchedItems[$categoryValue] = [
           'source' => 'fallback',
           'item'   => $filled,
         ];
@@ -43,7 +43,7 @@ class FallbackOutfitBuilder
   /**
    * 指定カテゴリの最適候補を探す
    */
-  private function findBestCandidate(array $currentItems, int $userId, string $category, ?string $tpo, ?string $targetDate): ?Item
+  private function findBestCandidate(array $currentItems, int $userId, int $category, ?string $tpo, ?string $targetDate): ?Item
   {
     $query = Item::where('user_id', $userId)
       ->where('main_category', $category);

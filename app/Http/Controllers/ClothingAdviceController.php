@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ClothingAdviceService;
+use App\Application\ClothingAdvice\ClothingAdviceUseCase;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class ClothingAdviceController extends Controller
 {
     public function __construct(
-        private ClothingAdviceService $clothingAdviceService
+        private ClothingAdviceUseCase $useCase
     ) {}
 
     /**
@@ -22,23 +22,19 @@ class ClothingAdviceController extends Controller
         $validated = $request->validate([
             'weatherData' => 'required|array',
             'tpo' => 'nullable|string',
-            'useJson' => 'nullable|boolean',
+            'targetDate' => 'required|date',
+            'cityId' => 'nullable|integer',
         ]);
 
         $userId = Auth::id();
 
-        $result = !empty($validated['useJson'])
-            ? $this->clothingAdviceService->suggestClothingJson(
-                $validated['weatherData'],
-                $userId,
-                $validated['tpo'] ?? null
-            )
-            : $this->clothingAdviceService->suggestClothing(
-                $validated['weatherData'],
-                $userId,
-                null,
-                $validated['tpo'] ?? null
-            );
+        $result = $this->useCase->handle(
+            $validated['weatherData'],
+            $userId,
+            $validated['targetDate'],
+            $validated['tpo'] ?? null,
+            $validated['cityId'] ?? null
+        );
 
         return response()->json($result);
     }
