@@ -16,9 +16,4 @@ class KeywordMapping extends Model
         'color',
         'style',
     ];
-
-    public function item()
-    {
-        return $this->belongsTo(Item::class);
-    }
 }

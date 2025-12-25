@@ -54,23 +54,30 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['production', 'exceptions'],
             'ignore_exceptions' => false,
         ],
 
-        'single' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders' => true,
+        'production' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/production.log'),
+            'level' => env('LOG_LEVEL', 'warning'),
+            'days' => 30,
+            'permission' => 0644,
         ],
 
-        'daily' => [
+        'exceptions' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
-            'days' => 14,
-            'replace_placeholders' => true,
+            'path' => storage_path('logs/exceptions.log'),
+            'level' => 'error',
+            'days' => 60,
+        ],
+
+        'access' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/access.log'),
+            'level' => 'info',
+            'days' => 7,
         ],
 
         'slack' => [
@@ -89,7 +96,7 @@ return [
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
-                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT'),
             ],
             'processors' => [PsrLogMessageProcessor::class],
         ],
