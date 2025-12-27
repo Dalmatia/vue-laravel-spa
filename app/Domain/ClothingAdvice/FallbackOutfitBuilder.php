@@ -2,6 +2,7 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Enums\MainCategory;
 use App\Models\Item;
 
 class FallbackOutfitBuilder
@@ -14,8 +15,28 @@ class FallbackOutfitBuilder
   /**
    * null のカテゴリをユーザーの手持ちアイテムで補完する
    */
-  public function fillMissingItems(array $matchedItems, int $userId, ?string $tpo = null, ?string $targetDate = null): array
+  public function fillMissingItems(array $matchedItems, int $userId, OuterPolicy $outerPolicy, ?string $tpo = null, ?string $targetDate = null): array
   {
+    if (
+      $outerPolicy === OuterPolicy::REQUIRED &&
+      empty($matchedItems[MainCategory::outer]['item'] ?? null)
+    ) {
+      $outer = $this->findBestCandidate(
+        $matchedItems,
+        $userId,
+        MainCategory::outer,
+        $tpo,
+        $targetDate
+      );
+
+      if ($outer) {
+        $matchedItems[MainCategory::outer] = [
+          'source' => 'fallback',
+          'item'   => $outer,
+        ];
+      }
+    }
+
     foreach ($matchedItems as $categoryValue => $data) {
       if (!empty($data['item'])) {
         continue;

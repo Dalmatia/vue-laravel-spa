@@ -2,6 +2,7 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Enums\MainCategory;
 use App\Models\Item;
 use App\Models\KeywordMapping;
 
@@ -20,8 +21,14 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     array $excludeColors,
     array $currentItems,
     ?string $tpo,
-    ?string $targetDate
+    ?string $targetDate,
+    OuterPolicy $outerPolicy
   ): ?Item {
+    if ($category === MainCategory::outer) {
+      if ($outerPolicy === OuterPolicy::AVOID) {
+        return null;
+      }
+    }
     $conditions = $this->buildConditionsFromKeywords($keywords);
 
     $query = Item::where('user_id', $userId)

@@ -51,21 +51,52 @@ class WeatherAnalyzer
     return array_key_first($counts);
   }
 
+  // 体感温度の平均を計算するメソッド
+  public function calculateAverageFeelsLike($hourlyData, string $targetDate): ?float
+  {
+    if (!isset($hourlyData['time'], $hourlyData['apparent_temperature'])) {
+      return null;
+    }
+
+    $total = 0;
+    $count = 0;
+
+    foreach ($hourlyData['time'] as $i => $timestamp) {
+      if (
+        str_starts_with($timestamp, $targetDate) &&
+        isset($hourlyData['apparent_temperature'][$i])
+      ) {
+        $total += $hourlyData['apparent_temperature'][$i];
+        $count++;
+      }
+    }
+
+    return $count > 0 ? round($total / $count, 1) : null;
+  }
+
   // 取得した天気データから、服装アドバイスに必要な情報を抽出するメソッド
   public function extractWeatherInfoForAdvice($data, $index)
   {
     $date = $data['daily']['time'][$index] ?? now()->addDays($index)->format('Y-m-d');
     // 湿度と風速をhourlyから平均で取得
     [$humidityAvg, $windAvg] = $this->calculateAverageHourly($data['hourly'], $date);
+    $feelsLike = $this->calculateAverageFeelsLike($data['hourly'], $date);
 
     // 天気（最高/最低気温、降水確率、湿度、風速）を取得
     return [
-      'max' => $data['daily']['temperature_2m_max'][$index] ?? null,
-      'min' => $data['daily']['temperature_2m_min'][$index] ?? null,
+      'max' => isset($data['daily']['temperature_2m_max'][$index])
+        ? round($data['daily']['temperature_2m_max'][$index])
+        : null,
+
+      'min' => isset($data['daily']['temperature_2m_min'][$index])
+        ? round($data['daily']['temperature_2m_min'][$index])
+        : null,
+
       'pop' => $data['daily']['precipitation_probability_max'][$index] ?? null,
       'avgPop' => $data['daily']['precipitation_probability_mean'][$index] ?? null,
-      'humidityAvg' => $humidityAvg ?? null,
-      'windAvg' => $windAvg ?? null,
+      'humidityAvg' => $humidityAvg,
+      'windAvg' => $windAvg,
+      'feels_like' => $feelsLike,
     ];
   }
 }

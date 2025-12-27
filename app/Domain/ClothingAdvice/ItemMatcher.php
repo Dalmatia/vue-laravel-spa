@@ -2,16 +2,25 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Domain\Weather\ThermalLevelResolver;
 use App\Enums\MainCategory;
 
 class ItemMatcher
 {
   public function __construct(
     private CategoryMatcherStrategy $categoryMatcher,
+    private OuterPolicyResolver $outerPolicyResolver,
   ) {}
 
-  public function matchItemsFromJson(array $itemsByCategory, int $userId, array $excludeColorsByCategory = [], array $excludeItemIds = [], ?string $tpo = null, ?string $targetDate = null): array
-  {
+  public function matchItemsFromJson(
+    array $itemsByCategory,
+    int $userId,
+    array $excludeColorsByCategory = [],
+    array $excludeItemIds = [],
+    OuterPolicy $outerPolicy,
+    ?string $tpo = null,
+    ?string $targetDate = null
+  ): array {
     $matchedItems = [
       MainCategory::outer   => null,
       MainCategory::tops    => null,
@@ -33,7 +42,8 @@ class ItemMatcher
         $excludeColorsByCategory[$category] ?? [],
         $matchedItems,
         $tpo,
-        $targetDate
+        $targetDate,
+        $outerPolicy
       );
 
       if ($item) {

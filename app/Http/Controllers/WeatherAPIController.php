@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Analyzers\WeatherAnalyzer;
 use App\Formatters\WeatherFormatter;
 use Illuminate\Http\Request;
 use App\Services\WeatherService;
@@ -9,16 +10,11 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherAPIController extends Controller
 {
-    private WeatherService $weatherService;
-    private WeatherFormatter $weatherFormatter;
-
     public function __construct(
-        WeatherService $weatherService,
-        WeatherFormatter $weatherFormatter
-    ) {
-        $this->weatherService = $weatherService;
-        $this->weatherFormatter = $weatherFormatter;
-    }
+        private WeatherAnalyzer $analyzer,
+        private WeatherService $weatherService,
+        private WeatherFormatter $weatherFormatter
+    ) {}
 
     public function fetchWeather(Request $request)
     {
@@ -32,8 +28,9 @@ class WeatherAPIController extends Controller
 
         $result = [];
         foreach (['today' => 0, 'tomorrow' => 1] as $label => $index) {
-            $formatted = $this->weatherFormatter->formatWeather($weatherData, $index);
-            $result[$label] = $formatted;
+            $weatherInfo = $this->analyzer->extractWeatherInfoForAdvice($weatherData, $index);
+
+            $result[$label] = $this->weatherFormatter->formatWeather($weatherData, $index, $weatherInfo);
         }
 
         return response()->json([

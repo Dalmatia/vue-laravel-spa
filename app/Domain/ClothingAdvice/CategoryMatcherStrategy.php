@@ -14,6 +14,7 @@ interface CategoryMatcherStrategy
     array $excludeColors,
     array $currentItems,
     ?string $tpo,
-    ?string $targetDate
+    ?string $targetDate,
+    OuterPolicy $outerPolicy
   ): ?Item;
 }

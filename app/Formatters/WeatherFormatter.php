@@ -12,22 +12,25 @@ class WeatherFormatter
   ) {}
 
   // 指定された日の天気データをフォーマットして返すメソッド
-  public function formatWeather($data, $index)
+  public function formatWeather(array $data, int $index, array $weatherInfo)
   {
-    if (!isset($data['daily']['time'][$index])) return null;
-
     $weatherCode = $this->getWeatherCodeForDisplay($data, $index);
-    $weatherDescribe = WeatherCode::weatherDescribe($weatherCode);
-    $weatherIcon = WeatherCode::weatherIcon($weatherCode);
 
     return [
-      'date' => date('Y-m-d', strtotime($data['daily']['time'][$index])),
-      'description' => $weatherDescribe,
-      'weather_icon' => $weatherIcon,
-      'max_temp' => isset($data['daily']['temperature_2m_max'][$index]) ? round($data['daily']['temperature_2m_max'][$index]) : '不明',
-      'min_temp' => isset($data['daily']['temperature_2m_min'][$index]) ? round($data['daily']['temperature_2m_min'][$index]) : '不明',
-      'precipitation_probability' => $data['daily']['precipitation_probability_max'][$index] ?? '不明',
-      'precipitation_avg' => $data['daily']['precipitation_probability_mean'][$index] ?? null,
+      'date' => $weatherInfo['date'] ?? date('Y-m-d', strtotime($data['daily']['time'][$index])),
+
+      'description' => WeatherCode::weatherDescribe($weatherCode),
+      'weather_icon' => WeatherCode::weatherIcon($weatherCode),
+
+      'max_temp' => $weatherInfo['max'],
+      'min_temp' => $weatherInfo['min'],
+      'feels_like' => $weatherInfo['feels_like'],
+
+      'humidity_avg' => $weatherInfo['humidityAvg'],
+      'wind_avg' => $weatherInfo['windAvg'],
+
+      'precipitation_probability' => $weatherInfo['pop'],
+      'precipitation_avg' => $weatherInfo['avgPop'],
     ];
   }
 
