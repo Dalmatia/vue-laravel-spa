@@ -2,8 +2,6 @@
 
 namespace App\Domain\ClothingAdvice;
 
-use App\Models\Item;
-
 interface CategoryMatcherStrategy
 {
   public function match(
@@ -15,6 +13,5 @@ interface CategoryMatcherStrategy
     array $currentItems,
     ?string $tpo,
     ?string $targetDate,
-    OuterPolicy $outerPolicy
-  ): ?Item;
+  ): ItemMatchResult;
 }

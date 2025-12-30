@@ -4,6 +4,7 @@ namespace App\Domain\ClothingAdvice;
 
 use App\Enums\MainCategory;
 use App\Models\Item;
+use Illuminate\Database\Eloquent\Collection;
 
 class FallbackOutfitBuilder
 {
@@ -17,43 +18,31 @@ class FallbackOutfitBuilder
    */
   public function fillMissingItems(array $matchedItems, int $userId, OuterPolicy $outerPolicy, ?string $tpo = null, ?string $targetDate = null): array
   {
-    if (
-      $outerPolicy === OuterPolicy::REQUIRED &&
-      empty($matchedItems[MainCategory::outer]['item'] ?? null)
-    ) {
-      $outer = $this->findBestCandidate(
-        $matchedItems,
-        $userId,
-        MainCategory::outer,
-        $tpo,
-        $targetDate
-      );
-
-      if ($outer) {
-        $matchedItems[MainCategory::outer] = [
-          'source' => 'fallback',
-          'item'   => $outer,
-        ];
-      }
-    }
-
     foreach ($matchedItems as $categoryValue => $data) {
-      if (!empty($data['item'])) {
+      if (!empty($data['item'] ?? null)) {
         continue;
       }
 
-      $filled = $this->findBestCandidate(
-        $matchedItems,
+      if (
+        $categoryValue === MainCategory::outer &&
+        $outerPolicy === OuterPolicy::AVOID
+      ) {
+        continue;
+      }
+
+      $result = $this->matchFallbackItem(
         $userId,
         $categoryValue,
+        $matchedItems,
         $tpo,
         $targetDate
       );
 
-      if ($filled) {
+      if ($result->primary) {
         $matchedItems[$categoryValue] = [
           'source' => 'fallback',
-          'item'   => $filled,
+          'item'   => $result->primary,
+          'alternatives' => $result->alternatives,
         ];
       }
     }
@@ -61,10 +50,7 @@ class FallbackOutfitBuilder
     return $matchedItems;
   }
 
-  /**
-   * 指定カテゴリの最適候補を探す
-   */
-  private function findBestCandidate(array $currentItems, int $userId, int $category, ?string $tpo, ?string $targetDate): ?Item
+  private function findCandidate(int $userId, int $category, ?string $targetDate): Collection
   {
     $query = Item::where('user_id', $userId)
       ->where('main_category', $category);
@@ -77,7 +63,18 @@ class FallbackOutfitBuilder
         ->orWhere('season', $season);
     });
 
-    $candidates = $query->get()->shuffle();
+    return $query->get()->shuffle();
+  }
+
+  /**
+   * 指定カテゴリの最適候補を探す
+   */
+  private function matchFallbackItem(int $userId, int $category, array $currentItems, ?string $tpo, ?string $targetDate): ItemMatchResult
+  {
+    $candidates = $this->findCandidate($userId, $category, $targetDate);
+
+    $primary = null;
+    $alternatives = [];
 
     foreach ($candidates as $candidate) {
       if ($this->ruleEvaluator->canUseItem(
@@ -87,10 +84,14 @@ class FallbackOutfitBuilder
         $this->ruleEvaluator->getColorTolerance($tpo),
         $this->ruleEvaluator->getPatternAllowance($tpo)
       )) {
-        return $candidate;
+        if ($primary === null) {
+          $primary = $candidate;
+        } else {
+          $alternatives[] = $candidate;
+        }
       }
     }
 
-    return null;
+    return new ItemMatchResult($primary, $alternatives);
   }
 }

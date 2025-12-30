@@ -2,7 +2,6 @@
 
 namespace App\Domain\ClothingAdvice;
 
-use App\Enums\MainCategory;
 use App\Models\Item;
 use App\Models\KeywordMapping;
 
@@ -22,13 +21,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     array $currentItems,
     ?string $tpo,
     ?string $targetDate,
-    OuterPolicy $outerPolicy
-  ): ?Item {
-    if ($category === MainCategory::outer) {
-      if ($outerPolicy === OuterPolicy::AVOID) {
-        return null;
-      }
-    }
+  ): ItemMatchResult {
     $conditions = $this->buildConditionsFromKeywords($keywords);
 
     $query = Item::where('user_id', $userId)
@@ -65,21 +58,31 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
         ->orWhere('season', $season);
     });
 
-    $candidate = $query->inRandomOrder()->first();
+    $candidates = $query->limit(5)->get();
 
-    if (!$candidate) {
-      return null;
+    if ($candidates->isEmpty()) {
+      return new ItemMatchResult(null);
     }
 
-    return $this->ruleEvaluator->canUseItem(
-      $candidate,
-      $currentItems,
-      $tpo,
-      $this->ruleEvaluator->getColorTolerance($tpo),
-      $this->ruleEvaluator->getPatternAllowance($tpo)
-    )
-      ? $candidate
-      : null;
+    $primary = null;
+    $alternatives = [];
+
+    foreach ($candidates as $item) {
+      if ($this->ruleEvaluator->canUseItem(
+        $item,
+        $currentItems,
+        $tpo,
+        $this->ruleEvaluator->getColorTolerance($tpo),
+        $this->ruleEvaluator->getPatternAllowance($tpo)
+      )) {
+        if (!$primary) {
+          $primary = $item;
+        } else {
+          $alternatives[] = $item;
+        }
+      }
+    }
+    return new ItemMatchResult($primary, $alternatives);
   }
 
   private function buildConditionsFromKeywords(array $keywords): array
