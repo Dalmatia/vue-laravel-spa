@@ -92,6 +92,33 @@ onMounted(() => {
                             :src="part.item.file"
                             class="w-24 h-24 object-cover rounded mb-2"
                         />
+
+                        <!-- 代替理由表示 -->
+                        <div
+                            v-if="part.alternatives?.length"
+                            class="mt-2 text-xs text-gray-600 space-y-1"
+                        >
+                            <span
+                                class="text-[11px] text-gray-500 font-semibold"
+                            >
+                                このアイテムを選んだ理由
+                            </span>
+                            <div
+                                v-for="(reason, idx) in part.alternatives[0]
+                                    .reasons"
+                                :key="idx"
+                                class="flex items-start"
+                            >
+                                <span class="mr-1">・</span>
+                                <span
+                                    class="line-clamp-1 cursor-help"
+                                    :title="reason"
+                                >
+                                    {{ reason }}
+                                </span>
+                            </div>
+                        </div>
+
                         <span v-if="part.keyword" class="text-sm text-gray-700">
                             {{ part.keyword }}
                         </span>

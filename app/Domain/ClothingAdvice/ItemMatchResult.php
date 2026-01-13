@@ -8,6 +8,7 @@ class ItemMatchResult
 {
   public function __construct(
     public readonly ?Item $primary,
+    public readonly ?ItemEvaluationResult $primaryEvaluation = null,
     public readonly array $alternatives = []
   ) {}
 }

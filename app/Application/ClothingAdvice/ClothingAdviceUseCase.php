@@ -9,7 +9,6 @@ final class ClothingAdviceUseCase
 {
   public function __construct(
     private AiAdviceCoordinator $aiCoordinator,
-    private OutfitSuggestionBuilder $outfitBuilder,
     private AdviceResultPersister $persister,
     private AdviceCache $adviceCache,
   ) {}
@@ -32,6 +31,9 @@ final class ClothingAdviceUseCase
     [$adviceText, $items, $isAiAvailable] =
       $this->aiCoordinator->generate($weatherData, $user, $tpo, $date, $cityId);
 
+    $items = $this->normalizeOutfitReasonsForUi($items);
+    $items = $this->translateOutfitReasons($items);
+
     $result = [
       'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
       'advice' => $adviceText,
@@ -50,5 +52,46 @@ final class ClothingAdviceUseCase
     );
 
     return $result;
+  }
+
+  private function normalizeOutfitReasonsForUi(array $items): array
+  {
+    foreach ($items as $category => &$entry) {
+      if (!isset($entry['alternatives'])) {
+        continue;
+      }
+
+      foreach ($entry['alternatives'] as &$alt) {
+        if (!empty($alt['reasons'])) {
+          $alt['reasons'] = OutfitReasonSelector::selectForUi(
+            $alt['reasons']
+          );
+        }
+      }
+    }
+
+    return $items;
+  }
+
+  private function translateOutfitReasons(array $items): array
+  {
+    foreach ($items as &$entry) {
+      if (!isset($entry['alternatives'])) {
+        continue;
+      }
+
+      foreach ($entry['alternatives'] as &$alt) {
+        if (!isset($alt['reasons'])) {
+          continue;
+        }
+
+        $alt['reasons'] = array_map(
+          fn($reason) => OutfitReasonTranslator::toUiText($reason),
+          $alt['reasons']
+        );
+      }
+    }
+
+    return $items;
   }
 }

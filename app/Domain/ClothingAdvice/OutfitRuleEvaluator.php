@@ -10,22 +10,58 @@ class OutfitRuleEvaluator
 {
   public function canUseItem(Item $candidate, array $currentItems, ?string $tpo, int $colorTolerance, int $patternAllowance): bool
   {
-    if (!$this->applyTpoFilter($candidate, $tpo)) {
-      return false;
+    return $this->evaluateItem(
+      $candidate,
+      $currentItems,
+      $tpo,
+      $colorTolerance,
+      $patternAllowance
+    )->canUse;
+  }
+
+  public function evaluateItem(Item $item, array $currentItems, ?string $tpo, int $colorTolerance, int $patternAllowance): ItemEvaluationResult
+  {
+    $reasons = [];
+
+    // TPO
+    if (!$this->isTpoAppropriate($item, $tpo)) {
+      $reasons[] = OutfitDecisionReason::TPO_MISMATCH;
+    } else {
+      $reasons[] = OutfitDecisionReason::TPO_APPROPRIATE;
     }
 
-    if ($this->shouldSkipCombination(
+    // 色の相性
+    if (!$this->isColorCompatible(
+      $item,
       $currentItems,
-      $candidate,
       $colorTolerance,
       $patternAllowance,
       $tpo
     )) {
-      return false;
+      $reasons[] = OutfitDecisionReason::COLOR_CONFLICT;
+    } else {
+      $reasons[] = OutfitDecisionReason::GOOD_COLOR_MATCH;
     }
 
-    return true;
+    // 季節感
+    if (!$this->isSeasonAppropriate($item)) {
+      $reasons[] = OutfitDecisionReason::SEASON_MISMATCH;
+    } else {
+      $reasons[] = OutfitDecisionReason::SEASON_APPROPRIATE;
+    }
+
+    $canUse = !collect($reasons)->contains(
+      fn($r) =>
+      in_array($r, [
+        OutfitDecisionReason::TPO_MISMATCH,
+        OutfitDecisionReason::COLOR_CONFLICT,
+        OutfitDecisionReason::SEASON_MISMATCH,
+      ], true)
+    );
+
+    return new ItemEvaluationResult($canUse, $reasons);
   }
+
 
   private function applyTpoFilter(Item $item, ?string $tpo): bool
   {
@@ -63,6 +99,11 @@ class OutfitRuleEvaluator
     };
 
     return !in_array($item->sub_category, $restricted, true);
+  }
+
+  private function isTpoAppropriate(Item $item, ?string $tpo): bool
+  {
+    return $this->applyTpoFilter($item, $tpo);
   }
 
   private function shouldSkipCombination(array $matchedItems, Item $candidate, int $colorTolerance, int $patternAllowance, ?string $tpo): bool
@@ -121,6 +162,22 @@ class OutfitRuleEvaluator
     return false;
   }
 
+  private function isColorCompatible(
+    Item $candidate,
+    array $currentItems,
+    int $colorTolerance,
+    int $patternAllowance,
+    ?string $tpo
+  ): bool {
+    return !$this->shouldSkipCombination(
+      $currentItems,
+      $candidate,
+      $colorTolerance,
+      $patternAllowance,
+      $tpo
+    );
+  }
+
   private function allowSameColorCombination(?string $tpo, int $color): bool
   {
     $isNeutral = Color::isNeutralColor($color);
@@ -154,5 +211,10 @@ class OutfitRuleEvaluator
       'outdoor' => 2,
       default => 1,
     };
+  }
+
+  private function isSeasonAppropriate(Item $item): bool
+  {
+    return true; // 仮
   }
 }

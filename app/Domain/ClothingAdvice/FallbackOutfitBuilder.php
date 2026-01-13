@@ -42,6 +42,7 @@ class FallbackOutfitBuilder
         $matchedItems[$categoryValue] = [
           'source' => 'fallback',
           'item'   => $result->primary,
+          'primaryReasons' => $result->primaryEvaluation?->reasons ?? [],
           'alternatives' => $result->alternatives,
         ];
       }
@@ -77,21 +78,33 @@ class FallbackOutfitBuilder
     $alternatives = [];
 
     foreach ($candidates as $candidate) {
-      if ($this->ruleEvaluator->canUseItem(
+      $evaluation = $this->ruleEvaluator->evaluateItem(
         $candidate,
         $currentItems,
         $tpo,
         $this->ruleEvaluator->getColorTolerance($tpo),
         $this->ruleEvaluator->getPatternAllowance($tpo)
-      )) {
+      );
+
+      if ($evaluation->canUse) {
         if ($primary === null) {
           $primary = $candidate;
+          $primaryEvaluation = $evaluation;
         } else {
-          $alternatives[] = $candidate;
+          $alternatives[] = [
+            'item' => $candidate,
+            'reasons' => [
+              OutfitDecisionReason::BETTER_OPTION_SELECTED
+            ],
+          ];
         }
       }
     }
 
-    return new ItemMatchResult($primary, $alternatives);
+    return new ItemMatchResult(
+      primary: $primary,
+      primaryEvaluation: $primaryEvaluation ?? null,
+      alternatives: $alternatives
+    );
   }
 }

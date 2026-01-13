@@ -65,24 +65,33 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     }
 
     $primary = null;
+    $primaryEvaluation = null;
     $alternatives = [];
 
     foreach ($candidates as $item) {
-      if ($this->ruleEvaluator->canUseItem(
+      $evaluation = $this->ruleEvaluator->evaluateItem(
         $item,
         $currentItems,
         $tpo,
         $this->ruleEvaluator->getColorTolerance($tpo),
         $this->ruleEvaluator->getPatternAllowance($tpo)
-      )) {
-        if (!$primary) {
+      );
+
+      if ($evaluation->canUse) {
+        if ($primary === null) {
           $primary = $item;
+          $primaryEvaluation = $evaluation;
         } else {
-          $alternatives[] = $item;
+          $alternatives[] = [
+            'item' => $item,
+            'reasons' => [
+              OutfitDecisionReason::BETTER_OPTION_SELECTED
+            ],
+          ];
         }
       }
     }
-    return new ItemMatchResult($primary, $alternatives);
+    return new ItemMatchResult($primary, $primaryEvaluation, $alternatives);
   }
 
   private function buildConditionsFromKeywords(array $keywords): array
