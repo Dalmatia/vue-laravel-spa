@@ -3,6 +3,7 @@
 namespace App\Application\ClothingAdvice;
 
 use App\Domain\ClothingAdvice\AdviceCache;
+use App\Domain\ClothingAdvice\OutfitDecisionReason;
 use App\Models\User;
 
 final class ClothingAdviceUseCase
@@ -31,8 +32,7 @@ final class ClothingAdviceUseCase
     [$adviceText, $items, $isAiAvailable] =
       $this->aiCoordinator->generate($weatherData, $user, $tpo, $date, $cityId);
 
-    $items = $this->normalizeOutfitReasonsForUi($items);
-    $items = $this->translateOutfitReasons($items);
+    $items = $this->normalizeAndTranslateReasons($items);
 
     $result = [
       'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
@@ -54,41 +54,29 @@ final class ClothingAdviceUseCase
     return $result;
   }
 
-  private function normalizeOutfitReasonsForUi(array $items): array
-  {
-    foreach ($items as $category => &$entry) {
-      if (!isset($entry['alternatives'])) {
-        continue;
-      }
-
-      foreach ($entry['alternatives'] as &$alt) {
-        if (!empty($alt['reasons'])) {
-          $alt['reasons'] = OutfitReasonSelector::selectForUi(
-            $alt['reasons']
-          );
-        }
-      }
-    }
-
-    return $items;
-  }
-
-  private function translateOutfitReasons(array $items): array
+  private function normalizeAndTranslateReasons(array $items): array
   {
     foreach ($items as &$entry) {
-      if (!isset($entry['alternatives'])) {
-        continue;
+      // primary reasons（採用理由）
+      if (!empty($entry['primaryReasons'])) {
+        $entry['primaryReasons'] = array_map(
+          fn(OutfitDecisionReason $r) => $r->label(),
+          OutfitReasonSelector::selectForUi($entry['primaryReasons'])
+        );
       }
 
-      foreach ($entry['alternatives'] as &$alt) {
-        if (!isset($alt['reasons'])) {
-          continue;
-        }
+      // alternative reasons（代替理由）
+      if (!empty($entry['alternatives'])) {
+        foreach ($entry['alternatives'] as &$alt) {
+          if (empty($alt['reasons'])) {
+            continue;
+          }
 
-        $alt['reasons'] = array_map(
-          fn($reason) => OutfitReasonTranslator::toUiText($reason),
-          $alt['reasons']
-        );
+          $alt['reasons'] = array_map(
+            fn(OutfitDecisionReason $r) => $r->label(),
+            OutfitReasonSelector::selectForUi($alt['reasons'])
+          );
+        }
       }
     }
 

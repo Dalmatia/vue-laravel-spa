@@ -29,21 +29,24 @@ class OutfitReasonSelector
       }
     }
 
-    // ネガティブ理由があれば最優先
     if (!empty($negative)) {
-      return array_slice(
-        self::sortByPriority($negative),
-        0,
-        2
-      );
+      return array_slice(self::sortByPriority($negative), 0, 2);
     }
 
-    // ポジティブ理由のみ
-    return array_slice(
-      self::sortByPriority($positive),
-      0,
-      2
+    return array_slice(self::sortByPriority($positive), 0, 2);
+  }
+
+  /**
+   * primary 用：おすすめ理由（ポジティブのみ）
+   */
+  public static function selectForPrimary(array $reasons): array
+  {
+    $positive = array_filter(
+      $reasons,
+      fn($r) => !self::isNegative($r)
     );
+
+    return array_slice(self::sortByPriority($positive), 0, 2);
   }
 
   /**

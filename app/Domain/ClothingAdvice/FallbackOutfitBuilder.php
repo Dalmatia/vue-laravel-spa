@@ -2,6 +2,7 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Application\ClothingAdvice\OutfitReasonSelector;
 use App\Enums\MainCategory;
 use App\Models\Item;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,8 +43,15 @@ class FallbackOutfitBuilder
         $matchedItems[$categoryValue] = [
           'source' => 'fallback',
           'item'   => $result->primary,
-          'primaryReasons' => $result->primaryEvaluation?->reasons ?? [],
-          'alternatives' => $result->alternatives,
+          'primaryReasons' => OutfitReasonSelector::selectForPrimary($result->primaryEvaluation?->reasons ?? []),
+          'alternatives' => [
+            [
+              'item' => null,
+              'reasons' => [
+                OutfitDecisionReason::BETTER_OPTION_SELECTED,
+              ],
+            ],
+          ],
         ];
       }
     }

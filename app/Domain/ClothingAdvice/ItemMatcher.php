@@ -2,8 +2,8 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Application\ClothingAdvice\OutfitReasonSelector;
 use App\Enums\MainCategory;
-use App\Domain\ClothingAdvice\OutfitDecisionReason;
 
 class ItemMatcher
 {
@@ -54,8 +54,15 @@ class ItemMatcher
       if ($result->primary) {
         $matchedItems[$category] = [
           'item' => $result->primary,
-          'primaryReasons' => $result->primaryEvaluation->reasons,
-          'alternatives' => $result->alternatives,
+          'primaryReasons' => OutfitReasonSelector::selectForPrimary($result->primaryEvaluation->reasons),
+          'alternatives' => [
+            [
+              'item' => null,
+              'reasons' => [
+                OutfitDecisionReason::BETTER_OPTION_SELECTED,
+              ],
+            ],
+          ],
           'source' => 'json',
         ];
       }

@@ -2,6 +2,7 @@
 import { defineProps, defineEmits, onMounted } from 'vue';
 import { useCategoryData } from '../src/composables/useCategoryData';
 import PaletteOutline from 'vue-material-design-icons/PaletteOutline.vue';
+import OutfitReasonBlock from './OutfitReasonBlock.vue';
 
 const { getMainCategoryName, initEnums } = useCategoryData();
 const props = defineProps({
@@ -74,65 +75,38 @@ onMounted(() => {
                 {{ advice.advice }}
             </p>
 
-            <div
-                v-if="advice.outfit_suggestion"
-                class="grid grid-cols-2 sm:grid-cols-4 gap-4"
-            >
+            <div v-if="advice.outfit_suggestion" class="space-y-4">
                 <div
                     v-for="(part, mainCategory) in advice.outfit_suggestion"
                     :key="mainCategory"
-                    class="flex flex-col items-center bg-gray-50 rounded-lg shadow-sm p-2"
+                    class="flex justify-center w-full bg-gray-50 rounded-lg shadow-sm p-3"
                 >
-                    <span class="font-semibold mb-1">
-                        {{ getMainCategoryName(mainCategory) }}
-                    </span>
+                    <div class="flex max-w-md w-full">
+                        <template v-if="part?.item">
+                            <img
+                                :src="part.item.file"
+                                class="w-24 h-24 object-cover rounded mr-4 flex-shrink-0"
+                            />
 
-                    <template v-if="part?.item">
-                        <img
-                            :src="part.item.file"
-                            class="w-24 h-24 object-cover rounded mb-2"
-                        />
+                            <div class="flex-1">
+                                <div class="font-semibold mb-1">
+                                    {{ getMainCategoryName(mainCategory) }}
+                                </div>
 
-                        <!-- 代替理由表示 -->
-                        <div
-                            v-if="part.alternatives?.length"
-                            class="mt-2 text-xs text-gray-600 space-y-1"
-                        >
-                            <span
-                                class="text-[11px] text-gray-500 font-semibold"
-                            >
-                                このアイテムを選んだ理由
-                            </span>
-                            <div
-                                v-for="(reason, idx) in part.alternatives[0]
-                                    .reasons"
-                                :key="idx"
-                                class="flex items-start"
-                            >
-                                <span class="mr-1">・</span>
-                                <span
-                                    class="line-clamp-1 cursor-help"
-                                    :title="reason"
-                                >
-                                    {{ reason }}
-                                </span>
+                                <OutfitReasonBlock
+                                    v-if="part.primaryReasons?.length"
+                                    title="このアイテムを選んだ理由"
+                                    :reasons="part.primaryReasons"
+                                />
+
+                                <OutfitReasonBlock
+                                    v-else-if="part.alternatives?.length"
+                                    title="補足"
+                                    :reasons="part.alternatives[0].reasons"
+                                />
                             </div>
-                        </div>
-
-                        <span v-if="part.keyword" class="text-sm text-gray-700">
-                            {{ part.keyword }}
-                        </span>
-                    </template>
-
-                    <template v-else>
-                        <div
-                            class="flex flex-col items-center justify-center h-32 w-full"
-                        >
-                            <span class="text-red-500 text-sm font-semibold">
-                                未登録
-                            </span>
-                        </div>
-                    </template>
+                        </template>
+                    </div>
                 </div>
             </div>
         </template>

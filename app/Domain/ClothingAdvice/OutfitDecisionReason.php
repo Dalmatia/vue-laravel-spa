@@ -14,4 +14,30 @@ enum OutfitDecisionReason: string
     case TPO_MISMATCH = 'tpo_mismatch';
     case SEASON_MISMATCH = 'season_mismatch';
     case BETTER_OPTION_SELECTED = 'better_option_selected';
+
+    /**
+     * UI表示用ラベル
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            // OK理由
+            self::GOOD_COLOR_MATCH =>
+            '色の組み合わせが自然で統一感があります',
+            self::TPO_APPROPRIATE =>
+            '選択したシーンに適した服装です',
+            self::SEASON_APPROPRIATE =>
+            '現在の季節に合ったアイテムです',
+
+            // NG / 比較理由
+            self::COLOR_CONFLICT =>
+            '色の相性があまり良くありません',
+            self::TPO_MISMATCH =>
+            'シーンに対して不向きな印象になります',
+            self::SEASON_MISMATCH =>
+            '季節感が合っていません',
+            self::BETTER_OPTION_SELECTED =>
+            'より条件に合うアイテムが見つかりました',
+        };
+    }
 }
