@@ -4,11 +4,13 @@ namespace App\Domain\ClothingAdvice;
 
 use App\Application\ClothingAdvice\OutfitReasonSelector;
 use App\Enums\MainCategory;
+use App\Domain\ClothingAdvice\PrimaryItemSelector;
 
 class ItemMatcher
 {
   public function __construct(
     private CategoryMatcherStrategy $categoryMatcher,
+    private PrimaryItemSelector $primaryItemSelector,
   ) {}
 
   public function matchItemsFromJson(
@@ -40,7 +42,7 @@ class ItemMatcher
         continue;
       }
 
-      $result = $this->categoryMatcher->match(
+      $evaluatedItems = $this->categoryMatcher->evaluateCandidates(
         $userId,
         $category,
         $keywords,
@@ -50,6 +52,8 @@ class ItemMatcher
         $tpo,
         $targetDate,
       );
+
+      $result = $this->primaryItemSelector->select($evaluatedItems);
 
       if ($result->primary) {
         $matchedItems[$category] = [

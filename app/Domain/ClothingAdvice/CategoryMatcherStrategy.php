@@ -4,7 +4,7 @@ namespace App\Domain\ClothingAdvice;
 
 interface CategoryMatcherStrategy
 {
-  public function match(
+  public function evaluateCandidates(
     int $userId,
     int $category,
     array $keywords,
@@ -12,6 +12,6 @@ interface CategoryMatcherStrategy
     array $excludeColors,
     array $currentItems,
     ?string $tpo,
-    ?string $targetDate,
-  ): ItemMatchResult;
+    ?string $targetDate
+  ): array;
 }

@@ -59,7 +59,25 @@ class OutfitRuleEvaluator
       ], true)
     );
 
-    return new ItemEvaluationResult($canUse, $reasons);
+    $score = 0.0;
+
+    if ($this->isTpoAppropriate($item, $tpo)) {
+      $score += 2.0;
+    }
+
+    if ($this->isColorCompatible(...)) {
+      $score += 2.0;
+    }
+
+    if ($this->isSeasonAppropriate($item)) {
+      $score += 1.0;
+    }
+
+    return new ItemEvaluationResult(
+      canUse: $canUse,
+      reasons: $reasons,
+      score: $score,
+    );
   }
 
 

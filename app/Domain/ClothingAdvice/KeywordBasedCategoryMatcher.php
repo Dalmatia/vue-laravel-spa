@@ -12,7 +12,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     private SeasonResolver $seasonResolver
   ) {}
 
-  public function match(
+  public function evaluateCandidates(
     int $userId,
     int $category,
     array $keywords,
@@ -21,7 +21,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     array $currentItems,
     ?string $tpo,
     ?string $targetDate,
-  ): ItemMatchResult {
+  ): array {
     $conditions = $this->buildConditionsFromKeywords($keywords);
 
     $query = Item::where('user_id', $userId)
@@ -60,13 +60,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
 
     $candidates = $query->limit(5)->get();
 
-    if ($candidates->isEmpty()) {
-      return new ItemMatchResult(null);
-    }
-
-    $primary = null;
-    $primaryEvaluation = null;
-    $alternatives = [];
+    $evaluatedItems = [];
 
     foreach ($candidates as $item) {
       $evaluation = $this->ruleEvaluator->evaluateItem(
@@ -77,21 +71,13 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
         $this->ruleEvaluator->getPatternAllowance($tpo)
       );
 
-      if ($evaluation->canUse) {
-        if ($primary === null) {
-          $primary = $item;
-          $primaryEvaluation = $evaluation;
-        } else {
-          $alternatives[] = [
-            'item' => $item,
-            'reasons' => [
-              OutfitDecisionReason::BETTER_OPTION_SELECTED
-            ],
-          ];
-        }
-      }
+      $evaluatedItems[] = [
+        'item' => $item,
+        'evaluation' => $evaluation,
+      ];
     }
-    return new ItemMatchResult($primary, $primaryEvaluation, $alternatives);
+
+    return $evaluatedItems;
   }
 
   private function buildConditionsFromKeywords(array $keywords): array

@@ -3,6 +3,7 @@
 namespace App\Domain\ClothingAdvice;
 
 use App\Application\ClothingAdvice\OutfitReasonSelector;
+use App\Domain\ClothingAdvice\PrimaryItemSelector;
 use App\Enums\MainCategory;
 use App\Models\Item;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,7 +12,8 @@ class FallbackOutfitBuilder
 {
   public function __construct(
     private OutfitRuleEvaluator $ruleEvaluator,
-    private SeasonResolver $seasonResolver
+    private SeasonResolver $seasonResolver,
+    private PrimaryItemSelector $primaryItemSelector,
   ) {}
 
   /**
@@ -82,9 +84,6 @@ class FallbackOutfitBuilder
   {
     $candidates = $this->findCandidate($userId, $category, $targetDate);
 
-    $primary = null;
-    $alternatives = [];
-
     foreach ($candidates as $candidate) {
       $evaluation = $this->ruleEvaluator->evaluateItem(
         $candidate,
@@ -94,25 +93,12 @@ class FallbackOutfitBuilder
         $this->ruleEvaluator->getPatternAllowance($tpo)
       );
 
-      if ($evaluation->canUse) {
-        if ($primary === null) {
-          $primary = $candidate;
-          $primaryEvaluation = $evaluation;
-        } else {
-          $alternatives[] = [
-            'item' => $candidate,
-            'reasons' => [
-              OutfitDecisionReason::BETTER_OPTION_SELECTED
-            ],
-          ];
-        }
-      }
+      $evaluatedItems[] = [
+        'item' => $candidate,
+        'evaluation' => $evaluation,
+      ];
     }
 
-    return new ItemMatchResult(
-      primary: $primary,
-      primaryEvaluation: $primaryEvaluation ?? null,
-      alternatives: $alternatives
-    );
+    return $this->primaryItemSelector->select($evaluatedItems);
   }
 }
