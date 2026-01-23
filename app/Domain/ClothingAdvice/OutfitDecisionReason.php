@@ -15,6 +15,9 @@ enum OutfitDecisionReason: string
     case SEASON_MISMATCH = 'season_mismatch';
     case BETTER_OPTION_SELECTED = 'better_option_selected';
 
+        // ネガティブ（マッチング失敗理由）
+    case NO_MATCH_FOUND = 'no_match_found';
+
     /**
      * UI表示用ラベル
      */
@@ -38,6 +41,9 @@ enum OutfitDecisionReason: string
             '季節感が合っていません',
             self::BETTER_OPTION_SELECTED =>
             'より条件に合うアイテムが見つかりました',
+
+            self::NO_MATCH_FOUND =>
+            '条件に合うアイテムが見つかりませんでした',
         };
     }
 }

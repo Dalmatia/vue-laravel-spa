@@ -32,11 +32,12 @@ final class ClothingAdviceUseCase
     [$adviceText, $items, $isAiAvailable] =
       $this->aiCoordinator->generate($weatherData, $user, $tpo, $date, $cityId);
 
+    $items = $this->normalizeOutfitSuggestionStructure($items);
     $items = $this->normalizeAndTranslateReasons($items);
 
     $result = [
       'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
-      'advice' => $adviceText,
+      'advice' => $adviceText ?: '天候とお手持ちのアイテムをもとに服装を提案しました。',
       'outfit_suggestion' => $items,
     ];
 
@@ -53,6 +54,34 @@ final class ClothingAdviceUseCase
 
     return $result;
   }
+
+  private function normalizeOutfitSuggestionStructure(array $items): array
+  {
+    foreach ($items as $category => &$entry) {
+      if (!is_array($entry)) {
+        $entry = [];
+      }
+
+      // item が無い場合でも形を保証
+      $entry['item'] ??= null;
+      $entry['primaryReasons'] ??= [];
+      $entry['alternatives'] ??= [];
+
+      if (empty($entry['alternatives'])) {
+        $entry['alternatives'] = [
+          [
+            'item' => null,
+            'reasons' => [
+              OutfitDecisionReason::NO_MATCH_FOUND,
+            ],
+          ],
+        ];
+      }
+    }
+
+    return $items;
+  }
+
 
   private function normalizeAndTranslateReasons(array $items): array
   {

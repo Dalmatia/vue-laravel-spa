@@ -10,26 +10,36 @@ final class PrimaryItemSelector
 
   public function select(array $evaluatedItems): ItemMatchResult
   {
+    if (empty($evaluatedItems)) {
+      return new ItemMatchResult(null);
+    }
+
     $usable = array_filter(
       $evaluatedItems,
-      fn($e) => $e['evaluation']->canUse
+      fn($e) => $e['evaluation']?->canUse === true
     );
 
     if (empty($usable)) {
-      return new ItemMatchResult(null, null, []);
+      return new ItemMatchResult(null);
     }
 
-    $maxScore = max(
-      array_map(fn($e) => $e['evaluation']->score, $usable)
+    // score 未定義対策
+    $scores = array_map(
+      fn($e) => $e['evaluation']->score ?? 0,
+      $usable
     );
+
+    $maxScore = max($scores);
 
     $pool = array_filter(
       $usable,
-      fn($e) =>
-      $e['evaluation']->score >= $maxScore - self::TIE_THRESHOLD
+      fn($e) => ($e['evaluation']->score ?? 0) >= $maxScore - self::TIE_THRESHOLD
     );
 
-    $pool = array_values($pool);
+    if (empty($pool)) {
+      return new ItemMatchResult(null);
+    }
+
     $primaryEntry = $pool[array_rand($pool)];
 
     $alternatives = array_values(array_filter(

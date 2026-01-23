@@ -78,6 +78,9 @@ class OutfitReasonSelector
   private static function priority(OutfitDecisionReason $reason): int
   {
     return match ($reason) {
+      // マッチ失敗（最優先で伝えたい）
+      OutfitDecisionReason::NO_MATCH_FOUND => 0,
+
       // ミスマッチ
       OutfitDecisionReason::TPO_MISMATCH,
       OutfitDecisionReason::SEASON_MISMATCH => 1,

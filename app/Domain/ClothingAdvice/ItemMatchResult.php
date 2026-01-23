@@ -11,4 +11,9 @@ class ItemMatchResult
     public readonly ?ItemEvaluationResult $primaryEvaluation = null,
     public readonly array $alternatives = []
   ) {}
+
+  public function hasPrimary(): bool
+  {
+    return $this->primary !== null;
+  }
 }

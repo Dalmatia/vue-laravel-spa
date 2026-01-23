@@ -82,30 +82,29 @@ onMounted(() => {
                     class="flex justify-center w-full bg-gray-50 rounded-lg shadow-sm p-3"
                 >
                     <div class="flex max-w-md w-full">
-                        <template v-if="part?.item">
-                            <img
-                                :src="part.item.file"
-                                class="w-24 h-24 object-cover rounded mr-4 flex-shrink-0"
+                        <img
+                            v-if="part.item"
+                            :src="part.item.file"
+                            class="w-24 h-24 object-cover rounded mr-4 flex-shrink-0"
+                        />
+
+                        <div class="flex-1">
+                            <div class="font-semibold mb-1">
+                                {{ getMainCategoryName(mainCategory) }}
+                            </div>
+
+                            <OutfitReasonBlock
+                                v-if="part.primaryReasons?.length"
+                                title="このアイテムを選んだ理由"
+                                :reasons="part.primaryReasons"
                             />
 
-                            <div class="flex-1">
-                                <div class="font-semibold mb-1">
-                                    {{ getMainCategoryName(mainCategory) }}
-                                </div>
-
-                                <OutfitReasonBlock
-                                    v-if="part.primaryReasons?.length"
-                                    title="このアイテムを選んだ理由"
-                                    :reasons="part.primaryReasons"
-                                />
-
-                                <OutfitReasonBlock
-                                    v-else-if="part.alternatives?.length"
-                                    title="補足"
-                                    :reasons="part.alternatives[0].reasons"
-                                />
-                            </div>
-                        </template>
+                            <OutfitReasonBlock
+                                v-else-if="part.alternatives?.length"
+                                title="補足"
+                                :reasons="part.alternatives[0].reasons"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
