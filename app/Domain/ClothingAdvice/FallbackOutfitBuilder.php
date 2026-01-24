@@ -84,6 +84,8 @@ class FallbackOutfitBuilder
   {
     $candidates = $this->findCandidate($userId, $category, $targetDate);
 
+    $evaluatedItems = [];
+
     foreach ($candidates as $candidate) {
       $evaluation = $this->ruleEvaluator->evaluateItem(
         $candidate,
@@ -97,6 +99,12 @@ class FallbackOutfitBuilder
         'item' => $candidate,
         'evaluation' => $evaluation,
       ];
+    }
+
+    if (empty($evaluatedItems)) {
+      return ItemMatchResult::noMatch(
+        OutfitDecisionReason::NO_MATCH_FOUND
+      );
     }
 
     return $this->primaryItemSelector->select($evaluatedItems);
