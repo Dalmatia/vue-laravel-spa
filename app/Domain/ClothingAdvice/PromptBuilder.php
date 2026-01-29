@@ -2,7 +2,6 @@
 
 namespace App\Domain\ClothingAdvice;
 
-use App\Enums\Color;
 use App\Enums\Gender;
 use App\Models\User;
 
@@ -66,6 +65,50 @@ class PromptBuilder
     PROMPT;
   }
 
+  public function build(
+    AdviceGenerationMode $mode,
+    array $weatherData,
+    ?User $user,
+    ?string $tpo
+  ): string {
+    return match ($mode) {
+      AdviceGenerationMode::OUTFIT_BASED =>
+      $this->buildJson($weatherData, $user, $tpo),
+
+      AdviceGenerationMode::GENERAL_ADVICE =>
+      $this->buildGeneralAdviceJson($weatherData, $user, $tpo),
+    };
+  }
+
+  private function buildGeneralAdviceJson(
+    array $weatherData,
+    ?User $user,
+    ?string $tpo
+  ): string {
+    $tpoText = $this->mapTpoToText($tpo);
+
+    return <<<PROMPT
+      あなたは服装アドバイザーです。
+
+      【重要】
+      - 具体的な服装・コーディネートは想定しない
+      - 「この服装」「このコーデ」「〜を着る」などの表現は禁止
+      - 天気とシーンに基づいた一般的な考え方・注意点のみを述べる
+
+      【summary のルール】
+      - 状況説明 + 方針を簡潔に述べる
+      - 例：
+      - 「寒さを考慮した服装のポイント」
+      - 「{$tpoText}シーンに適した服装の考え方」
+      
+      出力は JSON のみ。
+
+      {
+        "summary": "string",
+        "notes": ["string"]
+      }
+      PROMPT;
+  }
 
 
   private function mapGenderToText(?Gender $gender): string

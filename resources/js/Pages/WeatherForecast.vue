@@ -1,17 +1,21 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useWeatherForecast } from '../src/composables/useWeatherForecast';
 import { useClothingAdvice } from '../src/composables/useClothingAdvice';
 import SelectCity from '../Components/SelectCity.vue';
 import WeatherTabs from '../Components/WeatherTabs.vue';
 import WeatherCard from '../Components/WeatherCard.vue';
 import AdviceSection from '../Components/AdviceSection.vue';
+import { useAuthStore } from '../stores/auth';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
+const authStore = useAuthStore();
+const authUserId = computed(() => authStore.user.id);
 const {
     selectedCity,
     weather,
     isLoading,
-    error,
     formattedWeather,
     fetchSavedCity,
     fetchWeather,
@@ -94,6 +98,9 @@ onMounted(async () => {
                 :advice="advice"
                 :is-advice-loading="isAdviceLoading"
                 @change-tpo="(tpo) => (selectedTpo = tpo)"
+                @go-to-items="
+                    router.push({ name: 'Items', params: { id: authUserId } })
+                "
             />
         </div>
     </div>

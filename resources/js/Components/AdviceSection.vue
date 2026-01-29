@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits, onMounted } from 'vue';
+import { defineProps, defineEmits, onMounted, ref, computed, watch } from 'vue';
 import { useCategoryData } from '../src/composables/useCategoryData';
 import PaletteOutline from 'vue-material-design-icons/PaletteOutline.vue';
 import OutfitReasonBlock from './OutfitReasonBlock.vue';
@@ -11,7 +11,7 @@ const props = defineProps({
     isAdviceLoading: { type: Boolean, required: true },
 });
 
-const emit = defineEmits(['change-tpo']);
+const emit = defineEmits(['change-tpo', 'go-to-items']);
 
 const tpoOptions = [
     { key: 'casual', label: 'カジュアル' },
@@ -19,6 +19,19 @@ const tpoOptions = [
     { key: 'office', label: 'オフィス' },
     { key: 'outdoor', label: 'アウトドア' },
 ];
+
+const showOutfitSuggestion = ref(false);
+
+const isGeneralAdvice = computed(() => {
+    return props.advice?.mode === 'general_advice';
+});
+
+watch(
+    () => props.selectedTpo,
+    () => {
+        showOutfitSuggestion.value = false;
+    },
+);
 
 onMounted(() => {
     initEnums();
@@ -71,11 +84,69 @@ onMounted(() => {
         </p>
 
         <template v-else-if="advice">
+            <p
+                v-if="isGeneralAdvice"
+                class="text-xs text-gray-500 mb-2 text-center"
+            >
+                登録アイテムが少ないため、一般的な服装アドバイスを表示しています
+            </p>
+
             <p class="text-sm text-gray-700 mb-4 whitespace-pre-line">
                 {{ advice.advice }}
             </p>
 
-            <div v-if="advice.outfit_suggestion" class="space-y-4">
+            <div
+                v-if="isGeneralAdvice && advice.notes?.length"
+                class="mt-3 bg-blue-50 border border-blue-100 rounded-lg p-3"
+            >
+                <ul
+                    class="text-sm text-blue-700 list-disc list-inside space-y-1"
+                >
+                    <li v-for="(note, i) in advice.notes" :key="i">
+                        {{ note }}
+                    </li>
+                </ul>
+            </div>
+
+            <div
+                v-if="isGeneralAdvice"
+                class="mt-4 border border-dashed border-gray-300 rounded-lg p-4 text-center bg-gray-50"
+            >
+                <p class="text-sm text-gray-600 mb-2">
+                    お手持ちのアイテムを登録すると、より具体的なコーデ提案ができます
+                </p>
+
+                <button
+                    class="text-sm font-medium text-blue-600 hover:underline"
+                    @click="$emit('go-to-items')"
+                >
+                    アイテムを登録する
+                </button>
+            </div>
+
+            <!-- 折りたたみトグル -->
+            <div
+                v-if="isGeneralAdvice"
+                class="border rounded-lg bg-gray-50 px-4 py-2 mb-3 shadow-sm"
+            >
+                <button
+                    class="w-full flex justify-between items-center text-sm font-medium text-blue-600"
+                    @click="showOutfitSuggestion = !showOutfitSuggestion"
+                >
+                    <span>参考としてアイテム候補を見る</span>
+                    <span class="text-xs text-gray-500">
+                        {{ showOutfitSuggestion ? '▲' : '▼' }}
+                    </span>
+                </button>
+            </div>
+
+            <div
+                v-if="
+                    advice.outfit_suggestion &&
+                    (!isGeneralAdvice || showOutfitSuggestion)
+                "
+                class="border rounded-lg bg-white shadow-sm p-4 space-y-4"
+            >
                 <div
                     v-for="(part, mainCategory) in advice.outfit_suggestion"
                     :key="mainCategory"
@@ -94,13 +165,19 @@ onMounted(() => {
                             </div>
 
                             <OutfitReasonBlock
-                                v-if="part.primaryReasons?.length"
+                                v-if="
+                                    !isGeneralAdvice &&
+                                    part.primaryReasons?.length
+                                "
                                 title="このアイテムを選んだ理由"
                                 :reasons="part.primaryReasons"
                             />
 
                             <OutfitReasonBlock
-                                v-else-if="part.alternatives?.length"
+                                v-else-if="
+                                    !isGeneralAdvice &&
+                                    part.alternatives?.length
+                                "
                                 title="補足"
                                 :reasons="part.alternatives[0].reasons"
                             />

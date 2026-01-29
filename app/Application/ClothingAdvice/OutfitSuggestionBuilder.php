@@ -41,4 +41,17 @@ final class OutfitSuggestionBuilder
 
     return [$filled, $outerPolicy];
   }
+
+  /**
+   * 服装提案として成立しているか
+   */
+  public function hasEnoughItems(array $outfitSuggestion): bool
+  {
+    $usableCount = collect($outfitSuggestion)
+      ->filter(fn($part) => !empty($part['item']))
+      ->count();
+
+    // 2点以上で「コーデとして成立」(仮)
+    return $usableCount >= 2;
+  }
 }

@@ -27,13 +27,7 @@ class AiClient
       $text = $response->text();
 
       $jsonText = $this->extractJson($text);
-      $json = json_decode($jsonText, true, 512, JSON_THROW_ON_ERROR);
-
-      if (!isset($json['items']) || !is_array($json['items'])) {
-        throw new \RuntimeException('Invalid AI JSON structure');
-      }
-
-      return $json;
+      return json_decode($jsonText, true, 512, JSON_THROW_ON_ERROR);
     } catch (\Throwable $e) {
       Log::error('Gemini JSON parse error', [
         'error' => $e->getMessage(),

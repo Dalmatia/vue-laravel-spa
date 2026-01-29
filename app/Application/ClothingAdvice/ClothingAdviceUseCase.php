@@ -29,15 +29,28 @@ final class ClothingAdviceUseCase
       return $cached;
     }
 
-    [$adviceText, $items, $isAiAvailable] =
-      $this->aiCoordinator->generate($weatherData, $user, $tpo, $date, $cityId);
+    $generated = $this->aiCoordinator->generate(
+      $weatherData,
+      $user,
+      $tpo,
+      $date,
+      $cityId
+    );
+
+    $adviceText = $generated['advice'];
+    $items = $generated['items'];
+    $mode = $generated['mode'];
+    $isAiAvailable = $generated['ai_used'];
+    $notes = $generated['notes'] ?? null;
 
     $items = $this->normalizeOutfitSuggestionStructure($items);
     $items = $this->normalizeAndTranslateReasons($items);
 
     $result = [
       'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
+      'mode' => $mode,
       'advice' => $adviceText ?: '天候とお手持ちのアイテムをもとに服装を提案しました。',
+      'notes' => $notes,
       'outfit_suggestion' => $items,
     ];
 
