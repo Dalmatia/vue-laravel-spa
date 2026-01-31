@@ -62,10 +62,7 @@ class WeatherAnalyzer
     $count = 0;
 
     foreach ($hourlyData['time'] as $i => $timestamp) {
-      if (
-        str_starts_with($timestamp, $targetDate) &&
-        isset($hourlyData['apparent_temperature'][$i])
-      ) {
+      if (isset($hourlyData['apparent_temperature'][$i])) {
         $total += $hourlyData['apparent_temperature'][$i];
         $count++;
       }

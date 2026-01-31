@@ -26,14 +26,8 @@ export function useClothingAdvice(selectedCity, weather) {
 
         try {
             const { data } = await axios.post('/api/clothing_advice', {
-                weatherData: {
-                    max: w.max_temp,
-                    min: w.min_temp,
-                    pop: w.precipitation_probability,
-                    avgPop: w.precipitation_probability,
-                    humidityAvg: w.humidity ?? 60,
-                    windAvg: w.wind_speed ?? 2,
-                },
+                weather: weather.value,
+                selectedTab: selectedTab.value,
                 tpo: selectedTpo.value,
                 targetDate: w.date,
                 cityId: selectedCity.value.city_id,
@@ -57,8 +51,8 @@ export function useClothingAdvice(selectedCity, weather) {
     // TPOまたは日付タブが切り替わったら再取得
     watch(
         [selectedCity, selectedTpo, selectedTab, weather],
-        () => fetchClothingAdvice(),
-        { deep: true }
+        fetchClothingAdvice,
+        { deep: true },
     );
 
     return {

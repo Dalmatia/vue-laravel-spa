@@ -5,7 +5,7 @@ import { useClothingAdvice } from '../src/composables/useClothingAdvice';
 import SelectCity from '../Components/SelectCity.vue';
 import WeatherTabs from '../Components/WeatherTabs.vue';
 import WeatherCard from '../Components/WeatherCard.vue';
-import AdviceSection from '../Components/AdviceSection.vue';
+import AdviceSection from '../Components/Advice/AdviceSection.vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 

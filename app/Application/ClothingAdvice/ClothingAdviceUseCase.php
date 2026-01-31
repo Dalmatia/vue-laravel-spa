@@ -14,7 +14,7 @@ final class ClothingAdviceUseCase
     private AdviceCache $adviceCache,
   ) {}
 
-  public function handle(array $weatherData, int $userId, ?string $date, ?string $tpo, ?string $cityId): array
+  public function handle(array $formattedWeather, int $userId, ?string $date, ?string $tpo, ?string $cityId): array
   {
     $date ??= now()->toDateString();
     $user = User::findOrFail($userId);
@@ -30,7 +30,7 @@ final class ClothingAdviceUseCase
     }
 
     $generated = $this->aiCoordinator->generate(
-      $weatherData,
+      $formattedWeather,
       $user,
       $tpo,
       $date,

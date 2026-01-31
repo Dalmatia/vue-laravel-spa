@@ -46,7 +46,7 @@ final class AiAdviceCoordinator
 
     if ($feelsLike === null) {
       Log::warning('feels_like missing, fallback used', ['weather' => $weather]);
-      $feelsLike = $weather['max_temp'] ?? 20.0;
+      $feelsLike = $weather['max'] ?? 20.0;
     }
 
     [$items, $outerPolicy] = $this->outfitBuilder->outfitSuggestion(
@@ -58,7 +58,7 @@ final class AiAdviceCoordinator
       $feelsLike
     );
 
-    $notes = $json['notes'] ?? null;
+    $notes = $json['notes'] ?? [];
 
     $mode = $this->outfitBuilder->hasEnoughItems($items)
       ? AdviceGenerationMode::OUTFIT_BASED

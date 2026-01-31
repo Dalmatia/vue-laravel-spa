@@ -20,7 +20,8 @@ class ClothingAdviceController extends Controller
     public function generateAdvice(Request $request)
     {
         $validated = $request->validate([
-            'weatherData' => 'required|array',
+            'weather' => 'required|array',
+            'selectedTab' => 'required|in:today,tomorrow',
             'tpo' => 'nullable|string',
             'targetDate' => 'required|date',
             'cityId' => 'nullable|integer',
@@ -28,8 +29,26 @@ class ClothingAdviceController extends Controller
 
         $userId = Auth::id();
 
+        $w = $validated['weather'][$validated['selectedTab']] ?? null;
+
+        if (!$w) {
+            return response()->json([
+                'message' => '天気データが不正です'
+            ], 422);
+        }
+
+        $formattedWeather = [
+            'max'         => $w['max_temp'] ?? null,
+            'min'         => $w['min_temp'] ?? null,
+            'pop'         => $w['precipitation_probability'] ?? null,
+            'avgPop'      => $w['precipitation_probability'] ?? null,
+            'humidityAvg' => $w['humidity'] ?? 60,
+            'windAvg'     => $w['wind_speed'] ?? 2,
+            'feels_like'  => $w['feels_like'] ?? null,
+        ];
+
         $result = $this->useCase->handle(
-            $validated['weatherData'],
+            $formattedWeather,
             $userId,
             $validated['targetDate'],
             $validated['tpo'] ?? null,

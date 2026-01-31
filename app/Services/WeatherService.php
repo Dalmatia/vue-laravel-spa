@@ -38,7 +38,7 @@ class WeatherService
   {
     return "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
       . "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_probability_mean,weathercode"
-      . "&hourly=weathercode,relativehumidity_2m,windspeed_10m"
+      . "&hourly=weathercode,relativehumidity_2m,windspeed_10m,apparent_temperature"
       . "&timezone=Asia/Tokyo";
   }
 }
