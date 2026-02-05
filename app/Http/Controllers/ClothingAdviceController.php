@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Application\ClothingAdvice\ClothingAdviceUseCase;
-
+use App\Domain\Weather\WeatherDto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,23 +32,19 @@ class ClothingAdviceController extends Controller
         $w = $validated['weather'][$validated['selectedTab']] ?? null;
 
         if (!$w) {
-            return response()->json([
-                'message' => '天気データが不正です'
-            ], 422);
+            return response()->json(['message' => '天気データが不正です'], 422);
         }
 
-        $formattedWeather = [
+        $weatherDto = WeatherDto::fromApi([
             'max'         => $w['max_temp'] ?? null,
             'min'         => $w['min_temp'] ?? null,
             'pop'         => $w['precipitation_probability'] ?? null,
-            'avgPop'      => $w['precipitation_probability'] ?? null,
             'humidityAvg' => $w['humidity'] ?? 60,
             'windAvg'     => $w['wind_speed'] ?? 2,
-            'feels_like'  => $w['feels_like'] ?? null,
-        ];
+        ]);
 
         $result = $this->useCase->handle(
-            $formattedWeather,
+            $weatherDto,
             $userId,
             $validated['targetDate'],
             $validated['tpo'] ?? null,

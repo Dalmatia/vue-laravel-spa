@@ -4,6 +4,7 @@ namespace App\Application\ClothingAdvice;
 
 use App\Domain\ClothingAdvice\AdviceCache;
 use App\Domain\ClothingAdvice\OutfitDecisionReason;
+use App\Domain\Weather\WeatherDto;
 use App\Models\User;
 
 final class ClothingAdviceUseCase
@@ -14,7 +15,7 @@ final class ClothingAdviceUseCase
     private AdviceCache $adviceCache,
   ) {}
 
-  public function handle(array $formattedWeather, int $userId, ?string $date, ?string $tpo, ?string $cityId): array
+  public function handle(WeatherDto $weatherDto, int $userId, ?string $date, ?string $tpo, ?string $cityId): array
   {
     $date ??= now()->toDateString();
     $user = User::findOrFail($userId);
@@ -30,7 +31,7 @@ final class ClothingAdviceUseCase
     }
 
     $generated = $this->aiCoordinator->generate(
-      $formattedWeather,
+      $weatherDto,
       $user,
       $tpo,
       $date,

@@ -6,6 +6,7 @@ use App\Domain\ClothingAdvice\AdviceGenerationMode;
 use App\Domain\ClothingAdvice\AiClient;
 use App\Domain\ClothingAdvice\OuterPolicy;
 use App\Domain\ClothingAdvice\PromptBuilder;
+use App\Domain\Weather\WeatherDto;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +19,7 @@ final class AiAdviceCoordinator
     private ExclusionConfigBuilder $exclusionBuilder,
   ) {}
 
-  public function generate(array $weather, User $user, ?string $tpo, string $date, ?string $cityId): array
+  public function generate(WeatherDto $weather, User $user, ?string $tpo, string $date, ?string $cityId): array
   {
     $json = null;
 
@@ -42,12 +43,7 @@ final class AiAdviceCoordinator
       ? ($json['summary'] ?? '本日の服装アドバイスです。')
       : 'AI提案が利用できなかったため、手持ちアイテムから組み合わせを提案しました。';
 
-    $feelsLike = $weather['feels_like'] ?? null;
-
-    if ($feelsLike === null) {
-      Log::warning('feels_like missing, fallback used', ['weather' => $weather]);
-      $feelsLike = $weather['max'] ?? 20.0;
-    }
+    $feelsLike = $weather->feelsLike();
 
     [$items, $outerPolicy] = $this->outfitBuilder->outfitSuggestion(
       $json['items'] ?? [],

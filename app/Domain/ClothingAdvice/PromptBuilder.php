@@ -2,13 +2,14 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Domain\Weather\WeatherDto;
 use App\Enums\Gender;
 use App\Models\User;
 
 class PromptBuilder
 {
   public function buildJson(
-    array $weatherData,
+    WeatherDto $weatherData,
     ?User $user = null,
     ?string $tpo = null
   ): string {
@@ -51,12 +52,11 @@ class PromptBuilder
       - シーン: {$tpoText}
 
       【天気】
-      - 最高気温: {$weatherData['max']}℃
-      - 最低気温: {$weatherData['min']}℃
-      - 降水確率: {$weatherData['pop']}%
-      - 湿度: {$weatherData['humidityAvg']}%
-      - 風速: {$weatherData['windAvg']} m/s
-
+      - 最高気温: {$weatherData->max()}℃
+      - 最低気温: {$weatherData->min()}℃
+      - 降水確率: {$weatherData->pop()}%
+      - 湿度: {$weatherData->humidityAvg()}%
+      - 風速: {$weatherData->windAvg()} m/s
       【制約】
       - summary は 40文字以内
       - items の配列要素は 1〜3 件
@@ -67,7 +67,7 @@ class PromptBuilder
 
   public function build(
     AdviceGenerationMode $mode,
-    array $weatherData,
+    WeatherDto $weatherData,
     ?User $user,
     ?string $tpo
   ): string {
@@ -81,7 +81,7 @@ class PromptBuilder
   }
 
   private function buildGeneralAdviceJson(
-    array $weatherData,
+    WeatherDto $weatherData,
     ?User $user,
     ?string $tpo
   ): string {
