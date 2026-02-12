@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\ClothingAdvice\ClothingAdviceUseCase;
 use App\Domain\Weather\WeatherDto;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -35,13 +36,18 @@ class ClothingAdviceController extends Controller
             return response()->json(['message' => '天気データが不正です'], 422);
         }
 
-        $weatherDto = WeatherDto::fromApi([
-            'max'         => $w['max_temp'] ?? null,
-            'min'         => $w['min_temp'] ?? null,
-            'pop'         => $w['precipitation_probability'] ?? null,
-            'humidityAvg' => $w['humidity'] ?? 60,
-            'windAvg'     => $w['wind_speed'] ?? 2,
-        ]);
+        $date = CarbonImmutable::parse($validated['targetDate']);
+
+        $weatherDto = WeatherDto::fromApi(
+            [
+                'max'         => $w['max_temp'] ?? null,
+                'min'         => $w['min_temp'] ?? null,
+                'pop'         => $w['precipitation_probability'] ?? null,
+                'humidityAvg' => $w['humidity'] ?? 60,
+                'windAvg'     => $w['wind_speed'] ?? 2,
+            ],
+            $date
+        );
 
         $result = $this->useCase->handle(
             $weatherDto,

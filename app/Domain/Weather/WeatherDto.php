@@ -2,9 +2,13 @@
 
 namespace App\Domain\Weather;
 
+use App\Enums\Season;
+use Carbon\CarbonImmutable;
+
 final class WeatherDto
 {
   public function __construct(
+    private readonly CarbonImmutable $date,
     private readonly float $max,
     private readonly float $min,
     private readonly int $pop,
@@ -13,7 +17,7 @@ final class WeatherDto
     private readonly float $feelsLike,
   ) {}
 
-  public static function fromApi(array $data): self
+  public static function fromApi(array $data, CarbonImmutable $date): self
   {
     $max = (float) $data['max'];
     $min = (float) $data['min'];
@@ -27,6 +31,7 @@ final class WeatherDto
     $feelsLike = self::calculateFeelsLike($temp, $humidity, $wind);
 
     return new self(
+      date: $date,
       max: $max,
       min: $min,
       pop: (int) $data['pop'],
@@ -103,5 +108,17 @@ final class WeatherDto
   public function feelsLike(): float
   {
     return $this->feelsLike;
+  }
+
+  public function season(): int
+  {
+    $month = $this->date->month;
+
+    return match (true) {
+      in_array($month, [3, 4, 5])  => Season::spring,
+      in_array($month, [6, 7, 8])  => Season::summer,
+      in_array($month, [9, 10, 11])  => Season::fall,
+      default                      => Season::winter,
+    };
   }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Application\ClothingAdvice;
 
+use App\Application\Outfit\RelatedOutfitService;
 use App\Domain\ClothingAdvice\AdviceCache;
 use App\Domain\ClothingAdvice\OutfitDecisionReason;
 use App\Domain\Weather\WeatherDto;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 
 final class ClothingAdviceUseCase
 {
@@ -13,6 +15,7 @@ final class ClothingAdviceUseCase
     private AiAdviceCoordinator $aiCoordinator,
     private AdviceResultPersister $persister,
     private AdviceCache $adviceCache,
+    private RelatedOutfitService $relatedOutfitService,
   ) {}
 
   public function handle(WeatherDto $weatherDto, int $userId, ?string $date, ?string $tpo, ?string $cityId): array
@@ -27,6 +30,7 @@ final class ClothingAdviceUseCase
       $cityId,
       $user->profile_hash
     )) {
+      $cached['related_outfits'] = [];
       return $cached;
     }
 
@@ -47,12 +51,24 @@ final class ClothingAdviceUseCase
     $items = $this->normalizeOutfitSuggestionStructure($items);
     $items = $this->normalizeAndTranslateReasons($items);
 
+    // 提案カテゴリ抽出
+    $usedCategories = $this->extractMainCategories($items);
+
+    $season = $weatherDto->season();
+
+    // 関連コーデ取得（キャッシュしない）
+    $relatedOutfits = $this->relatedOutfitService
+      ->getByCategories($user->id, $usedCategories, $season, CarbonImmutable::today(), 5)
+      ->map(fn($dto) => $dto->toArray())
+      ->all();
+
     $result = [
       'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
       'mode' => $mode,
       'advice' => $adviceText ?: '天候とお手持ちのアイテムをもとに服装を提案しました。',
       'notes' => $notes,
       'outfit_suggestion' => $items,
+      'related_outfits' => $relatedOutfits,
     ];
 
     $this->persister->storeResult(
@@ -124,5 +140,24 @@ final class ClothingAdviceUseCase
     }
 
     return $items;
+  }
+
+  /**
+   * Outfit 提案から「実際に採用された」主要カテゴリを抽出
+   *
+   * @param array $items
+   * @return array ['tops', 'outer', ...]
+   */
+  private function extractMainCategories(array $items): array
+  {
+    return collect($items)
+      ->filter(
+        fn($entry, $category) =>
+        in_array($category, ['tops', 'outer', 'bottoms', 'shoes'], true)
+          && !empty($entry['item'])
+      )
+      ->keys()
+      ->values()
+      ->all();
   }
 }

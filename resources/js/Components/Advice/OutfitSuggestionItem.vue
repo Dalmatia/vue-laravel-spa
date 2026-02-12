@@ -31,13 +31,18 @@ const props = defineProps({
                     title="このアイテムを選んだ理由"
                     :reasons="part.primaryReasons"
                 />
-
-                <OutfitReasonBlock
-                    v-else-if="!isGeneralAdvice && part.alternatives?.length"
-                    title="補足"
-                    :reasons="part.alternatives[0].reasons"
-                />
             </div>
         </div>
+
+        <OutfitReasonBlock
+            v-if="
+                !isGeneralAdvice &&
+                !part.primaryReasons?.length &&
+                part.alternatives?.length
+            "
+            class="mt-3"
+            title="補足"
+            :reasons="part.alternatives[0].reasons"
+        />
     </div>
 </template>
