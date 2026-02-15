@@ -77,11 +77,12 @@ class Outfit extends Model
         return $query->where('user_id', '!=', $userId);
     }
 
-    //　season 一致を優先表示する
+    // season 一致を優先表示する
     public function scopePreferSeason(Builder $query, ?int $season, CarbonImmutable $baseDate): Builder
     {
         $baseDateString = $baseDate->toDateString();
         $threshold = self::RECENT_THRESHOLD_DAYS;
+        $seasonCount = self::SEASON_COUNT;
 
         if (!$season) {
             return $query->orderByRaw(
@@ -96,7 +97,7 @@ class Outfit extends Model
                WHEN season = ?
                AND ABS(DATEDIFF(outfit_date, ?)) <= {$threshold} THEN 0
                WHEN season = ? THEN 1
-               WHEN LEAST(ABS(season - ?), {self::SEASON_COUNT} - ABS(season - ?)) = 1 THEN 2
+               WHEN LEAST(ABS(season - ?), {$seasonCount} - ABS(season - ?)) = 1 THEN 2
                ELSE 3
              END,
              ABS(DATEDIFF(outfit_date, ?)) ASC,

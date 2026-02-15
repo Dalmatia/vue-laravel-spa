@@ -2,19 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\ClothingAdvice\SeasonResolver;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
+    public function __construct(
+        private SeasonResolver $seasonResolver
+    ) {}
+
     public function index()
     {
-        $outfits = Outfit::orderBy('outfit_date', 'desc')->get();
+        $baseDate = CarbonImmutable::today();
 
-        return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
+        $season = $this->seasonResolver->resolve($baseDate->toDateString());
+
+        $outfits = Outfit::query()
+            ->preferSeason($season, $baseDate)
+            ->withCount([
+                'likes as likes_count' => function ($q) {
+                    $q->where('like', 1);
+                }
+            ])
+            ->with(['user'])
+            ->limit(5)
+            ->get();
+
+        return response([
+            'outfits' => new AllOutfitsCollection($outfits),
+            'users' => User::all()
+        ]);
     }
 
     public function suggestionUsers()
