@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\ClothingAdvice\SeasonResolver;
+use App\Enums\Gender;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
@@ -18,12 +19,31 @@ class HomeController extends Controller
 
     public function index()
     {
+        $authUser = Auth::user();
+        $genderFilter = request()->get('gender');
         $baseDate = CarbonImmutable::today();
-
         $season = $this->seasonResolver->resolve($baseDate->toDateString());
 
         $outfits = Outfit::query()
             ->preferSeason($season, $baseDate)
+            ->when(
+                filled($genderFilter),
+                function ($query) use ($genderFilter) {
+                    if ($genderFilter !== 'all') {
+                        $query->whereHas('user', function ($q) use ($genderFilter) {
+                            $q->where('gender', $genderFilter);
+                        });
+                    }
+                }
+            )
+            ->when(
+                !$genderFilter && $authUser && $authUser->gender !== Gender::NotSet,
+                function ($query) use ($authUser) {
+                    $query->whereHas('user', function ($q) use ($authUser) {
+                        $q->where('gender', $authUser->gender);
+                    });
+                }
+            )
             ->withCount([
                 'likes as likes_count' => function ($q) {
                     $q->where('like', 1);
@@ -33,10 +53,7 @@ class HomeController extends Controller
             ->limit(5)
             ->get();
 
-        return response([
-            'outfits' => new AllOutfitsCollection($outfits),
-            'users' => User::all()
-        ]);
+        return response(['outfits' => new AllOutfitsCollection($outfits)]);
     }
 
     public function suggestionUsers()

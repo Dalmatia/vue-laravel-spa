@@ -82,7 +82,6 @@ class Outfit extends Model
     {
         $baseDateString = $baseDate->toDateString();
         $threshold = self::RECENT_THRESHOLD_DAYS;
-        $seasonCount = self::SEASON_COUNT;
 
         if (!$season) {
             return $query->orderByRaw(
@@ -97,7 +96,10 @@ class Outfit extends Model
                WHEN season = ?
                AND ABS(DATEDIFF(outfit_date, ?)) <= {$threshold} THEN 0
                WHEN season = ? THEN 1
-               WHEN LEAST(ABS(season - ?), {$seasonCount} - ABS(season - ?)) = 1 THEN 2
+               WHEN LEAST(
+                     ABS(CAST(season AS SIGNED) - ?),
+                     4 - ABS(CAST(season AS SIGNED) - ?)
+                    ) = 1 THEN 2
                ELSE 3
              END,
              ABS(DATEDIFF(outfit_date, ?)) ASC,
