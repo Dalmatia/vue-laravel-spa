@@ -5,6 +5,7 @@ namespace App\Domain\ClothingAdvice;
 use App\Application\ClothingAdvice\OutfitReasonSelector;
 use App\Enums\MainCategory;
 use App\Domain\ClothingAdvice\PrimaryItemSelector;
+use App\Domain\Weather\WeatherDto;
 
 class ItemMatcher
 {
@@ -19,6 +20,7 @@ class ItemMatcher
     array $excludeColorsByCategory = [],
     array $excludeItemIds = [],
     OuterPolicy $outerPolicy,
+    WeatherDto $weather,
     ?string $tpo = null,
     ?string $targetDate = null
   ): array {
@@ -49,6 +51,7 @@ class ItemMatcher
         $excludeItemIds,
         $excludeColorsByCategory[$category] ?? [],
         $matchedItems,
+        $weather,
         $tpo,
         $targetDate,
       );

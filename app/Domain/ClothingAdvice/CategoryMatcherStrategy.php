@@ -2,6 +2,8 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Domain\Weather\WeatherDto;
+
 interface CategoryMatcherStrategy
 {
   public function evaluateCandidates(
@@ -11,6 +13,7 @@ interface CategoryMatcherStrategy
     array $excludeItemIds,
     array $excludeColors,
     array $currentItems,
+    WeatherDto $weatherDto,
     ?string $tpo,
     ?string $targetDate
   ): array;

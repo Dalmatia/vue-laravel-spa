@@ -121,4 +121,34 @@ final class WeatherDto
       default                      => Season::winter,
     };
   }
+
+  public function thermalSeason(): int
+  {
+    $feels = $this->feelsLike();
+    $month = $this->date->month;
+
+    // 真冬
+    if ($feels <= 5) {
+      return Season::winter;
+    }
+
+    // 真夏
+    if ($feels >= 25) {
+      return Season::summer;
+    }
+
+    // 中間（春秋）
+    if (in_array($month, [9, 10, 11])) {
+      return Season::fall;
+    }
+
+    if (in_array($month, [3, 4, 5])) {
+      return Season::spring;
+    }
+
+    // それ以外は温度ベースで補完
+    return $feels <= 15
+      ? Season::spring
+      : Season::fall;
+  }
 }

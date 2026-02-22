@@ -6,6 +6,7 @@ use App\Domain\ClothingAdvice\FallbackOutfitBuilder;
 use App\Domain\ClothingAdvice\ItemMatcher;
 use App\Domain\ClothingAdvice\OuterPolicyResolver;
 use App\Domain\Weather\ThermalLevelResolver;
+use App\Domain\Weather\WeatherDto;
 
 final class OutfitSuggestionBuilder
 {
@@ -16,9 +17,9 @@ final class OutfitSuggestionBuilder
     private ThermalLevelResolver $thermalLevelResolver
   ) {}
 
-  public function outfitSuggestion(array $items, int $userId, array $exclude, ?string $tpo, string $date, float $feelsLike): array
+  public function outfitSuggestion(array $items, int $userId, array $exclude, ?string $tpo, string $date, WeatherDto $weather): array
   {
-    $thermalLevel = $this->thermalLevelResolver->resolve($feelsLike);
+    $thermalLevel = $this->thermalLevelResolver->resolve($weather->feelsLike());
     $outerPolicy  = $this->outerPolicyResolver->resolve($thermalLevel, $tpo);
 
     $matched = $this->matcher->matchItemsFromJson(
@@ -27,6 +28,7 @@ final class OutfitSuggestionBuilder
       $exclude['colors'],
       $exclude['ids'],
       $outerPolicy,
+      $weather,
       $tpo,
       $date
     );
@@ -35,6 +37,7 @@ final class OutfitSuggestionBuilder
       $matched,
       $userId,
       $outerPolicy,
+      $weather,
       $tpo,
       $date
     );

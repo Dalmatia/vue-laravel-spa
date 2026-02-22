@@ -4,6 +4,7 @@ namespace App\Domain\ClothingAdvice;
 
 use App\Application\ClothingAdvice\OutfitReasonSelector;
 use App\Domain\ClothingAdvice\PrimaryItemSelector;
+use App\Domain\Weather\WeatherDto;
 use App\Enums\MainCategory;
 use App\Models\Item;
 use Illuminate\Database\Eloquent\Collection;
@@ -12,14 +13,13 @@ class FallbackOutfitBuilder
 {
   public function __construct(
     private OutfitRuleEvaluator $ruleEvaluator,
-    private SeasonResolver $seasonResolver,
     private PrimaryItemSelector $primaryItemSelector,
   ) {}
 
   /**
    * null のカテゴリをユーザーの手持ちアイテムで補完する
    */
-  public function fillMissingItems(array $matchedItems, int $userId, OuterPolicy $outerPolicy, ?string $tpo = null, ?string $targetDate = null): array
+  public function fillMissingItems(array $matchedItems, int $userId, OuterPolicy $outerPolicy, WeatherDto $weatherDto, ?string $tpo = null, ?string $targetDate = null): array
   {
     foreach ($matchedItems as $categoryValue => $data) {
       if (!empty($data['item'] ?? null)) {
@@ -38,7 +38,7 @@ class FallbackOutfitBuilder
         $categoryValue,
         $matchedItems,
         $tpo,
-        $targetDate
+        $weatherDto
       );
 
       if ($result->primary) {
@@ -61,28 +61,28 @@ class FallbackOutfitBuilder
     return $matchedItems;
   }
 
-  private function findCandidate(int $userId, int $category, ?string $targetDate): Collection
+  private function findCandidate(int $userId, int $category, WeatherDto $weatherDto): Collection
   {
     $query = Item::where('user_id', $userId)
       ->where('main_category', $category);
 
     // 季節フィルタ
-    $season = $this->seasonResolver->resolve($targetDate);
+    $season = $weatherDto->thermalSeason();
     $query->where(function ($q) use ($season) {
       $q->whereNull('season')
         ->orWhere('season', 0)
         ->orWhere('season', $season);
     });
 
-    return $query->get()->shuffle();
+    return $query->inRandomOrder()->get();
   }
 
   /**
    * 指定カテゴリの最適候補を探す
    */
-  private function matchFallbackItem(int $userId, int $category, array $currentItems, ?string $tpo, ?string $targetDate): ItemMatchResult
+  private function matchFallbackItem(int $userId, int $category, array $currentItems, ?string $tpo, WeatherDto $weatherDto): ItemMatchResult
   {
-    $candidates = $this->findCandidate($userId, $category, $targetDate);
+    $candidates = $this->findCandidate($userId, $category, $weatherDto);
 
     $evaluatedItems = [];
 

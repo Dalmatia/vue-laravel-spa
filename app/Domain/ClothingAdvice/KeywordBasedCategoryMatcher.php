@@ -2,6 +2,7 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Domain\Weather\WeatherDto;
 use App\Models\Item;
 use App\Models\KeywordMapping;
 
@@ -9,7 +10,6 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
 {
   public function __construct(
     private OutfitRuleEvaluator $ruleEvaluator,
-    private SeasonResolver $seasonResolver
   ) {}
 
   public function evaluateCandidates(
@@ -19,6 +19,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     array $excludeItemIds,
     array $excludeColors,
     array $currentItems,
+    WeatherDto $weatherDto,
     ?string $tpo,
     ?string $targetDate,
   ): array {
@@ -51,7 +52,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
       $query->whereNotIn('color', $excludeColors);
     }
 
-    $season = $this->seasonResolver->resolve($targetDate);
+    $season = $weatherDto->thermalSeason();
     $query->where(function ($q) use ($season) {
       $q->whereNull('season')
         ->orWhere('season', 0)

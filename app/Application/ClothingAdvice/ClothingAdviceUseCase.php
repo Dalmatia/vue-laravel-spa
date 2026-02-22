@@ -54,7 +54,7 @@ final class ClothingAdviceUseCase
     // 提案カテゴリ抽出
     $usedCategories = $this->extractMainCategories($items);
 
-    $season = $weatherDto->season();
+    $season = $weatherDto->thermalSeason();
 
     // 関連コーデ取得（キャッシュしない）
     $relatedOutfits = $this->relatedOutfitService

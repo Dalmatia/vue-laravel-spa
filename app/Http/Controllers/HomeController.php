@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Analyzers\WeatherAnalyzer;
 use App\Domain\ClothingAdvice\SeasonResolver;
+use App\Domain\Weather\WeatherDto;
 use App\Enums\Gender;
 use App\Http\Resources\AllOutfitsCollection;
 use App\Models\Outfit;
 use App\Models\User;
+use App\Services\WeatherService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +17,9 @@ use Illuminate\Support\Facades\DB;
 class HomeController extends Controller
 {
     public function __construct(
-        private SeasonResolver $seasonResolver
+        private SeasonResolver $seasonResolver,
+        private WeatherService $weatherService,
+        private WeatherAnalyzer $analyzer,
     ) {}
 
     public function index()
@@ -22,7 +27,27 @@ class HomeController extends Controller
         $authUser = Auth::user();
         $genderFilter = request()->get('gender');
         $baseDate = CarbonImmutable::today();
-        $season = $this->seasonResolver->resolve($baseDate->toDateString());
+
+        $lat = request()->get('lat');
+        $lon = request()->get('lon');
+
+        if ($lat && $lon) {
+
+            $weatherData = $this->weatherService->getWeatherData($lat, $lon);
+
+            if ($weatherData) {
+                $weatherInfo = $this->analyzer
+                    ->extractWeatherInfoForAdvice($weatherData, 0);
+
+                $dto = WeatherDto::fromApi($weatherInfo, CarbonImmutable::now());
+
+                $season = $dto->thermalSeason();
+            } else {
+                $season = $this->seasonResolver->resolve(now()->toDateString());
+            }
+        } else {
+            $season = $this->seasonResolver->resolve($baseDate->toDateString());
+        }
 
         $outfits = Outfit::query()
             ->preferSeason($season, $baseDate)

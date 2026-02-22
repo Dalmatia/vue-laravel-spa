@@ -43,15 +43,13 @@ final class AiAdviceCoordinator
       ? ($json['summary'] ?? '本日の服装アドバイスです。')
       : 'AI提案が利用できなかったため、手持ちアイテムから組み合わせを提案しました。';
 
-    $feelsLike = $weather->feelsLike();
-
     [$items, $outerPolicy] = $this->outfitBuilder->outfitSuggestion(
       $json['items'] ?? [],
       $user->id,
       $exclude,
       $tpo,
       $date,
-      $feelsLike
+      $weather
     );
 
     $notes = $json['notes'] ?? [];
