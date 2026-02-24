@@ -28,7 +28,10 @@ class RelatedOutfitService
       ->usesCategories($categories)
       ->preferSeason($season, $baseDate)
       ->with(['user'])
-      ->withCount('likes')
+      ->withCount([
+        'likes as likes_count' => fn($q) => $q->where('like', 1)
+      ])
+      ->orderByDesc('likes_count')
       ->limit($limit)
       ->get()
       ->map(fn($outfit) => RelatedOutfitDto::fromModel($outfit));

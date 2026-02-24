@@ -2,7 +2,9 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Domain\Weather\ThermalLevel;
 use App\Enums\Color;
+use App\Enums\Season;
 use App\Enums\SubCategory;
 use App\Models\Item;
 
@@ -19,58 +21,61 @@ class OutfitRuleEvaluator
     )->canUse;
   }
 
-  public function evaluateItem(Item $item, array $currentItems, ?string $tpo, int $colorTolerance, int $patternAllowance): ItemEvaluationResult
-  {
+  public function evaluateItem(
+    Item $item,
+    array $currentItems,
+    ?string $tpo,
+    int $colorTolerance,
+    int $patternAllowance,
+    ?ThermalLevel $thermalLevel = null
+  ): ItemEvaluationResult {
+
     $reasons = [];
 
     // TPO
-    if (!$this->isTpoAppropriate($item, $tpo)) {
-      $reasons[] = OutfitDecisionReason::TPO_MISMATCH;
-    } else {
-      $reasons[] = OutfitDecisionReason::TPO_APPROPRIATE;
-    }
+    $isTpoOk = $this->isTpoAppropriate($item, $tpo);
+    $reasons[] = $isTpoOk
+      ? OutfitDecisionReason::TPO_APPROPRIATE
+      : OutfitDecisionReason::TPO_MISMATCH;
 
-    // 色の相性
-    if (!$this->isColorCompatible(
+    // Color
+    $isColorOk = $this->isColorCompatible(
       $item,
       $currentItems,
       $colorTolerance,
       $patternAllowance,
       $tpo
-    )) {
-      $reasons[] = OutfitDecisionReason::COLOR_CONFLICT;
-    } else {
-      $reasons[] = OutfitDecisionReason::GOOD_COLOR_MATCH;
-    }
-
-    // 季節感
-    if (!$this->isSeasonAppropriate($item)) {
-      $reasons[] = OutfitDecisionReason::SEASON_MISMATCH;
-    } else {
-      $reasons[] = OutfitDecisionReason::SEASON_APPROPRIATE;
-    }
-
-    $canUse = !collect($reasons)->contains(
-      fn($r) =>
-      in_array($r, [
-        OutfitDecisionReason::TPO_MISMATCH,
-        OutfitDecisionReason::COLOR_CONFLICT,
-        OutfitDecisionReason::SEASON_MISMATCH,
-      ], true)
     );
+    $reasons[] = $isColorOk
+      ? OutfitDecisionReason::GOOD_COLOR_MATCH
+      : OutfitDecisionReason::COLOR_CONFLICT;
+
+    // canUse（季節は含めない）
+    $canUse = $isTpoOk && $isColorOk;
 
     $score = 0.0;
 
-    if ($this->isTpoAppropriate($item, $tpo)) {
+    if ($isTpoOk) {
       $score += 2.0;
     }
 
-    if ($this->isColorCompatible(...)) {
+    if ($isColorOk) {
       $score += 2.0;
     }
 
-    if ($this->isSeasonAppropriate($item)) {
-      $score += 1.0;
+    // 温度スコアリング
+    if ($thermalLevel && $item->season !== null) {
+      $seasonIndex = Season::toThermalIndex($item->season);
+
+      if ($seasonIndex === null) {
+        $distance = abs($thermalLevel->toIndex() - $seasonIndex);
+
+        $score += match (true) {
+          $distance === 0 => 2.0,
+          $distance === 1 => 1.0,
+          default         => 0.0,
+        };
+      }
     }
 
     return new ItemEvaluationResult(
@@ -229,10 +234,5 @@ class OutfitRuleEvaluator
       'outdoor' => 2,
       default => 1,
     };
-  }
-
-  private function isSeasonAppropriate(Item $item): bool
-  {
-    return true; // 仮
   }
 }

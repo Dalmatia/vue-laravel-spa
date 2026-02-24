@@ -4,6 +4,7 @@ namespace App\Domain\ClothingAdvice;
 
 use App\Application\ClothingAdvice\OutfitReasonSelector;
 use App\Domain\ClothingAdvice\PrimaryItemSelector;
+use App\Domain\Weather\ThermalLevelResolver;
 use App\Domain\Weather\WeatherDto;
 use App\Enums\MainCategory;
 use App\Models\Item;
@@ -14,6 +15,7 @@ class FallbackOutfitBuilder
   public function __construct(
     private OutfitRuleEvaluator $ruleEvaluator,
     private PrimaryItemSelector $primaryItemSelector,
+    private ThermalLevelResolver $thermalLevelResolver
   ) {}
 
   /**
@@ -83,8 +85,8 @@ class FallbackOutfitBuilder
   private function matchFallbackItem(int $userId, int $category, array $currentItems, ?string $tpo, WeatherDto $weatherDto): ItemMatchResult
   {
     $candidates = $this->findCandidate($userId, $category, $weatherDto);
-
     $evaluatedItems = [];
+    $thermalLevel = $this->thermalLevelResolver->resolve($weatherDto->feelsLike());
 
     foreach ($candidates as $candidate) {
       $evaluation = $this->ruleEvaluator->evaluateItem(
@@ -92,7 +94,8 @@ class FallbackOutfitBuilder
         $currentItems,
         $tpo,
         $this->ruleEvaluator->getColorTolerance($tpo),
-        $this->ruleEvaluator->getPatternAllowance($tpo)
+        $this->ruleEvaluator->getPatternAllowance($tpo),
+        $thermalLevel
       );
 
       $evaluatedItems[] = [

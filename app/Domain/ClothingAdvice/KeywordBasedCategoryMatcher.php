@@ -2,6 +2,7 @@
 
 namespace App\Domain\ClothingAdvice;
 
+use App\Domain\Weather\ThermalLevelResolver;
 use App\Domain\Weather\WeatherDto;
 use App\Models\Item;
 use App\Models\KeywordMapping;
@@ -10,6 +11,7 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
 {
   public function __construct(
     private OutfitRuleEvaluator $ruleEvaluator,
+    private ThermalLevelResolver $thermalLevelResolver
   ) {}
 
   public function evaluateCandidates(
@@ -62,14 +64,15 @@ class KeywordBasedCategoryMatcher implements CategoryMatcherStrategy
     $candidates = $query->limit(5)->get();
 
     $evaluatedItems = [];
-
+    $thermalLevel = $this->thermalLevelResolver->resolve($weatherDto->feelsLike());
     foreach ($candidates as $item) {
       $evaluation = $this->ruleEvaluator->evaluateItem(
         $item,
         $currentItems,
         $tpo,
         $this->ruleEvaluator->getColorTolerance($tpo),
-        $this->ruleEvaluator->getPatternAllowance($tpo)
+        $this->ruleEvaluator->getPatternAllowance($tpo),
+        $thermalLevel
       );
 
       $evaluatedItems[] = [

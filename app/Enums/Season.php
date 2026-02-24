@@ -55,4 +55,15 @@ final class Season extends Enum
 
         return $selectArray;
     }
+
+    public static function toThermalIndex(?int $season): ?int
+    {
+        return match ($season) {
+            self::winter => 0,
+            self::spring => 1,
+            self::fall   => 2,
+            self::summer => 3,
+            default        => null,
+        };
+    }
 }
