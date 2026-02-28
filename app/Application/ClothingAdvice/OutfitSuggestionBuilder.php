@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Application\ClothingAdvice;
+
+use App\Domain\ClothingAdvice\FallbackOutfitBuilder;
+use App\Domain\ClothingAdvice\ItemMatcher;
+use App\Domain\ClothingAdvice\OuterPolicyResolver;
+use App\Domain\Weather\ThermalLevelResolver;
+use App\Domain\Weather\WeatherDto;
+
+final class OutfitSuggestionBuilder
+{
+  public function __construct(
+    private ItemMatcher $matcher,
+    private FallbackOutfitBuilder $fallback,
+    private OuterPolicyResolver $outerPolicyResolver,
+    private ThermalLevelResolver $thermalLevelResolver
+  ) {}
+
+  public function outfitSuggestion(array $items, int $userId, array $exclude, ?string $tpo, string $date, WeatherDto $weather): array
+  {
+    $thermalLevel = $this->thermalLevelResolver->resolve($weather->feelsLike());
+    $outerPolicy  = $this->outerPolicyResolver->resolve($thermalLevel, $tpo);
+
+    $matched = $this->matcher->matchItemsFromJson(
+      $items,
+      $userId,
+      $exclude['colors'],
+      $exclude['ids'],
+      $outerPolicy,
+      $weather,
+      $tpo,
+      $date
+    );
+
+    $filled = $this->fallback->fillMissingItems(
+      $matched,
+      $userId,
+      $outerPolicy,
+      $weather,
+      $tpo,
+      $date
+    );
+
+    return [$filled, $outerPolicy];
+  }
+
+  /**
+   * 服装提案として成立しているか
+   */
+  public function hasEnoughItems(array $outfitSuggestion): bool
+  {
+    $usableCount = collect($outfitSuggestion)
+      ->filter(fn($part) => !empty($part['item']))
+      ->count();
+
+    // 2点以上で「コーデとして成立」(仮)
+    return $usableCount >= 2;
+  }
+}

@@ -1,0 +1,144 @@
+<script setup>
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useAuthStore } from '../stores/auth';
+import { useFollowStore } from '../stores/follow';
+import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
+
+import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
+import WeatherForecast from './WeatherForecast.vue';
+
+import Follow from 'vue-material-design-icons/AccountPlusOutline.vue';
+import unFollow from 'vue-material-design-icons/AccountCheckOutline.vue';
+
+let wWidth = ref(window.innerWidth);
+const outfits = ref([]);
+const authStore = useAuthStore();
+const user = computed(() => (authStore.user ? authStore.user.id : null));
+const followStore = useFollowStore();
+const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
+
+const resizeHandler = () => {
+    wWidth.value = window.innerWidth;
+};
+
+// 投稿したコーディネートの表示
+const fetchOutfits = async () => {
+    try {
+        const response = await axios.get('/api/home');
+        outfits.value = response.data.outfits;
+
+        // 各ユーザーのフォロー状態をチェック
+        const follows = outfits.value.map((outfit) => outfit.user.id);
+        await followStore.fetchFollowStatus(follows);
+    } catch (error) {
+        console.error('コーディネート一覧の取得に失敗しました。', error);
+    }
+};
+
+const followUser = async (userId) => {
+    try {
+        await followStore.pushFollow(userId);
+        followStore.status[userId] = true;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+// フォロー解除する
+const deleteFollow = async (userId) => {
+    try {
+        await followStore.deleteFollow(userId);
+        followStore.status[userId] = false;
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('resize', resizeHandler);
+    fetchOutfits();
+    window.addEventListener('outfit-created', fetchOutfits);
+    window.addEventListener('outfit-updated', fetchOutfits);
+    window.addEventListener('outfit-deleted', fetchOutfits);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', resizeHandler);
+    window.removeEventListener('outfit-created', fetchOutfits);
+    window.removeEventListener('outfit-updated', fetchOutfits);
+    window.removeEventListener('outfit-deleted', fetchOutfits);
+});
+</script>
+
+<template>
+    <div id="Posts" class="md:pr-1.5 lg:pl-0 md:pl-[90px]">
+        <WeatherForecast />
+        <!-- コーディネート一覧 -->
+        <span class="font-bold text-lg pr-6">他ユーザーのコーディネート</span>
+        <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
+            <article
+                class="overflow-hidden rounded-lg shadow-lg"
+                v-for="outfit in outfits"
+                :key="outfit.id"
+            >
+                <a @click="toggleOutfitOverlay(outfit)">
+                    <img
+                        class="block h-[193px] w-[177px] md:h-[300px] md:w-full"
+                        :src="outfit.file"
+                        loading="lazy"
+                        alt="コーディネート画像"
+                    />
+                </a>
+                <p class="text-grey-darker text-sm">{{ outfit.outfit_date }}</p>
+                <footer
+                    class="flex items-center justify-between leading-none mt-3 md:p-4"
+                >
+                    <div
+                        class="flex items-center no-underline hover:underline text-black"
+                    >
+                        <div
+                            class="rounded-full w-8 h-8 overflow-hidden border-2"
+                        >
+                            <img
+                                alt="ユーザー画像"
+                                class="w-full h-full object-cover"
+                                :src="outfit.user.file"
+                            />
+                        </div>
+                        <p class="ml-2 text-xs">{{ outfit.user.name }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <div
+                            class="follow"
+                            @click="followUser(outfit.user.id)"
+                            v-if="
+                                outfit.user.id !== user &&
+                                !followStore.followStatus(outfit.user.id)
+                            "
+                        >
+                            <Follow />
+                        </div>
+                        <div
+                            class="unfollow"
+                            @click="deleteFollow(outfit.user.id)"
+                            v-if="
+                                outfit.user.id !== user &&
+                                followStore.followStatus(outfit.user.id)
+                            "
+                        >
+                            <unFollow />
+                        </div>
+                    </div>
+                </footer>
+            </article>
+        </div>
+        <div class="pb-20"></div>
+    </div>
+
+    <ShowOutfitOverlay
+        v-if="overlayState.open"
+        :outfit="overlayState.currentOutfit"
+        @delete-selected="deleteOutfit($event)"
+        @close-overlay="toggleOutfitOverlay(null)"
+    />
+</template>

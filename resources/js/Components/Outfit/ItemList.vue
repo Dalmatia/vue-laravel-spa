@@ -1,0 +1,75 @@
+<script setup>
+import { defineProps, ref } from 'vue';
+import ShowItemOverlay from '../Items/ShowItemOverlay.vue';
+
+const props = defineProps({
+    items: Array,
+});
+const emit = defineEmits(['closeOverlay']);
+
+let currentItem = ref(null);
+let openOverlay = ref(false);
+
+// アイテム詳細ページオーバーレイ表示
+const openItemOverlay = (item) => {
+    currentItem.value = item.data;
+    openOverlay.value = true;
+};
+</script>
+
+<template>
+    <ul class="flex flex-wrap px-[6px] lg:flex-col lg:gap-6 lg:px-0">
+        <li
+            v-for="item in items"
+            :key="item.id"
+            class="group w-1/3 px-[10px] lg:flex lg:w-full lg:flex-col lg:gap-6 lg:px-0"
+        >
+            <div class="lg:flex">
+                <div
+                    class="flex justify-center border border-gray-300 lg:h-[120px] lg:w-[100px] lg:shrink-0 lg:overflow-hidden lg:rounded-[3px] lg:border-none lg:hover:opacity-70"
+                    @click="openItemOverlay(item)"
+                >
+                    <span class="item_style">
+                        <img
+                            v-if="item.data?.file"
+                            :src="item.data.file"
+                            alt="着用アイテム画像"
+                            class="item_image w-[91px] h-[118px] md:w-[215px] md:h-[258px] lg:w-[100px] lg:h-[120px] object-cover"
+                        />
+                    </span>
+                </div>
+                <div class="min-w-0 lg:grow lg:pl-[18px] lg:pr-[23px]">
+                    <p
+                        class="truncate pt-1 text-[10px] leading-[1.4] lg:mt-[-3px] lg:pt-0 lg:text-[15px] lg:font-bold lg:leading-[1.6] lg:tracking-wide"
+                    >
+                        <span class="hidden lg:inline">{{ item.label }}</span>
+                    </p>
+                    <p
+                        v-if="item.category && item.color"
+                        class="truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                    >
+                        <span
+                            class="hidden lg:inline lg:text-blue-500 xl:hover:underline"
+                        >
+                            {{ item.category }} ({{ item.color }})
+                        </span>
+                    </p>
+                    <p
+                        v-else
+                        class="text-gray-400 truncate text-[10px] leading-[1.4] xl:pt-[3px] xl:text-[12px]"
+                    >
+                        読み込み中...
+                    </p>
+                </div>
+            </div>
+            <div class="hidden lg:block lg:group-last:hidden">
+                <div class="bg-gray-300 h-[1px]"></div>
+            </div>
+        </li>
+    </ul>
+    <ShowItemOverlay
+        v-if="openOverlay"
+        :item="currentItem"
+        @close-overlay="openOverlay = false"
+    />
+</template>

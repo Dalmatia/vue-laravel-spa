@@ -1,0 +1,163 @@
+<?php
+
+namespace App\Application\ClothingAdvice;
+
+use App\Application\Outfit\RelatedOutfitService;
+use App\Domain\ClothingAdvice\AdviceCache;
+use App\Domain\ClothingAdvice\OutfitDecisionReason;
+use App\Domain\Weather\WeatherDto;
+use App\Models\User;
+use Carbon\CarbonImmutable;
+
+final class ClothingAdviceUseCase
+{
+  public function __construct(
+    private AiAdviceCoordinator $aiCoordinator,
+    private AdviceResultPersister $persister,
+    private AdviceCache $adviceCache,
+    private RelatedOutfitService $relatedOutfitService,
+  ) {}
+
+  public function handle(WeatherDto $weatherDto, int $userId, ?string $date, ?string $tpo, ?string $cityId): array
+  {
+    $date ??= now()->toDateString();
+    $user = User::findOrFail($userId);
+
+    if ($cached = $this->adviceCache->get(
+      $userId,
+      $date,
+      $tpo,
+      $cityId,
+      $user->profile_hash
+    )) {
+      $cached['related_outfits'] = [];
+      return $cached;
+    }
+
+    $generated = $this->aiCoordinator->generate(
+      $weatherDto,
+      $user,
+      $tpo,
+      $date,
+      $cityId
+    );
+
+    $adviceText = $generated['advice'];
+    $items = $generated['items'];
+    $mode = $generated['mode'];
+    $isAiAvailable = $generated['ai_used'];
+    $notes = $generated['notes'] ?? null;
+
+    $items = $this->normalizeOutfitSuggestionStructure($items);
+    $items = $this->normalizeAndTranslateReasons($items);
+
+    // 提案カテゴリ抽出
+    $usedCategories = $this->extractMainCategories($items);
+
+    $season = $weatherDto->thermalSeason();
+
+    // 関連コーデ取得（キャッシュしない）
+    $relatedOutfits = $this->relatedOutfitService
+      ->getByCategories($user->id, $usedCategories, $season, CarbonImmutable::today(), 5)
+      ->map(fn($dto) => $dto->toArray())
+      ->all();
+
+    $result = [
+      'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
+      'mode' => $mode,
+      'advice' => $adviceText ?: '天候とお手持ちのアイテムをもとに服装を提案しました。',
+      'notes' => $notes,
+      'outfit_suggestion' => $items,
+      'related_outfits' => $relatedOutfits,
+    ];
+
+    $this->persister->storeResult(
+      $user->id,
+      $date,
+      $result,
+      $items,
+      $tpo,
+      $cityId,
+      $user->profile_hash,
+      $isAiAvailable
+    );
+
+    return $result;
+  }
+
+  private function normalizeOutfitSuggestionStructure(array $items): array
+  {
+    foreach ($items as $category => &$entry) {
+      if (!is_array($entry)) {
+        $entry = [];
+      }
+
+      // item が無い場合でも形を保証
+      $entry['item'] ??= null;
+      $entry['primaryReasons'] ??= [];
+      $entry['alternatives'] ??= [];
+
+      if (empty($entry['alternatives'])) {
+        $entry['alternatives'] = [
+          [
+            'item' => null,
+            'reasons' => [
+              OutfitDecisionReason::NO_MATCH_FOUND,
+            ],
+          ],
+        ];
+      }
+    }
+
+    return $items;
+  }
+
+
+  private function normalizeAndTranslateReasons(array $items): array
+  {
+    foreach ($items as &$entry) {
+      // primary reasons（採用理由）
+      if (!empty($entry['primaryReasons'])) {
+        $entry['primaryReasons'] = array_map(
+          fn(OutfitDecisionReason $r) => $r->label(),
+          OutfitReasonSelector::selectForUi($entry['primaryReasons'])
+        );
+      }
+
+      // alternative reasons（代替理由）
+      if (!empty($entry['alternatives'])) {
+        foreach ($entry['alternatives'] as &$alt) {
+          if (empty($alt['reasons'])) {
+            continue;
+          }
+
+          $alt['reasons'] = array_map(
+            fn(OutfitDecisionReason $r) => $r->label(),
+            OutfitReasonSelector::selectForUi($alt['reasons'])
+          );
+        }
+      }
+    }
+
+    return $items;
+  }
+
+  /**
+   * Outfit 提案から「実際に採用された」主要カテゴリを抽出
+   *
+   * @param array $items
+   * @return array ['tops', 'outer', ...]
+   */
+  private function extractMainCategories(array $items): array
+  {
+    return collect($items)
+      ->filter(
+        fn($entry, $category) =>
+        in_array($category, ['tops', 'outer', 'bottoms', 'shoes'], true)
+          && !empty($entry['item'])
+      )
+      ->keys()
+      ->values()
+      ->all();
+  }
+}
