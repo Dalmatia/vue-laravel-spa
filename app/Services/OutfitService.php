@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Outfit;
 use Illuminate\Http\Request;
 use App\Services\FileService;
+use Illuminate\Support\Facades\Auth;
 
 class OutfitService
 {
@@ -17,7 +18,7 @@ class OutfitService
 
   public function createOrUpdateOutfit(Outfit $outfit, Request $request)
   {
-    $outfit->user_id = auth()->user()->id;
+    $outfit->user_id = Auth::id();
     if ($request->hasFile('file')) {
       $outfit = $this->handleFileUpload($outfit, $request);
     }
@@ -25,6 +26,8 @@ class OutfitService
     $outfit->save();
 
     $this->syncItemRelations($outfit, $request);
+
+    $outfit->load('items');
 
     return $outfit;
   }
@@ -39,21 +42,23 @@ class OutfitService
     $outfit->description = $this->normalizeNull($request->input('description'));
     $outfit->outfit_date = $request->input('outfit_date');
     $outfit->season = $this->normalizeNull($request->input('season'));
-
-    foreach (['tops', 'outer', 'bottoms', 'shoes'] as $item) {
-      $outfit->$item = $this->normalizeNull($request->input($item));
-    }
   }
 
   private function syncItemRelations(Outfit $outfit, Request $request)
   {
-    $itemIds = collect(['tops', 'outer', 'bottoms', 'shoes'])
-      ->map(fn($item) => $this->normalizeNull($request->input($item)))
-      ->filter()
-      ->unique()
-      ->toArray();
+    $items = json_decode($request->input('items'), true) ?? [];
 
-    $outfit->items()->sync($itemIds);
+    $syncData = [];
+
+    foreach ($items as $item) {
+      if (!isset($item['item_id'])) continue;
+
+      $syncData[$item['item_id']] = [
+        'role' => $item['role'] ?? null
+      ];
+    }
+
+    $outfit->items()->sync($syncData);
   }
 
   private function normalizeNull($value)

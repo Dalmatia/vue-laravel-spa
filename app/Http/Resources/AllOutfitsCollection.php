@@ -21,10 +21,17 @@ class AllOutfitsCollection extends ResourceCollection
                 'description' => $outfit->description,
                 'outfit_date' => $outfit->outfit_date,
                 'season' => $outfit->season,
-                'tops' => $outfit->tops,
-                'outer' => $outfit->outer,
-                'bottoms' => $outfit->bottoms,
-                'shoes' => $outfit->shoes,
+                'items' => $outfit->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'file' => $item->file,
+                        'main_category' => $item->main_category,
+                        'sub_category' => $item->sub_category,
+                        'color' => $item->color,
+                        'season' => $item->season,
+                        'memo' => $item->memo,
+                    ];
+                }),
                 'likes' => $outfit->likes->map(function ($like) {
                     return [
                         'id' => $like->id,

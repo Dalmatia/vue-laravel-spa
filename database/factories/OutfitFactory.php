@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Domain\ClothingAdvice\SeasonResolver;
 use App\Enums\Gender;
 use App\Enums\Season;
+use App\Models\Item;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -78,5 +79,20 @@ class OutfitFactory extends Factory
         $file = basename($files[array_rand($files)]);
 
         return "/dummy/outfits/{$genderFolder}/{$seasonFolder}/{$file}";
+    }
+
+    public function configure()
+    {
+        return $this->afterCreating(function ($outfit) {
+
+            $items = Item::where('user_id', $outfit->user_id)
+                ->inRandomOrder()
+                ->limit(rand(2, 4))
+                ->get();
+
+            if ($items->isNotEmpty()) {
+                $outfit->items()->attach($items->pluck('id')->toArray());
+            }
+        });
     }
 }

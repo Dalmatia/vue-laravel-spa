@@ -6,10 +6,7 @@ export function useCreateOutfitForm(closeOverlay) {
         description: null,
         outfit_date: '',
         season: null,
-        tops: null,
-        outer: null,
-        bottoms: null,
-        shoes: null,
+        items: [],
     });
 
     const fileDisplay = ref('');
@@ -28,7 +25,14 @@ export function useCreateOutfitForm(closeOverlay) {
         Object.keys(error.value).forEach((key) => (error.value[key] = null));
         form.season = form.season === '' ? null : form.season;
         try {
-            const response = await axios.post('/api/outfit', form, {
+            const payload = new FormData();
+
+            payload.append('file', form.file);
+            payload.append('description', form.description);
+            payload.append('outfit_date', form.outfit_date);
+            payload.append('season', form.season);
+            payload.append('items', JSON.stringify(form.items));
+            const response = await axios.post('/api/outfit', payload, {
                 forceFormData: true,
                 preserveScroll: true,
                 headers: {
@@ -65,13 +69,18 @@ export function useCreateOutfitForm(closeOverlay) {
     // コーディネートに使用したアイテムを選択する
     const handleItemSelected = (selectedItem, itemType) => {
         const itemInfo = itemTypes[itemType];
-        if (!itemInfo) {
-            return;
-        }
+        if (!itemInfo) return;
 
-        const { key, imgKey } = itemInfo;
-        form[key] = selectedItem?.id ?? null;
-        form[imgKey] = selectedItem?.file ?? null;
+        const role = itemType;
+        form.items = form.items.filter((i) => i.role !== role);
+
+        if (selectedItem) {
+            form.items.push({
+                item_id: selectedItem.id,
+                role: role,
+                file: selectedItem.file,
+            });
+        }
     };
 
     const resetForm = () => {
@@ -80,10 +89,7 @@ export function useCreateOutfitForm(closeOverlay) {
             description: null,
             outfit_date: '',
             season: '',
-            tops: null,
-            outer: null,
-            bottoms: null,
-            shoes: null,
+            items: [],
         });
         fileDisplay.value = '';
     };

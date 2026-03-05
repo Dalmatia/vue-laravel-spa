@@ -21,18 +21,6 @@ return new class extends Migration
             $table->date('outfit_date');
             $table->unsignedInteger('season')->nullable();
 
-            $table->unsignedBigInteger('tops')->nullable();
-            $table->foreign('tops')->references('id')->on('items')->onDelete('cascade');
-
-            $table->unsignedBigInteger('outer')->nullable();
-            $table->foreign('outer')->references('id')->on('items')->onDelete('cascade');
-
-            $table->unsignedBigInteger('bottoms')->nullable();
-            $table->foreign('bottoms')->references('id')->on('items')->onDelete('cascade');
-
-            $table->unsignedBigInteger('shoes')->nullable();
-            $table->foreign('shoes')->references('id')->on('items')->onDelete('cascade');
-
             $table->timestamps();
         });
     }

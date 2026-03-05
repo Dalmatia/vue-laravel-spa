@@ -74,7 +74,7 @@ class HomeController extends Controller
                     $q->where('like', 1);
                 }
             ])
-            ->with(['user'])
+            ->with(['user', 'items'])
             ->limit(5)
             ->get();
 

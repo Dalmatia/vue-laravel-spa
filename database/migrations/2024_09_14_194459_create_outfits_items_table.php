@@ -23,6 +23,7 @@ return new class extends Migration
                 ->references('id')
                 ->on('items')
                 ->onDelete('cascade');
+            $table->unsignedTinyInteger('role')->nullable();
             $table->timestamps();
         });
     }

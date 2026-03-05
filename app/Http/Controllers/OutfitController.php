@@ -9,6 +9,7 @@ use App\Models\Outfit;
 use App\Models\User;
 use App\Services\OutfitService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OutfitController extends Controller
 {
@@ -20,11 +21,12 @@ class OutfitController extends Controller
 
     public function index(Request $request)
     {
-        $query = Outfit::withCount([
-            'likes as likes_count' => function ($query) {
-                $query->where('like', 1);
-            }
-        ]);
+        $query = Outfit::with(['items'])
+            ->withCount([
+                'likes as likes_count' => function ($query) {
+                    $query->where('like', 1);
+                }
+            ]);
 
         // フィルタリング条件を取得
         $filters = [
@@ -79,7 +81,7 @@ class OutfitController extends Controller
     public function show($id)
     {
         // Outfit を user リレーション込みで取得（N+1問題対策）
-        $outfit = Outfit::with('user')->find($id);
+        $outfit = Outfit::with('user', 'items')->find($id);
 
         // コーディネートが見つからない場合
         if (!$outfit) {
@@ -110,7 +112,7 @@ class OutfitController extends Controller
             return response()->json(['error' => 'コーディネートが見つかりません'], 404);
         }
 
-        if (auth()->user()->id !== $outfit->user_id) {
+        if (Auth::id() !== $outfit->user_id) {
             return abort(403);
         }
 

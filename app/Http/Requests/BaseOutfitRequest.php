@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 use App\Models\Outfit;
+use Illuminate\Support\Facades\Auth;
 
 abstract class BaseOutfitRequest extends FormRequest
 {
@@ -32,10 +33,10 @@ abstract class BaseOutfitRequest extends FormRequest
             'description' => 'nullable|max:1000',
             'outfit_date' => 'required',
             'season' => 'nullable',
-            'tops' => 'nullable',
-            'outer' => 'nullable',
-            'bottoms' => 'nullable',
-            'shoes' => 'nullable'
+            'tops' => 'nullable|exists:items,id',
+            'outer' => 'nullable|exists:items,id',
+            'bottoms' => 'nullable|exists:items,id',
+            'shoes' => 'nullable|exists:items,id',
         ];
     }
 
@@ -45,7 +46,7 @@ abstract class BaseOutfitRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $exists = Outfit::where('outfit_date', $this->outfit_date)
-                ->where('user_id', auth()->id())
+                ->where('user_id', Auth::id())
                 ->when($this->route('id'), function ($query) {
                     $query->where('id', '!=', $this->route('id'));
                 })

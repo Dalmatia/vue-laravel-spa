@@ -53,6 +53,10 @@ function closeOverlay() {
     emit('close');
 }
 
+function getSelectedItem(role) {
+    return form.items.find((i) => i.role === role);
+}
+
 onMounted(() => {
     getSeason();
 });
@@ -222,13 +226,10 @@ onMounted(() => {
                         <div class="min-h-fit p-2 grid grid-cols-2 gap-4">
                             <!-- 着用アイテム選択セクション -->
                             <ItemSelectionSection
-                                v-for="[
-                                    type,
-                                    { key, imgKey, label },
-                                ] in itemTypeEntries"
+                                v-for="[type, { label }] in itemTypeEntries"
                                 :key="type"
-                                :item="form[key]"
-                                :image="form[imgKey]"
+                                :item="getSelectedItem(Number(type))?.item_id"
+                                :image="getSelectedItem(Number(type))?.file"
                                 :label="label"
                                 :onClick="() => openModal(Number(type))"
                             />

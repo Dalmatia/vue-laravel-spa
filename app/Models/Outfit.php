@@ -20,10 +20,6 @@ class Outfit extends Model
         'description',
         'outfit_date',
         'season',
-        'tops',
-        'outer',
-        'bottoms',
-        'shoes',
     ];
 
     private const RECENT_THRESHOLD_DAYS = 30;
@@ -51,7 +47,7 @@ class Outfit extends Model
 
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'outfits_items', 'outfit_id', 'item_id');
+        return $this->belongsToMany(Item::class, 'outfits_items', 'outfit_id', 'item_id')->withPivot('role');
     }
 
     protected static function booted()

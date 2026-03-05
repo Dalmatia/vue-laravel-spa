@@ -18,7 +18,6 @@ const user = useAuthStore().user;
 
 const {
     editForm,
-    itemRefs,
     seasons,
     error,
     itemTypeArray,
@@ -38,12 +37,9 @@ const {
 } = useModal();
 isOpen.value = true;
 
-const selectNewImage = () => {
-    const fileInput = document.getElementById('file');
-    if (fileInput) {
-        fileInput.click();
-    }
-};
+function getItemByRole(role) {
+    return editForm.value.items.find((i) => (i.role ?? i.pivot?.role) === role);
+}
 </script>
 
 <template>
@@ -212,11 +208,8 @@ const selectNewImage = () => {
                             <ItemSelectionSection
                                 v-for="section in itemTypeArray"
                                 :key="section.key"
-                                :item="editForm[section.key]"
-                                :image="
-                                    editForm[section.imgKey] ||
-                                    itemRefs[section.key]?.file
-                                "
+                                :item="getItemByRole(section.type)?.id"
+                                :image="getItemByRole(section.type)?.file"
                                 :label="section.label"
                                 :onClick="() => openModal(section.type)"
                             />

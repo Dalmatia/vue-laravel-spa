@@ -1,8 +1,9 @@
 import { ref, watch, onMounted, computed } from 'vue';
 
 export function useEditOutfitForm(props, emit) {
-    const editForm = ref({ ...props.editOutfit });
+    const editForm = ref(JSON.parse(JSON.stringify(props.editOutfit)));
 
+    // コーディネートに使用したアイテムの情報(表示用)
     const outer = ref({});
     const tops = ref({});
     const bottoms = ref({});
@@ -24,10 +25,7 @@ export function useEditOutfitForm(props, emit) {
         description: null,
         outfit_date: '',
         season: '',
-        tops: '',
-        outer: '',
-        bottoms: '',
-        shoes: '',
+        items: null,
     });
 
     // コーディネートに使用したアイテムのカテゴリー
@@ -42,40 +40,6 @@ export function useEditOutfitForm(props, emit) {
         type: Number(type),
         ...info,
     }));
-
-    // 投稿時に選択したアイテムの表示
-    const fetchItem = async () => {
-        try {
-            const fetchItemData = async (itemId, item) => {
-                const response = await axios.get(`/api/items/${itemId}`);
-                item.value = response.data;
-            };
-
-            const fetchPromises = [];
-
-            if (editForm.value.tops) {
-                fetchPromises.push(fetchItemData(editForm.value.tops, tops));
-            }
-
-            if (editForm.value.outer) {
-                fetchPromises.push(fetchItemData(editForm.value.outer, outer));
-            }
-
-            if (editForm.value.bottoms) {
-                fetchPromises.push(
-                    fetchItemData(editForm.value.bottoms, bottoms)
-                );
-            }
-
-            if (editForm.value.shoes) {
-                fetchPromises.push(fetchItemData(editForm.value.shoes, shoes));
-            }
-
-            await Promise.all(fetchPromises);
-        } catch (error) {
-            console.error('データの取得に失敗しました:', error);
-        }
-    };
 
     const getSeason = async () => {
         try {
@@ -99,10 +63,7 @@ export function useEditOutfitForm(props, emit) {
         formData.append('description', editForm.value.description);
         formData.append('outfit_date', editForm.value.outfit_date);
         formData.append('season', editForm.value.season);
-        formData.append('tops', editForm.value.tops);
-        formData.append('outer', editForm.value.outer);
-        formData.append('bottoms', editForm.value.bottoms);
-        formData.append('shoes', editForm.value.shoes);
+        formData.append('items', JSON.stringify(editForm.value.items));
 
         try {
             const response = await axios.post(
@@ -114,7 +75,7 @@ export function useEditOutfitForm(props, emit) {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
-                }
+                },
             );
             if (response.status === 200) {
                 emit('closeOverlay');
@@ -148,16 +109,27 @@ export function useEditOutfitForm(props, emit) {
 
     // コーディネートに使用したアイテムを選択する
     const handleItemSelected = (selectedItem, selectedItemType) => {
-        const itemType = itemTypes[selectedItemType];
-        if (itemType) {
-            editForm.value[itemType.key] = selectedItem
-                ? selectedItem.id
-                : null;
-            editForm.value[itemType.imgKey] = selectedItem
-                ? selectedItem.file
-                : null;
-            itemRefs.value[itemType.key] = selectedItem ? selectedItem : {};
+        const role = selectedItemType;
+
+        editForm.value.items = editForm.value.items.filter(
+            (i) => (i.role ?? i.pivot?.role) !== role,
+        );
+
+        if (selectedItem) {
+            editForm.value.items.push({
+                item_id: selectedItem.id,
+                role: role,
+                file: selectedItem.file,
+            });
         }
+    };
+
+    const normalizeItems = () => {
+        editForm.value.items = editForm.value.items.map((item) => ({
+            item_id: item.item_id ?? item.id,
+            role: item.role ?? item.pivot?.role,
+            file: item.file,
+        }));
     };
 
     // 内容が変更されなかった時にeditFormを初期化
@@ -165,14 +137,15 @@ export function useEditOutfitForm(props, emit) {
         () => props.editOutfit,
         (newEditOutfit) => {
             editForm.value = JSON.parse(JSON.stringify(newEditOutfit));
+            normalizeItems();
             fileDisplay.value = '';
-            fetchItem(); // アイテムの再取得
         },
-        { immediate: true } // 初回マウント時にも実行
+        { immediate: true }, // 初回マウント時にも実行
     );
 
     onMounted(async () => {
-        await Promise.all([fetchItem(), getSeason()]);
+        await getSeason();
+        normalizeItems();
     });
 
     return {
