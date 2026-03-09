@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, toRefs, ref, onUnmounted } from 'vue';
 
-import EditOutfitOverlay from './Edit/EditOutfitOverlay.vue';
+import OutfitFormOverlay from '../Outfit/Form/OutfitFormOverlay.vue';
 
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
@@ -93,9 +93,9 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <EditOutfitOverlay
+    <OutfitFormOverlay
         v-if="openEdit"
         :editOutfit="outfit"
-        @closeOverlay="openEdit = false"
+        @close="openEdit = false"
     />
 </template>

@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useFollowStore } from '../../stores/follow';
 import { useOutfitDetail } from '../../src/composables/outfit/useOutfitDetail';
-import { useOutfitItems } from '../../src/composables/outfit/useOutfitItems';
+import { useOutfitItemDisplay } from '../../src/composables/outfit/useOutfitItemDisplay';
 import { useOutfitComments } from '../../src/composables/outfit/useOutfitComments';
 
 import OutfitHeader from './OutfitHeader.vue';
@@ -27,7 +27,7 @@ const {
     fetchOutfit,
 } = useOutfitDetail(props.outfit);
 
-const { enumStore, outfitItems, fetchItems } = useOutfitItems();
+const { enumStore, outfitItems, fetchItems } = useOutfitItemDisplay();
 
 // 選択したシーズン情報の取得
 const season = computed(() => enumStore.getSeason(outfit.value.season));

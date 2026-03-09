@@ -10,7 +10,7 @@ import CalendarDayCell from './CalendarDayCell.vue';
 import OutfitPreview from './OutfitPreview.vue';
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import YearMonthPicker from './YearMonthPicker.vue';
-import CreateOutfitOverlay from '@/Components/Outfit/Create/CreateOutfitOverlay.vue';
+import OutfitFormOverlay from '../Outfit/Form/OutfitFormOverlay.vue';
 
 const authStore = useAuthStore();
 const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
@@ -47,7 +47,7 @@ const fetchOutfits = async () => {
         const response = await axios.get(`/api/users/${authStore.user.id}`);
         outfits.value = response.data.outfits;
         outfitImgMap.value = new Map(
-            outfits.value.map((o) => [o.outfit_date, o.file])
+            outfits.value.map((o) => [o.outfit_date, o.file]),
         );
     } catch (error) {
         console.error(error);
@@ -176,10 +176,7 @@ onUnmounted(() => {
         @close-overlay="toggleOutfitOverlay(null)"
     />
     <!-- コーディネートの投稿オーバーレイ -->
-    <CreateOutfitOverlay
-        v-if="openCreatePost"
-        @close="openCreatePost = false"
-    />
+    <OutfitFormOverlay v-if="openCreatePost" @close="openCreatePost = false" />
     <!-- 年月ピッカー -->
     <YearMonthPicker
         v-if="showMonthPicker"

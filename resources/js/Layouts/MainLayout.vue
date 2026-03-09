@@ -9,8 +9,8 @@ import TopNavHome from './TopNavHome.vue';
 import SideNav from './SideNav.vue';
 import SuggestionsSection from './SuggestionsSection.vue';
 import BottomNav from './BottomNav.vue';
-import CreateOutfitOverlay from '@/Components/Outfit/Create/CreateOutfitOverlay.vue';
-import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
+import OutfitFormOverlay from '../Components/Outfit/Form/OutfitFormOverlay.vue';
+import ShowOutfitOverlay from '../Components/Outfit/ShowOutfitOverlay.vue';
 import NotificationPanel from '../Components/NotificationPanel.vue';
 
 let showCreatePost = ref(false);
@@ -87,10 +87,7 @@ onUnmounted(() => {
         <BottomNav @open-create-post="showCreatePost = true" />
     </div>
 
-    <CreateOutfitOverlay
-        v-if="showCreatePost"
-        @close="showCreatePost = false"
-    />
+    <OutfitFormOverlay v-if="showCreatePost" @close="showCreatePost = false" />
 
     <ShowOutfitOverlay
         v-if="overlayState.open"

@@ -1,47 +1,30 @@
 <script setup>
-import { onMounted, ref } from 'vue';
-
+import { computed, onMounted } from 'vue';
+import { useItems } from '../../../src/composables/item/useItems';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close', 'onItemSelected']);
 const props = defineProps({ itemType: Number });
 
-const items = ref([]);
-const isLoading = ref(true);
-const hasError = ref(false);
+const { items, isLoading, hasError, fetchItems } = useItems();
 
-// 登録アイテムの表示
-const fetchItems = async () => {
-    try {
-        const response = await axios.get('/api/items');
-        items.value = response.data.items.filter(
-            (item) => item.main_category === props.itemType
-        );
-    } catch (error) {
-        console.error(error);
-        hasError.value = true;
-    } finally {
-        setTimeout(() => {
-            isLoading.value = false;
-        }, 300);
-    }
-};
+const filteredItems = computed(() =>
+    items.value.filter((i) => i.main_category === props.itemType),
+);
 
 const selectItem = (item) => {
     // 選択されたアイテムのIDを親コンポーネントに伝える
-    emit('onItemSelected', item, props.itemType);
+    emit('onItemSelected', item);
     emit('close'); // モーダルを閉じる
 };
 
 // 「選択しない」ボタンがクリックされた場合にnullを送信
 const selectNone = () => {
-    emit('onItemSelected', null, props.itemType);
+    emit('onItemSelected', null);
     emit('close'); // モーダルを閉じる
 };
 
-onMounted(() => {
-    fetchItems();
-});
+onMounted(() => fetchItems());
 </script>
 
 <template>
@@ -76,7 +59,7 @@ onMounted(() => {
 
                 <!-- アイテムがない場合のメッセージ -->
                 <div
-                    v-else-if="items.length === 0"
+                    v-else-if="filteredItems.length === 0"
                     class="text-center text-lg font-bold"
                 >
                     アイテムが登録されていません！
@@ -88,7 +71,7 @@ onMounted(() => {
                     class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5 w-full"
                 >
                     <div
-                        v-for="item in items"
+                        v-for="item in filteredItems"
                         :key="item.id"
                         class="flex flex-col items-center justify-center cursor-pointer relative"
                     >

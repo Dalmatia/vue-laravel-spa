@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { useCategoryData } from '../useCategoryData';
 import { useEnumStore } from '@/stores/enum';
 
-export function useOutfitItems() {
+export function useOutfitItemDisplay() {
     const outfitItems = ref([]);
     const categoryData = useCategoryData();
     const enumStore = useEnumStore();

@@ -1,19 +1,20 @@
 <script setup>
 const props = defineProps({
-    item: Number,
+    itemId: Number,
     image: String,
     label: String,
-    onClick: Function,
 });
+
+const emit = defineEmits(['open']);
 </script>
 
 <template>
     <div
         class="container border border-gray-300 h-48 lg:h-56 w-full p-2 cursor-pointer"
-        @click="onClick"
+        @click="emit('open')"
     >
         <div
-            v-if="!item"
+            v-if="!itemId"
             class="text-sm text-blue-500 hover:text-gray-900 font-extrabold"
         >
             {{ label }}
