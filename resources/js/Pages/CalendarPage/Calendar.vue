@@ -10,7 +10,7 @@ import CalendarDayCell from './CalendarDayCell.vue';
 import OutfitPreview from './OutfitPreview.vue';
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import YearMonthPicker from './YearMonthPicker.vue';
-import OutfitFormOverlay from '../Outfit/Form/OutfitFormOverlay.vue';
+import OutfitFormOverlay from '../../Components/Outfit/Form/OutfitFormOverlay.vue';
 
 const authStore = useAuthStore();
 const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();

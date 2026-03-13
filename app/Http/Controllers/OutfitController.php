@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOutfitRequest;
 use App\Http\Requests\UpdateOutfitRequest;
-use App\Http\Resources\AllOutfitsCollection;
+use App\Http\Resources\OutfitResource;
 use App\Models\Outfit;
 use App\Models\User;
 use App\Services\OutfitService;
@@ -68,7 +68,10 @@ class OutfitController extends Controller
         $outfits = $query->get();
 
         // コーディネートを取得し、ユーザー情報も取得
-        return response(['outfits' => new AllOutfitsCollection($outfits), 'users' => User::all()]);
+        return response()->json([
+            'outfits' => OutfitResource::collection($outfits)->resolve(),
+            'users' => User::all()
+        ], 200);
     }
 
     public function store(StoreOutfitRequest $request)
@@ -81,7 +84,12 @@ class OutfitController extends Controller
     public function show($id)
     {
         // Outfit を user リレーション込みで取得（N+1問題対策）
-        $outfit = Outfit::with('user', 'items')->find($id);
+        $outfit = Outfit::with([
+            'user',
+            'items' => function ($query) {
+                $query->orderByPivot('role');
+            }
+        ])->find($id);
 
         // コーディネートが見つからない場合
         if (!$outfit) {

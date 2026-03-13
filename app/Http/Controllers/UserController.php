@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\PasswordResetCompleted;
 use App\Events\UserWithdrawn;
-use App\Http\Resources\AllOutfitsCollection;
+use App\Http\Resources\OutfitResource;
 use App\Models\Outfit;
 use App\Models\User;
 use App\Services\FileService;
@@ -37,7 +37,7 @@ class UserController extends Controller
 
         return response()->json([
             'user' => $user,
-            'outfits' => new AllOutfitsCollection($outfits),
+            'outfits' => OutfitResource::collection($outfits)->resolve(),
             'outfit_count' => $outfits->count(),
         ], 200);
     }
