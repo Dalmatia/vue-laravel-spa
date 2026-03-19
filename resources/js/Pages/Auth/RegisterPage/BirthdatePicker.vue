@@ -22,7 +22,7 @@ const emit = defineEmits(['update:modelValue']);
 <template>
     <div>
         <label
-            for="birthdate"
+            id="birthdate"
             class="inline-block text-gray-800 text-sm sm:text-base mb-2"
         >
             生年月日:

@@ -3,9 +3,9 @@
 namespace Database\Factories;
 
 use App\Domain\ClothingAdvice\SeasonResolver;
+use App\Domain\Outfit\OutfitItemGenerator;
 use App\Enums\Gender;
 use App\Enums\Season;
-use App\Models\Item;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -14,22 +14,15 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class OutfitFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        $user = User::inRandomOrder()->first();
         $seasonResolver = app(SeasonResolver::class);
         $date = $this->generateNaturalDate();
         $season = $seasonResolver->resolve($date->toDateString());
 
         return [
-            'user_id' => $user->id,
             'description' => fake()->sentence(),
-            'file' => $this->generateSeasonalImage($season, $user->gender),
+            'file' => '/dummy/outfits/default.jpg',
             'outfit_date' => $date,
             'season' => $season,
         ];
@@ -85,13 +78,25 @@ class OutfitFactory extends Factory
     {
         return $this->afterCreating(function ($outfit) {
 
-            $items = Item::where('user_id', $outfit->user_id)
-                ->inRandomOrder()
-                ->limit(rand(2, 4))
-                ->get();
+            $user = $outfit->user ?? User::find($outfit->user_id);
+            if (!$user) {
+                return;
+            }
+
+            // ===== 画像生成 =====
+            $outfit->update([
+                'file' => $this->generateSeasonalImage(
+                    $outfit->season,
+                    $user->gender
+                )
+            ]);
+
+            // ===== アイテム生成 =====
+            $items = app(OutfitItemGenerator::class)
+                ->generate($user, $outfit);
 
             if ($items->isNotEmpty()) {
-                $outfit->items()->attach($items->pluck('id')->toArray());
+                $outfit->items()->attach($items->pluck('id'));
             }
         });
     }
