@@ -28,10 +28,7 @@ const onSortChange = (val) => {
 <template>
     <div>
         <!-- デスクトップ -->
-        <div
-            v-if="!isMobile"
-            class="relative flex flex-col h-auto md:w-[680px] lg:w-[880px]"
-        >
+        <div v-if="!isMobile" class="relative flex flex-col w-full">
             <h1 class="text-center mb-5 text-lg font-semibold">
                 コーディネート検索
             </h1>

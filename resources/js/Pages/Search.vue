@@ -10,6 +10,7 @@ import { useSearchOutfits } from '../src/composables/useSearchOutfits';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 import { specialColors } from '../src/specialColors';
 
+let timeout;
 const openFilter = ref(false);
 const openModal = ref(false);
 const isMobile = ref(window.innerWidth < 768);
@@ -32,7 +33,12 @@ const {
 const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 const { getColorClass, getColorStyle } = specialColors();
 
-const handleResize = () => (isMobile.value = window.innerWidth < 768);
+const handleResize = () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+        isMobile.value = window.innerWidth < 768;
+    }, 100);
+};
 
 const handleSortChange = () => fetchOutfits();
 
@@ -55,14 +61,14 @@ onMounted(() => {
     window.addEventListener('resize', handleResize);
     handleResize();
     ['outfit-created', 'outfit-updated', 'outfit-deleted'].forEach((e) =>
-        window.addEventListener(e, fetchOutfits)
+        window.addEventListener(e, fetchOutfits),
     );
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
     ['outfit-created', 'outfit-updated', 'outfit-deleted'].forEach((e) =>
-        window.removeEventListener(e, fetchOutfits)
+        window.removeEventListener(e, fetchOutfits),
     );
 });
 </script>
@@ -110,6 +116,7 @@ onUnmounted(() => {
         <!-- OutfitList 共通 -->
         <div class="z-[1]">
             <OutfitList
+                :isMobile="isMobile"
                 :isLoading="isLoading"
                 :outfits="outfits"
                 @openOutfitOverlay="toggleOutfitOverlay($event)"
