@@ -1,16 +1,41 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import OutfitCardSkeleton from '../Skeletons/OutfitCardSkeleton.vue';
 
 const props = defineProps({
     isMobile: Boolean,
-    outfits: Array,
     isLoading: Boolean,
+    outfits: Array,
+    hasMore: Boolean,
+    isFetchingMore: Boolean,
 });
 
-const emit = defineEmits(['openOutfitOverlay']);
-
+const emit = defineEmits(['openOutfitOverlay', 'loadMore']);
 const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
+const loadMoreTrigger = ref(null);
+let observer;
+
+onMounted(() => {
+    observer = new IntersectionObserver((entries) => {
+        if (
+            entries[0].isIntersecting &&
+            props.hasMore &&
+            !props.isFetchingMore
+        ) {
+            emit('loadMore');
+        }
+    });
+
+    if (loadMoreTrigger.value) {
+        observer.observe(loadMoreTrigger.value);
+    }
+});
+
+onUnmounted(() => {
+    if (observer && loadMoreTrigger.value) {
+        observer.disconnect(loadMoreTrigger.value);
+    }
+});
 </script>
 
 <template>
@@ -23,6 +48,7 @@ const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
             </template>
 
             <template v-else-if="outfits && outfits.length > 0">
+                <!-- コーディネート一覧 -->
                 <div
                     v-for="outfit in outfits"
                     :key="outfit.id"
@@ -51,6 +77,13 @@ const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
                         </p>
                     </div>
                 </div>
+
+                <template v-if="isFetchingMore">
+                    <OutfitCardSkeleton
+                        v-for="n in isMobile ? 3 : 4"
+                        :key="'more-' + n"
+                    />
+                </template>
             </template>
 
             <template v-else>
@@ -65,5 +98,6 @@ const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
                 </div>
             </template>
         </div>
+        <div ref="loadMoreTrigger" class="h-10"></div>
     </div>
 </template>

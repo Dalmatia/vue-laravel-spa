@@ -25,7 +25,10 @@ const {
     subCategories,
     colors,
     seasons,
+    hasMore,
+    isFetchingMore,
     fetchOutfits,
+    resetAndFetch,
     filterByCategory,
     clearFilters,
 } = useSearchOutfits();
@@ -40,7 +43,7 @@ const handleResize = () => {
     }, 100);
 };
 
-const handleSortChange = () => fetchOutfits();
+const handleSortChange = () => resetAndFetch();
 
 const handleFilterByCategory = () => {
     filterByCategory();
@@ -119,7 +122,10 @@ onUnmounted(() => {
                 :isMobile="isMobile"
                 :isLoading="isLoading"
                 :outfits="outfits"
+                :hasMore="hasMore"
+                :isFetchingMore="isFetchingMore"
                 @openOutfitOverlay="toggleOutfitOverlay($event)"
+                @loadMore="fetchOutfits(true)"
             />
         </div>
     </div>

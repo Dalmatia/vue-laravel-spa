@@ -65,12 +65,17 @@ class OutfitController extends Controller
         }
 
         // 結果を取得
-        $outfits = $query->get();
+        $outfits = $query->paginate(12);
 
         // コーディネートを取得し、ユーザー情報も取得
         return response()->json([
-            'outfits' => OutfitResource::collection($outfits)->resolve(),
-            'users' => User::all()
+            'outfits' => OutfitResource::collection($outfits->items()),
+            'users' => User::all(),
+            'meta' => [
+                'current_page' => $outfits->currentPage(),
+                'last_page' => $outfits->lastPage(),
+                'has_more' => $outfits->hasMorePages(),
+            ],
         ], 200);
     }
 

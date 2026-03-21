@@ -1,6 +1,5 @@
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useFollowStore } from '@/stores/follow';
+
 export function useSearchOutfits() {
     const outfits = ref([]);
     const isLoading = ref(true);
@@ -16,22 +15,44 @@ export function useSearchOutfits() {
     const subCategories = ref([]);
     const colors = ref([]);
     const seasons = ref([]);
-    const followStore = useFollowStore();
+
+    const page = ref(1);
+    const hasMore = ref(true);
+    const isFetchingMore = ref(false);
 
     // 投稿したコーディネートの表示
-    const fetchOutfits = async () => {
-        isLoading.value = true;
+    const fetchOutfits = async (isLoadMore = false) => {
+        if (isLoadMore) {
+            if (!hasMore.value) return;
+            isFetchingMore.value = true;
+        } else {
+            isLoading.value = true;
+            page.value = 1;
+        }
+
         try {
             const response = await axios.get('/api/outfits', {
-                params: { ...filters.value, sort: sortOrder.value },
+                params: {
+                    ...filters.value,
+                    sort: sortOrder.value,
+                    page: page.value,
+                },
             });
-            outfits.value = response.data.outfits;
-            const follows = outfits.value.map((o) => o.user.id);
-            await followStore.fetchFollowStatus(follows);
+            const newOutfits = response.data.outfits;
+
+            if (isLoadMore) {
+                outfits.value.push(...newOutfits);
+            } else {
+                outfits.value = newOutfits;
+            }
+
+            hasMore.value = response.data.meta.has_more;
+            page.value++;
         } catch (err) {
             console.error('コーディネート一覧取得失敗', err);
         } finally {
             isLoading.value = false;
+            isFetchingMore.value = false;
         }
     };
 
@@ -46,8 +67,18 @@ export function useSearchOutfits() {
             console.error('Enum取得失敗', err);
         }
     };
+
+    const resetAndFetch = async () => {
+        outfits.value = [];
+        page.value = 1;
+        hasMore.value = true;
+
+        window.scrollTo({ top: 0 });
+        await fetchOutfits();
+    };
+
     const filterByCategory = () => {
-        fetchOutfits();
+        resetAndFetch();
     };
 
     // 指定した条件をクリアする
@@ -58,7 +89,7 @@ export function useSearchOutfits() {
             color: null,
             season: '',
         };
-        filterByCategory();
+        resetAndFetch();
     };
 
     onMounted(async () => {
@@ -78,7 +109,10 @@ export function useSearchOutfits() {
         subCategories,
         colors,
         seasons,
+        hasMore,
+        isFetchingMore,
         fetchOutfits,
+        resetAndFetch,
         filterByCategory,
         clearFilters,
     };
