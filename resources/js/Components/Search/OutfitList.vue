@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import OutfitCardSkeleton from '../Skeletons/OutfitCardSkeleton.vue';
 
 const props = defineProps({
@@ -10,10 +10,18 @@ const props = defineProps({
     isFetchingMore: Boolean,
 });
 
+let observer;
 const emit = defineEmits(['openOutfitOverlay', 'loadMore']);
 const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
 const loadMoreTrigger = ref(null);
-let observer;
+const loadedImages = ref({});
+
+watch(
+    () => props.outfits,
+    () => {
+        loadedImages.value = {};
+    },
+);
 
 onMounted(() => {
     observer = new IntersectionObserver(
@@ -40,7 +48,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (observer && loadMoreTrigger.value) {
-        observer.disconnect(loadMoreTrigger.value);
+        observer.disconnect();
     }
 });
 </script>
@@ -67,7 +75,10 @@ onUnmounted(() => {
                     >
                         <img
                             :src="outfit.file"
-                            class="w-full h-full object-cover cursor-pointer"
+                            loading="lazy"
+                            class="w-full h-full object-cover cursor-pointer transition-opacity duration-500"
+                            :class="{ 'opacity-0': !loadedImages[outfit.id] }"
+                            @load="loadedImages[outfit.id] = true"
                         />
                     </p>
                     <div
@@ -75,6 +86,7 @@ onUnmounted(() => {
                     >
                         <img
                             :src="outfit.user.file"
+                            loading="lazy"
                             class="rounded-full w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
                         />
                         <p
@@ -90,6 +102,9 @@ onUnmounted(() => {
                         v-for="n in isMobile ? 3 : 4"
                         :key="'more-' + n"
                     />
+                    <div class="col-span-full flex justify-center py-4">
+                        <div class="loader"></div>
+                    </div>
                 </template>
 
                 <div
@@ -115,3 +130,20 @@ onUnmounted(() => {
         <div ref="loadMoreTrigger" class="h-10"></div>
     </div>
 </template>
+
+<style scoped>
+.loader {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #ddd;
+    border-top: 3px solid #555;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>

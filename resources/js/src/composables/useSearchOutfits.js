@@ -1,7 +1,5 @@
 import { ref, onMounted } from 'vue';
 
-let cachedState = null;
-
 export function useSearchOutfits() {
     const outfits = ref([]);
     const isLoading = ref(true);
@@ -12,7 +10,6 @@ export function useSearchOutfits() {
         season: '',
     });
     const sortOrder = ref('popular');
-    // 検索する項目毎のデータの取得
     const mainCategories = ref([]);
     const subCategories = ref([]);
     const colors = ref([]);
@@ -22,7 +19,6 @@ export function useSearchOutfits() {
     const hasMore = ref(true);
     const isFetchingMore = ref(false);
 
-    // 投稿したコーディネートの表示
     const fetchOutfits = async (isLoadMore = false) => {
         if (isLoadMore) {
             if (!hasMore.value) return;
@@ -50,12 +46,9 @@ export function useSearchOutfits() {
 
             hasMore.value = response.data.meta.has_more;
             page.value++;
-        } catch (err) {
-            console.error('コーディネート一覧取得失敗', err);
         } finally {
             isLoading.value = false;
             isFetchingMore.value = false;
-            saveCache();
         }
     };
 
@@ -71,47 +64,6 @@ export function useSearchOutfits() {
         }
     };
 
-    const saveCache = () => {
-        cachedState = {
-            outfits: [...outfits.value],
-            page: page.value,
-            hasMore: hasMore.value,
-            filters: { ...filters.value },
-            sortOrder: sortOrder.value,
-            scrollY: window.scrollY,
-        };
-    };
-
-    const clearCache = () => {
-        cachedState = null;
-    };
-
-    const isSameCondition = () => {
-        if (!cachedState) return false;
-
-        return (
-            JSON.stringify(cachedState.filters) ===
-                JSON.stringify(filters.value) &&
-            cachedState.sortOrder === sortOrder.value
-        );
-    };
-
-    const restoreCache = () => {
-        if (!cachedState || !isSameCondition()) return false;
-
-        outfits.value = [...cachedState.outfits];
-        page.value = cachedState.page;
-        hasMore.value = cachedState.hasMore;
-        filters.value = { ...cachedState.filters };
-        sortOrder.value = cachedState.sortOrder;
-
-        requestAnimationFrame(() => {
-            window.scrollTo(0, cachedState.scrollY);
-        });
-
-        return true;
-    };
-
     const resetAndFetch = async () => {
         outfits.value = [];
         page.value = 1;
@@ -121,33 +73,15 @@ export function useSearchOutfits() {
         await fetchOutfits();
     };
 
-    const filterByCategory = () => {
-        resetAndFetch();
-    };
-
-    // 指定した条件をクリアする
-    const clearFilters = () => {
-        filters.value = {
-            mainCategory: '',
-            subCategory: '',
-            color: null,
-            season: '',
-        };
-        resetAndFetch();
-    };
-
     onMounted(async () => {
-        const restored = restoreCache();
-        if (restored) {
-            isLoading.value = false;
-            getEnums();
-        } else {
+        if (outfits.value.length === 0) {
             await Promise.all([fetchOutfits(), getEnums()]);
+        } else {
+            isLoading.value = false;
         }
     });
 
     return {
-        clearCache,
         outfits,
         isLoading,
         filters,
@@ -159,9 +93,6 @@ export function useSearchOutfits() {
         hasMore,
         isFetchingMore,
         fetchOutfits,
-        clearCache,
         resetAndFetch,
-        filterByCategory,
-        clearFilters,
     };
 }
