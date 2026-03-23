@@ -16,15 +16,22 @@ const loadMoreTrigger = ref(null);
 let observer;
 
 onMounted(() => {
-    observer = new IntersectionObserver((entries) => {
-        if (
-            entries[0].isIntersecting &&
-            props.hasMore &&
-            !props.isFetchingMore
-        ) {
-            emit('loadMore');
-        }
-    });
+    observer = new IntersectionObserver(
+        (entries) => {
+            if (
+                entries[0].isIntersecting &&
+                props.hasMore &&
+                !props.isFetchingMore
+            ) {
+                emit('loadMore');
+            }
+        },
+        {
+            root: null,
+            rootMargin: '200px',
+            threshold: 0,
+        },
+    );
 
     if (loadMoreTrigger.value) {
         observer.observe(loadMoreTrigger.value);
@@ -84,6 +91,13 @@ onUnmounted(() => {
                         :key="'more-' + n"
                     />
                 </template>
+
+                <div
+                    v-if="!hasMore && !isFetchingMore && outfits.length > 0"
+                    class="col-span-full text-center py-6 text-gray-500 text-sm md:text-base"
+                >
+                    これ以上コーディネート投稿はありません
+                </div>
             </template>
 
             <template v-else>

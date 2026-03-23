@@ -8,7 +8,7 @@ const props = defineProps({
     seasons: Array,
     openFilter: Boolean,
     isMobile: Boolean,
-    selectColor: Function,
+    openColorModal: Function,
     getColorClass: Function,
     getColorStyle: Function,
 });
@@ -121,7 +121,7 @@ const emit = defineEmits(['clearFilters', 'filterByCategory']);
                                 ? 'w-full border-b pb-2 text-right'
                                 : 'w-full',
                         ]"
-                        @click="selectColor(filters.color)"
+                        @click="openColorModal(filters.color)"
                     >
                         <div
                             v-if="filters.color"

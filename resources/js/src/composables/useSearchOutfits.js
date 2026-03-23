@@ -1,5 +1,7 @@
 import { ref, onMounted } from 'vue';
 
+let cachedState = null;
+
 export function useSearchOutfits() {
     const outfits = ref([]);
     const isLoading = ref(true);
@@ -53,6 +55,7 @@ export function useSearchOutfits() {
         } finally {
             isLoading.value = false;
             isFetchingMore.value = false;
+            saveCache();
         }
     };
 
@@ -66,6 +69,47 @@ export function useSearchOutfits() {
         } catch (err) {
             console.error('Enum取得失敗', err);
         }
+    };
+
+    const saveCache = () => {
+        cachedState = {
+            outfits: [...outfits.value],
+            page: page.value,
+            hasMore: hasMore.value,
+            filters: { ...filters.value },
+            sortOrder: sortOrder.value,
+            scrollY: window.scrollY,
+        };
+    };
+
+    const clearCache = () => {
+        cachedState = null;
+    };
+
+    const isSameCondition = () => {
+        if (!cachedState) return false;
+
+        return (
+            JSON.stringify(cachedState.filters) ===
+                JSON.stringify(filters.value) &&
+            cachedState.sortOrder === sortOrder.value
+        );
+    };
+
+    const restoreCache = () => {
+        if (!cachedState || !isSameCondition()) return false;
+
+        outfits.value = [...cachedState.outfits];
+        page.value = cachedState.page;
+        hasMore.value = cachedState.hasMore;
+        filters.value = { ...cachedState.filters };
+        sortOrder.value = cachedState.sortOrder;
+
+        requestAnimationFrame(() => {
+            window.scrollTo(0, cachedState.scrollY);
+        });
+
+        return true;
     };
 
     const resetAndFetch = async () => {
@@ -93,14 +137,17 @@ export function useSearchOutfits() {
     };
 
     onMounted(async () => {
-        try {
+        const restored = restoreCache();
+        if (restored) {
+            isLoading.value = false;
+            getEnums();
+        } else {
             await Promise.all([fetchOutfits(), getEnums()]);
-        } catch (error) {
-            console.error('データの取得に失敗しました。', error);
         }
     });
 
     return {
+        clearCache,
         outfits,
         isLoading,
         filters,
@@ -112,6 +159,7 @@ export function useSearchOutfits() {
         hasMore,
         isFetchingMore,
         fetchOutfits,
+        clearCache,
         resetAndFetch,
         filterByCategory,
         clearFilters,

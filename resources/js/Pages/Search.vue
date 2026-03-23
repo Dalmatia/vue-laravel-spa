@@ -28,6 +28,7 @@ const {
     hasMore,
     isFetchingMore,
     fetchOutfits,
+    clearCache,
     resetAndFetch,
     filterByCategory,
     clearFilters,
@@ -43,7 +44,9 @@ const handleResize = () => {
     }, 100);
 };
 
-const handleSortChange = () => resetAndFetch();
+const handleSortChange = async () => {
+    await resetAndFetch();
+};
 
 const handleFilterByCategory = () => {
     filterByCategory();
@@ -55,24 +58,33 @@ const handleClearFilters = () => {
     openFilter.value = false;
 };
 
-const selectColor = (color) => {
+const openColorModal = () => {
     openModal.value = true;
+};
+
+const selectColor = (color) => {
     filters.value.color = color;
+};
+
+const handleDeleted = () => {
+    clearCache();
+    resetAndFetch();
 };
 
 onMounted(() => {
     window.addEventListener('resize', handleResize);
     handleResize();
-    ['outfit-created', 'outfit-updated', 'outfit-deleted'].forEach((e) =>
-        window.addEventListener(e, fetchOutfits),
-    );
+    window.addEventListener('outfit-created', resetAndFetch);
+    window.addEventListener('outfit-updated', resetAndFetch);
+    window.addEventListener('outfit-deleted', handleDeleted);
 });
 
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
-    ['outfit-created', 'outfit-updated', 'outfit-deleted'].forEach((e) =>
-        window.removeEventListener(e, fetchOutfits),
-    );
+    window.removeEventListener('outfit-created', resetAndFetch);
+    window.removeEventListener('outfit-updated', resetAndFetch);
+    window.removeEventListener('outfit-deleted', handleDeleted);
+    if (timeout) clearTimeout(timeout);
 });
 </script>
 
@@ -105,7 +117,7 @@ onUnmounted(() => {
                         :subCategories="subCategories"
                         :seasons="seasons"
                         :openFilter="openFilter"
-                        :selectColor="selectColor"
+                        :openColorModal="openColorModal"
                         :getColorClass="getColorClass"
                         :getColorStyle="getColorStyle"
                         :isMobile="isMobile"
