@@ -1,10 +1,16 @@
 <script setup>
-import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
+import GenderSection from './FilterSections/GenderSection.vue';
+import MainCategorySection from './FilterSections/MainCategorySection.vue';
+import SubCategorySection from './FilterSections/SubCategorySection.vue';
+import ColorSection from './FilterSections/ColorSection.vue';
+import SeasonSection from './FilterSections/SeasonSection.vue';
+import FilterActions from './FilterSections/FilterActions.vue';
 
 const props = defineProps({
     filters: Object,
+    genders: Array,
     mainCategories: Array,
-    subCategories: Array,
+    filteredSubCategories: Array,
     seasons: Array,
     openFilter: Boolean,
     isMobile: Boolean,
@@ -12,7 +18,12 @@ const props = defineProps({
     getColorClass: Function,
     getColorStyle: Function,
 });
-const emit = defineEmits(['clearFilters', 'filterByCategory']);
+
+const emit = defineEmits([
+    'open-gender-modal',
+    'request-clear',
+    'request-submit',
+]);
 </script>
 
 <template>
@@ -26,200 +37,50 @@ const emit = defineEmits(['clearFilters', 'filterByCategory']);
         ]"
     >
         <form class="w-full p-4">
+            <!-- 性別 -->
+            <GenderSection
+                v-model="filters.gender"
+                :isMobile="isMobile"
+                :genders="genders"
+                @open="$emit('open-gender-modal')"
+            />
+
             <!-- メインカテゴリー -->
-            <div :class="isMobile ? 'mb-4' : 'flex border-y border-[#f2f2f2]'">
-                <label
-                    for="mainCategory"
-                    :class="
-                        isMobile
-                            ? 'block mb-1 text-base'
-                            : 'w-[300px] bg-[#f2f2f2] px-[30px] py-5 font-bold text-right border-b-white'
-                    "
-                >
-                    メインカテゴリー
-                </label>
-                <div :class="isMobile ? '' : 'flex-1 py-5 pl-10 pr-5'">
-                    <select
-                        id="mainCategory"
-                        v-model="filters.mainCategory"
-                        :class="
-                            isMobile
-                                ? 'w-full border-b pb-2 text-right'
-                                : 'w-full'
-                        "
-                    >
-                        <option value="">
-                            {{
-                                isMobile ? '指定なし' : 'メインカテゴリーを選択'
-                            }}
-                        </option>
-                        <option
-                            v-for="mainCategory in mainCategories"
-                            :key="mainCategory.id"
-                            :value="mainCategory.id"
-                        >
-                            {{ mainCategory.name }}
-                        </option>
-                    </select>
-                </div>
-            </div>
+            <MainCategorySection
+                v-model="filters.mainCategory"
+                :isMobile="isMobile"
+                :mainCategories="mainCategories"
+            />
 
             <!-- サブカテゴリー -->
-            <div :class="isMobile ? 'mb-4' : 'flex border-y border-[#f2f2f2]'">
-                <label
-                    for="subCategory"
-                    :class="
-                        isMobile
-                            ? 'block mb-1 text-base'
-                            : 'w-[300px] bg-[#f2f2f2] px-[30px] py-5 font-bold text-right border-b-white'
-                    "
-                >
-                    サブカテゴリー
-                </label>
-                <div :class="isMobile ? '' : 'flex-1 py-5 pl-10 pr-5'">
-                    <select
-                        id="subCategory"
-                        v-model="filters.subCategory"
-                        :class="
-                            isMobile
-                                ? 'w-full border-b pb-2 text-right'
-                                : 'w-full'
-                        "
-                    >
-                        <option value="">
-                            {{ isMobile ? '指定なし' : 'サブカテゴリーを選択' }}
-                        </option>
-                        <option
-                            v-for="subCategory in subCategories"
-                            :key="subCategory.id"
-                            :value="subCategory.id"
-                        >
-                            {{ subCategory.name }}
-                        </option>
-                    </select>
-                </div>
-            </div>
+            <SubCategorySection
+                v-model="filters.subCategory"
+                :isMobile="isMobile"
+                :subCategories="filteredSubCategories"
+            />
 
             <!-- カラー -->
-            <div :class="isMobile ? 'mb-4' : 'flex border-y border-[#f2f2f2]'">
-                <label
-                    for="color"
-                    :class="
-                        isMobile
-                            ? 'block mb-1 text-base'
-                            : 'w-[300px] bg-[#f2f2f2] px-[30px] py-5 font-bold text-right border-b-white'
-                    "
-                >
-                    カラー
-                </label>
-                <div :class="isMobile ? '' : 'flex-1 py-5 pl-10 pr-5'">
-                    <button
-                        id="color"
-                        type="button"
-                        :class="[
-                            isMobile
-                                ? 'w-full border-b pb-2 text-right'
-                                : 'w-full',
-                        ]"
-                        @click="openColorModal(filters.color)"
-                    >
-                        <div
-                            v-if="filters.color"
-                            :class="[
-                                'flex items-center gap-2',
-                                isMobile ? 'justify-end' : '',
-                            ]"
-                        >
-                            <span>選択中のカラー:</span>
-                            <div
-                                class="w-5 h-5 rounded-full border"
-                                :style="getColorStyle(filters.color)"
-                                :class="getColorClass(filters.color)"
-                            ></div>
-                            <span class="text-sm">
-                                {{ filters.color.name }}
-                            </span>
-                            <ChevronRight />
-                        </div>
-                        <div
-                            v-else
-                            :class="[
-                                'flex items-center gap-2',
-                                isMobile ? 'justify-end' : '',
-                            ]"
-                        >
-                            カラーを選択
-                            <ChevronRight />
-                        </div>
-                    </button>
-                </div>
-            </div>
+            <ColorSection
+                :isMobile="isMobile"
+                :color="filters.color"
+                :getColorClass="getColorClass"
+                :getColorStyle="getColorStyle"
+                @open-color-modal="openColorModal"
+            />
 
             <!-- シーズン -->
-            <div :class="isMobile ? 'mb-4' : 'flex border-y border-[#f2f2f2]'">
-                <label
-                    for="season"
-                    :class="
-                        isMobile
-                            ? 'block mb-1 text-base'
-                            : 'w-[300px] bg-[#f2f2f2] px-[30px] py-5 font-bold text-right border-b-white'
-                    "
-                >
-                    シーズン
-                </label>
-                <div :class="isMobile ? '' : 'flex-1 py-5 pl-10 pr-5'">
-                    <select
-                        id="season"
-                        v-model="filters.season"
-                        :class="
-                            isMobile
-                                ? 'w-full border-b pb-2 text-right'
-                                : 'w-full'
-                        "
-                    >
-                        <option value="">
-                            {{ isMobile ? '指定なし' : 'シーズンを選択' }}
-                        </option>
-                        <option
-                            v-for="season in seasons"
-                            :key="season.id"
-                            :value="season.id"
-                        >
-                            {{ season.name }}
-                        </option>
-                    </select>
-                </div>
-            </div>
+            <SeasonSection
+                v-model="filters.season"
+                :isMobile="isMobile"
+                :seasons="seasons"
+            />
 
             <!-- 共通のアクション -->
-            <div
-                :class="[
-                    isMobile
-                        ? 'flex flex-col items-center space-y-3 px-5 mt-6'
-                        : 'flex flex-row justify-center items-center gap-x-4 mt-6 max-w-[750px] mx-auto mb-7',
-                ]"
-            >
-                <button
-                    type="button"
-                    :class="[
-                        'text-[#999] border border-[#ccc] rounded-sm text-sm font-bold h-[45px] bg-white',
-                        isMobile ? 'w-full' : 'w-[210px]',
-                    ]"
-                    @click="emit('clearFilters')"
-                >
-                    指定した条件をクリア
-                </button>
-                <button
-                    type="button"
-                    :class="[
-                        'bg-black text-white font-bold rounded-sm text-sm h-[45px]',
-                        isMobile ? 'w-full' : 'w-[210px]',
-                    ]"
-                    @click.prevent="emit('filterByCategory', filters)"
-                >
-                    この条件で絞り込む
-                </button>
-            </div>
+            <FilterActions
+                :isMobile="isMobile"
+                @request-clear="emit('request-clear')"
+                @request-submit="emit('request-submit')"
+            />
         </form>
     </div>
 </template>

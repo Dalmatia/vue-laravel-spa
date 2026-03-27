@@ -21,7 +21,7 @@ class OutfitController extends Controller
 
     public function index(Request $request)
     {
-        $query = Outfit::with(['items'])
+        $query = Outfit::with(['items', 'user'])
             ->withCount([
                 'likes as likes_count' => function ($query) {
                     $query->where('like', 1);
@@ -30,6 +30,7 @@ class OutfitController extends Controller
 
         // フィルタリング条件を取得
         $filters = [
+            'gender' => $request->query('gender'),
             'main_category' => $request->query('mainCategory'),
             'sub_category' => $request->query('subCategory'),
             'color' => $request->query('color'),
@@ -37,16 +38,33 @@ class OutfitController extends Controller
         ];
 
         // フィルタリング条件に応じてクエリを構築
-        foreach ($filters as $filter => $value) {
-            if ($value) {
-                if ($filter === 'season') {
-                    $query->where($filter, $value);
-                } else {
-                    $query->whereHas('items', function ($query) use ($filter, $value) {
-                        $query->where($filter, $value);
-                    });
-                }
+        if ($filters['gender'] !== null && $filters['gender'] !== '') {
+            $query->whereHas('user', function ($q) use ($filters) {
+                $q->where('gender', $filters['gender']);
+            });
+        }
+
+        $query->when(
+            $filters['main_category'] || $filters['sub_category'] || $filters['color'],
+            function ($query) use ($filters) {
+                $query->whereHas('items', function ($q) use ($filters) {
+                    if ($filters['main_category']) {
+                        $q->where('main_category', $filters['main_category']);
+                    }
+
+                    if ($filters['sub_category']) {
+                        $q->where('sub_category', $filters['sub_category']);
+                    }
+
+                    if ($filters['color']) {
+                        $q->where('color', $filters['color']);
+                    }
+                });
             }
+        );
+
+        if ($filters['season']) {
+            $query->where('season', $filters['season']);
         }
 
         // ソート条件のマッピング
@@ -70,7 +88,6 @@ class OutfitController extends Controller
         // コーディネートを取得し、ユーザー情報も取得
         return response()->json([
             'outfits' => OutfitResource::collection($outfits->items()),
-            'users' => User::all(),
             'meta' => [
                 'current_page' => $outfits->currentPage(),
                 'last_page' => $outfits->lastPage(),

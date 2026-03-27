@@ -21,7 +21,8 @@ const deleteType = ref(null);
 const id = ref(null);
 // 選択したメイン・サブカテゴリー、カラー、季節の情報の取得
 const mainCategories = ref([]);
-const subCategories = ref([]);
+const subCategoriesMap = ref({});
+const subCategoriesFlat = ref([]);
 const colors = ref([]);
 const seasons = ref([]);
 
@@ -58,11 +59,12 @@ const fetchSelectData = async () => {
         const response = await axios.get('/api/enums');
         mainCategories.value = response.data.mainCategories;
         main_category.value = mainCategories.value.find(
-            (m) => m.id === item.value.main_category
+            (m) => m.id === item.value.main_category,
         );
-        subCategories.value = response.data.subCategories;
-        sub_category.value = subCategories.value.find(
-            (s) => s.id === item.value.sub_category
+        subCategoriesMap.value = response.data.subCategories;
+        subCategoriesFlat.value = Object.values(subCategoriesMap.value).flat();
+        sub_category.value = subCategoriesFlat.value.find(
+            (s) => s.id === item.value.sub_category,
         );
         colors.value = response.data.colors;
         color.value = colors.value.find((c) => c.id === item.value.color);

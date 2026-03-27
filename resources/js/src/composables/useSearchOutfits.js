@@ -1,17 +1,19 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 
 export function useSearchOutfits() {
     const outfits = ref([]);
     const isLoading = ref(true);
     const filters = ref({
+        gender: 0,
         mainCategory: '',
         subCategory: '',
         color: null,
         season: '',
     });
     const sortOrder = ref('popular');
+    const genders = ref([]);
     const mainCategories = ref([]);
-    const subCategories = ref([]);
+    const subCategories = ref({});
     const colors = ref([]);
     const seasons = ref([]);
 
@@ -32,6 +34,11 @@ export function useSearchOutfits() {
             const response = await axios.get('/api/outfits', {
                 params: {
                     ...filters.value,
+                    gender:
+                        filters.value.gender === 0
+                            ? null
+                            : filters.value.gender,
+                    color: filters.value.color?.id || null,
                     sort: sortOrder.value,
                     page: page.value,
                 },
@@ -55,6 +62,7 @@ export function useSearchOutfits() {
     const getEnums = async () => {
         try {
             const response = await axios.get('/api/enums');
+            genders.value = response.data.genders;
             mainCategories.value = response.data.mainCategories;
             subCategories.value = response.data.subCategories;
             colors.value = response.data.colors;
@@ -63,6 +71,11 @@ export function useSearchOutfits() {
             console.error('Enum取得失敗', err);
         }
     };
+
+    const filteredSubCategories = computed(() => {
+        if (!filters.value.mainCategory) return [];
+        return subCategories.value[filters.value.mainCategory] || [];
+    });
 
     const resetAndFetch = async () => {
         outfits.value = [];
@@ -73,6 +86,22 @@ export function useSearchOutfits() {
         await fetchOutfits();
     };
 
+    const filterByCategory = () => {
+        resetAndFetch();
+    };
+
+    // 指定した条件をクリアする
+    const clearFilters = () => {
+        filters.value = {
+            gender: 0,
+            mainCategory: '',
+            subCategory: '',
+            color: null,
+            season: '',
+        };
+        resetAndFetch();
+    };
+
     onMounted(async () => {
         if (outfits.value.length === 0) {
             await Promise.all([fetchOutfits(), getEnums()]);
@@ -81,18 +110,28 @@ export function useSearchOutfits() {
         }
     });
 
+    watch(
+        () => filters.value.mainCategory,
+        () => {
+            filters.value.subCategory = '';
+        },
+    );
+
     return {
         outfits,
         isLoading,
         filters,
         sortOrder,
+        genders,
         mainCategories,
-        subCategories,
+        filteredSubCategories,
         colors,
         seasons,
         hasMore,
         isFetchingMore,
         fetchOutfits,
         resetAndFetch,
+        filterByCategory,
+        clearFilters,
     };
 }

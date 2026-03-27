@@ -5,6 +5,7 @@ import FilterPanel from '../Components/Search/FilterPanel.vue';
 import OutfitList from '../Components/Search/OutfitList.vue';
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import SelectColor from './SelectColor.vue';
+import GenderSelectModal from '../Components/Search/Modals/GenderSelectModal.vue';
 
 import { useSearchOutfits } from '../src/composables/useSearchOutfits';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
@@ -21,14 +22,14 @@ const {
     isLoading,
     filters,
     sortOrder,
+    genders,
     mainCategories,
-    subCategories,
+    filteredSubCategories,
     colors,
     seasons,
     hasMore,
     isFetchingMore,
     fetchOutfits,
-    clearCache,
     resetAndFetch,
     filterByCategory,
     clearFilters,
@@ -66,8 +67,9 @@ const selectColor = (color) => {
     filters.value.color = color;
 };
 
+const isGenderModalOpen = ref(false);
+
 const handleDeleted = () => {
-    clearCache();
     resetAndFetch();
 };
 
@@ -113,16 +115,18 @@ onUnmounted(() => {
                 >
                     <FilterPanel
                         :filters="filters"
+                        :genders="genders"
                         :mainCategories="mainCategories"
-                        :subCategories="subCategories"
+                        :filteredSubCategories="filteredSubCategories"
                         :seasons="seasons"
                         :openFilter="openFilter"
                         :openColorModal="openColorModal"
                         :getColorClass="getColorClass"
                         :getColorStyle="getColorStyle"
                         :isMobile="isMobile"
-                        @clearFilters="handleClearFilters"
-                        @filterByCategory="handleFilterByCategory"
+                        @open-gender-modal="isGenderModalOpen = true"
+                        @request-clear="handleClearFilters"
+                        @request-submit="handleFilterByCategory"
                     />
                 </transition>
             </header>
@@ -155,6 +159,13 @@ onUnmounted(() => {
         :selectedColor="filters.color?.id"
         @color-selected="selectColor($event)"
         @close="openModal = false"
+    />
+    <GenderSelectModal
+        v-if="isGenderModalOpen"
+        :genders="genders"
+        :modelValue="filters.gender"
+        @update:modelValue="filters.gender = $event"
+        @close="isGenderModalOpen = false"
     />
 </template>
 

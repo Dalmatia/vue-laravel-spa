@@ -6,16 +6,29 @@ use App\Enums\Color;
 use App\Enums\Gender;
 use App\Enums\MainCategory;
 use App\Enums\Season;
-use App\Enums\SubCategory;
-use Illuminate\Http\Request;
 
 class EnumController extends Controller
 {
     public function index()
     {
+        $genders = [];
+        foreach (Gender::getValues() as $value) {
+            $genders[] = [
+                'value' => $value,
+                'label' => Gender::fromValue($value)->label(),
+            ];
+        }
+
+        $mainCategories = MainCategory::toSelectArray();
+        $subCategories = [];
+        foreach (MainCategory::getValues() as $main) {
+            $subCategories[$main] = MainCategory::getSubCategories($main);
+        }
+
         return [
-            'mainCategories' => MainCategory::toSelectArray(),
-            'subCategories' => SubCategory::toSelectArray(),
+            'genders' => $genders,
+            'mainCategories' => $mainCategories,
+            'subCategories' => $subCategories,
             'colors' => Color::toSelectArray(),
             'seasons' => Season::toSelectArray()
         ];
