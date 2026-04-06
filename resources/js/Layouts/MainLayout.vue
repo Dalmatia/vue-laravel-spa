@@ -73,7 +73,8 @@ onUnmounted(() => {
             <div
                 class="mx-auto md:pt-6 pt-20"
                 :class="
-                    route.path === '/' ? 'lg:w-8/12 w-full' : 'max-w-[1200px]'
+                    (route.path === '/' ? 'lg:w-8/12 w-full' : 'max-w-[1200px]',
+                    route.path === 'search' ? '' : 'md:pt-0')
                 "
             >
                 <main class="container">

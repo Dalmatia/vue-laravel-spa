@@ -1,21 +1,20 @@
 <script setup>
 import { defineEmits, defineProps, ref, onMounted } from 'vue';
-import axios from 'axios';
+import { useEditItemForm } from '../../../src/composables/editItemForm';
+import { useInitEnums } from '../../../src/composables/useInitEnums';
+import { useCategoryOptions } from '../../../src/composables/categoryOptions';
+import { specialColors } from '../../../src/specialColors';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
-import { useEditItemForm } from '../../../src/composables/editItemForm';
-import { useCategoryOptions } from '../../../src/composables/categoryOptions';
-import { specialColors } from '../../../src/specialColors';
 import SelectColor from '@/pages/SelectColor.vue';
 import FileUpdatePreview from '../../FileUpdatePreview.vue';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editItem: Object, required: true });
-const colors = ref([]);
-const seasons = ref([]);
+const { colors, seasons } = useInitEnums();
 const openModal = ref(false);
 const selectedColor = ref(null);
 const {
@@ -32,17 +31,6 @@ const { mainCategories, subCategories, fetchAllCategories } =
 
 const { getColorClass, getColorStyle } = specialColors();
 
-// メインカテゴリーなどの情報取得
-const fetchEnums = async () => {
-    try {
-        const response = await axios.get('/api/enums');
-        colors.value = response.data.colors;
-        seasons.value = response.data.seasons;
-    } catch (error) {
-        console.error('Enum データの取得に失敗しました', error);
-    }
-};
-
 const selectColor = (color) => {
     if (selectedColor.value?.id === color?.id) {
         // 同じ色をもう一度選ぶ → 選択解除
@@ -57,11 +45,10 @@ const selectColor = (color) => {
 };
 
 onMounted(async () => {
-    await fetchEnums();
     if (props.editItem.color) {
         editForm.value.color = props.editItem.color;
         selectedColor.value = colors.value.find(
-            (c) => c.id === props.editItem.color
+            (c) => c.id === props.editItem.color,
         );
     }
     await fetchAllCategories();

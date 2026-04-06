@@ -6,8 +6,10 @@ import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 import WeatherForecast from './WeatherForecast.vue';
+import { useOutfitApi } from '../src/composables/outfit/useOutfitApi';
 
 let wWidth = ref(window.innerWidth);
+const { getHomeOutfits } = useOutfitApi();
 const outfits = ref([]);
 const followStore = useFollowStore();
 const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
@@ -19,8 +21,8 @@ const resizeHandler = () => {
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
     try {
-        const response = await axios.get('/api/home');
-        outfits.value = response.data.outfits;
+        const response = await getHomeOutfits();
+        outfits.value = response.outfits;
 
         // 各ユーザーのフォロー状態をチェック
         const follows = outfits.value.map((outfit) => outfit.user.id);

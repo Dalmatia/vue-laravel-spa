@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, toRefs, ref, onUnmounted } from 'vue';
+import { useOutfitApi } from '../../src/composables/outfit/useOutfitApi';
 
 import OutfitFormOverlay from '../Outfit/Form/OutfitFormOverlay.vue';
 
 const emit = defineEmits(['close', 'deleteSelected']);
 const props = defineProps({ deleteType: String, id: Number });
 const { deleteType, id } = toRefs(props);
+const { getOutfit } = useOutfitApi();
 const outfit = ref(null);
 let openEdit = ref(false);
 let successMessage = ref(false);
@@ -13,9 +15,9 @@ let successMessage = ref(false);
 // 登録・更新時のアイテム情報取得
 const fetchOutfit = async () => {
     try {
-        const response = await axios.get(`/api/outfit/${id.value}`);
+        const response = await getOutfit(id.value);
 
-        outfit.value = response.data.outfit;
+        outfit.value = response.outfit;
     } catch (error) {
         console.error(error);
     }

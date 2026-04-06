@@ -6,6 +6,11 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue']);
+
+const selectSubCategory = (e) => {
+    const raw = e.target.value;
+    emit('update:modelValue', raw === '' ? '' : Number(raw));
+};
 </script>
 
 <template>
@@ -24,7 +29,7 @@ const emit = defineEmits(['update:modelValue']);
             <select
                 id="subCategory"
                 :value="modelValue"
-                @change="emit('update:modelValue', $event.target.value)"
+                @change="selectSubCategory"
                 :class="isMobile ? 'w-full border-b pb-2 text-right' : 'w-full'"
             >
                 <option value="">

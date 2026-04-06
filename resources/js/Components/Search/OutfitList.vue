@@ -36,7 +36,7 @@ onMounted(() => {
         },
         {
             root: null,
-            rootMargin: '200px',
+            rootMargin: '400px',
             threshold: 0,
         },
     );
@@ -50,6 +50,10 @@ onUnmounted(() => {
     if (observer && loadMoreTrigger.value) {
         observer.disconnect();
     }
+});
+
+watch(loadMoreTrigger, (el) => {
+    if (el) observer.observe(el);
 });
 </script>
 

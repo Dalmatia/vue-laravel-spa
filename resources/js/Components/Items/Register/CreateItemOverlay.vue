@@ -1,13 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useItemForm } from '../../../src/composables/itemForm';
+import { useInitEnums } from '../../../src/composables/useInitEnums';
+import { useCategoryOptions } from '../../../src/composables/categoryOptions';
+import { specialColors } from '../../../src/specialColors';
 
 import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
-import { useItemForm } from '../../../src/composables/itemForm';
-import { useCategoryOptions } from '../../../src/composables/categoryOptions';
-import { specialColors } from '../../../src/specialColors';
 import FileUploadPreview from '../../FileUploadPreview.vue';
 import SelectColor from '@/pages/SelectColor.vue';
 
@@ -26,21 +27,9 @@ const { mainCategories, subCategories, fetchAllCategories } =
     useCategoryOptions(() => form.main_category);
 
 const { getColorClass, getColorStyle } = specialColors();
-
-const colors = ref([]);
-const seasons = ref([]);
+const { colors, seasons } = useInitEnums();
 const openModal = ref(false);
 const selectedColor = ref(null);
-
-const fetchEnums = async () => {
-    try {
-        const response = await axios.get('/api/enums');
-        colors.value = response.data.colors;
-        seasons.value = response.data.seasons;
-    } catch (error) {
-        console.error('Enum データの取得に失敗しました', error);
-    }
-};
 
 const closeOverlay = () => {
     resetForm();
@@ -62,7 +51,6 @@ const selectColor = (color) => {
 
 // 各選択項目の値取得
 onMounted(async () => {
-    await fetchEnums();
     await fetchAllCategories();
 });
 </script>

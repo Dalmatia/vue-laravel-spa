@@ -10,7 +10,7 @@ const props = defineProps({
     filters: Object,
     genders: Array,
     mainCategories: Array,
-    filteredSubCategories: Array,
+    subCategories: Array,
     seasons: Array,
     openFilter: Boolean,
     isMobile: Boolean,
@@ -50,13 +50,14 @@ const emit = defineEmits([
                 v-model="filters.mainCategory"
                 :isMobile="isMobile"
                 :mainCategories="mainCategories"
+                @update:modelValue="filters.subCategory = ''"
             />
 
             <!-- サブカテゴリー -->
             <SubCategorySection
                 v-model="filters.subCategory"
                 :isMobile="isMobile"
-                :subCategories="filteredSubCategories"
+                :subCategories="subCategories"
             />
 
             <!-- カラー -->

@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useOutfitForm } from '@/src/composables/outfit/useOutfitForm';
-import { useOutfitEnums } from '@/src/composables/outfit/useOutfitEnums';
+import { useInitEnums } from '../../../src/composables/useInitEnums';
 import { useModal } from '@/src/composables/useModal';
 import { useOutfitApi } from '@/src/composables/outfit/useOutfitApi';
 
@@ -37,7 +37,7 @@ const {
     resetForm,
 } = useOutfitForm(props.editOutfit);
 
-const { seasons } = useOutfitEnums();
+const { seasons } = useInitEnums();
 const { createOutfit, updateOutfit } = useOutfitApi();
 
 const itemTypeEntries = Object.entries(itemTypes);

@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
 
 export const useEnumStore = defineStore('enum', {
     state: () => ({
+        genders: [],
+        mainCategories: [],
+        subCategories: [],
         colors: [],
         seasons: [],
-        genders: [],
         loaded: false,
     }),
 
@@ -13,15 +14,13 @@ export const useEnumStore = defineStore('enum', {
         async fetchEnums() {
             if (this.loaded) return;
 
-            // まとめて取得するなら /api/enums が便利
             const { data } = await axios.get('/api/enums');
 
+            this.genders = data.genders ?? [];
+            this.mainCategories = data.mainCategories;
+            this.subCategories = data.subCategories;
             this.colors = data.colors;
             this.seasons = data.seasons;
-
-            // genders は endpoint が別
-            const genderRes = await axios.get('/api/get_genders');
-            this.genders = genderRes.data;
 
             this.loaded = true;
         },
