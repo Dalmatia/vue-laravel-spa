@@ -1,54 +1,51 @@
-import { ref, watch } from 'vue';
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useInitEnums } from '../useInitEnums';
 
-export function useSearchQuerySync({ filters, sortOrder, colors }) {
+export function useSearchQuerySync() {
     const route = useRoute();
     const router = useRouter();
-    const isInitialized = ref(false);
+    const { colors } = useInitEnums();
 
-    const applyQueryToFilters = () => {
+    const filters = computed(() => {
         const q = route.query;
 
-        filters.value.gender = q.gender ? Number(q.gender) : 0;
-        filters.value.mainCategory = q.mainCategory || '';
-        filters.value.subCategory = q.subCategory || '';
+        const colorId = q.color ? Number(q.color) : null;
 
-        if (q.color) {
-            const id = Number(q.color);
-            filters.value.color = colors.value.find((c) => c.id === id) || null;
-        } else {
-            filters.value.color = null;
-        }
+        const selectedColor =
+            colorId && colors.value.length
+                ? colors.value.find((c) => c.id === colorId) || null
+                : null;
 
-        filters.value.season = q.season || '';
-        sortOrder.value = q.sort || 'popular';
-    };
+        return {
+            gender: q.gender ? Number(q.gender) : 0,
+            mainCategory: q.mainCategory || '',
+            subCategory: q.subCategory || '',
+            color: selectedColor,
+            season: q.season || '',
+        };
+    });
 
-    const updateQuery = (usePush = false) => {
+    const sortOrder = computed(() => {
+        return route.query.sort || 'popular';
+    });
+
+    const updateQuery = (newFilters, newSort, usePush = true) => {
         const query = {
-            gender:
-                filters.value.gender === 0 ? undefined : filters.value.gender,
-            mainCategory: filters.value.mainCategory || undefined,
-            subCategory: filters.value.subCategory || undefined,
-            color: filters.value.color?.id || undefined,
-            season: filters.value.season || undefined,
-            sort: sortOrder.value !== 'popular' ? sortOrder.value : undefined,
+            gender: newFilters.gender || undefined,
+            mainCategory: newFilters.mainCategory || undefined,
+            subCategory: newFilters.subCategory || undefined,
+            color: newFilters.color?.id || undefined,
+            season: newFilters.season || undefined,
+            sort: newSort !== 'popular' ? newSort : undefined,
         };
 
         router[usePush ? 'push' : 'replace']({ query });
     };
 
-    watch(
-        () => route.query,
-        () => {
-            if (!isInitialized.value) return;
-            applyQueryToFilters();
-        },
-    );
-
     return {
-        applyQueryToFilters,
+        filters,
+        sortOrder,
         updateQuery,
-        isInitialized,
     };
 }

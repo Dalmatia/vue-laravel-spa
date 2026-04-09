@@ -52,12 +52,10 @@ const selectColor = (color) => {
 
 <template>
     <div
-        class="box-border mx-auto max-w-6xl min-h-fit md:pl-[88px] lg:px-7 w-full"
+        class="box-border mx-auto max-w-6xl min-h-fit md:pl-[88px] lg:px-7 w-full md:-mt-6"
     >
         <!-- ヘッダー -->
-        <nav
-            class="flex flex-col box-border items-stretch sticky top-0 bg-white z-[1]"
-        >
+        <nav class="flex flex-col sticky top-0 bg-white z-10 border-b">
             <header>
                 <SearchHeaderSection
                     :isMobile="isMobile"

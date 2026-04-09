@@ -4,19 +4,24 @@ import { useSearchFilters } from './useSearchFilters';
 import { useSearchQuerySync } from './useSearchQuerySync';
 
 export function useSearchOutfits() {
-    const filtersState = useSearchFilters();
     const fetchState = useSearchFetch();
 
-    const { applyQueryToFilters, updateQuery, isInitialized } =
-        useSearchQuerySync({
-            filters: filtersState.filters,
-            sortOrder: filtersState.sortOrder,
-            colors: filtersState.colors,
-        });
+    const queryState = useSearchQuerySync();
+
+    const filtersState = useSearchFilters(
+        queryState.filters,
+        queryState.sortOrder,
+    );
 
     const applyFilters = async () => {
-        updateQuery(true);
+        queryState.updateQuery(
+            filtersState.filters.value,
+            filtersState.sortOrder.value,
+            true,
+        );
+
         fetchState.reset();
+
         await fetchState.fetchInitialOutfits({
             filters: filtersState.filters.value,
             sortOrder: filtersState.sortOrder.value,
@@ -24,14 +29,10 @@ export function useSearchOutfits() {
     };
 
     onMounted(async () => {
-        applyQueryToFilters();
-
         await fetchState.fetchInitialOutfits({
-            filters: filtersState.filters.value,
-            sortOrder: filtersState.sortOrder.value,
+            filters: queryState.filters.value,
+            sortOrder: queryState.sortOrder.value,
         });
-
-        isInitialized.value = true;
     });
 
     return {
