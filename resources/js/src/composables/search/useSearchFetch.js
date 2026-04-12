@@ -41,37 +41,21 @@ export function useSearchFetch() {
         }
     };
 
-    const ensureFilled = async (params) => {
+    const fetchInitialOutfits = async (params) => {
+        // 初回ロード
+        await fetchOutfits(params);
+
+        // 1回だけ追加ロード
         const isScreenFilled = () => {
             return document.body.scrollHeight > window.innerHeight;
         };
 
-        const MAX_TRIES = 10;
-
-        const loadUntilFilled = async (count = 0) => {
-            if (count >= MAX_TRIES) return;
-            if (isScreenFilled() || !hasMore.value) return;
-
-            const prevLength = outfits.value.length;
-
+        if (!isScreenFilled() && hasMore.value) {
             await fetchOutfits({
                 ...params,
                 isLoadMore: true,
             });
-
-            if (outfits.value.length === prevLength) return;
-
-            return loadUntilFilled(count + 1);
-        };
-
-        await loadUntilFilled();
-    };
-
-    const fetchInitialOutfits = async (params) => {
-        // 初回ロード
-        await fetchOutfits(params);
-        // 画面が埋まるまで追加ロード
-        await ensureFilled(params);
+        }
     };
 
     const reset = () => {

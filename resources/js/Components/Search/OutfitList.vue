@@ -11,6 +11,7 @@ const props = defineProps({
 });
 
 let observer;
+let isRequesting = false;
 const emit = defineEmits(['openOutfitOverlay', 'loadMore']);
 const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
 const loadMoreTrigger = ref(null);
@@ -27,10 +28,13 @@ onMounted(() => {
     observer = new IntersectionObserver(
         (entries) => {
             if (
+                props.isMobile &&
                 entries[0].isIntersecting &&
                 props.hasMore &&
-                !props.isFetchingMore
+                !props.isFetchingMore &&
+                !isRequesting
             ) {
+                isRequesting = true;
                 emit('loadMore');
             }
         },
@@ -45,6 +49,13 @@ onMounted(() => {
         observer.observe(loadMoreTrigger.value);
     }
 });
+
+watch(
+    () => props.isFetchingMore,
+    (val) => {
+        if (!val) isRequesting = false;
+    },
+);
 
 onUnmounted(() => {
     if (observer && loadMoreTrigger.value) {
@@ -110,6 +121,19 @@ watch(loadMoreTrigger, (el) => {
                         <div class="loader"></div>
                     </div>
                 </template>
+
+                <!-- 「さらに読み込む」ボタン追加 -->
+                <div
+                    v-if="hasMore && !isFetchingMore"
+                    class="col-span-full flex justify-center py-6"
+                >
+                    <button
+                        class="px-4 py-2 border rounded bg-white hover:bg-gray-100"
+                        @click="emit('loadMore')"
+                    >
+                        さらに読み込む
+                    </button>
+                </div>
 
                 <div
                     v-if="!hasMore && !isFetchingMore && outfits.length > 0"
