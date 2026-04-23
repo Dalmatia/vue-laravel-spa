@@ -1,26 +1,14 @@
 import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useSearchFetch } from './useSearchFetch';
-import { useSearchFilters } from './useSearchFilters';
 import { useSearchQuerySync } from './useSearchQuerySync';
 
 export function useSearchOutfits() {
     let isFirstLoad = true;
     const scrollY = ref(0);
+    const route = useRoute();
     const fetchState = useSearchFetch();
     const queryState = useSearchQuerySync();
-
-    const filtersState = useSearchFilters(
-        queryState.filters,
-        queryState.sortOrder,
-    );
-
-    const applyFilters = async () => {
-        queryState.updateQuery(
-            filtersState.filters.value,
-            filtersState.sortOrder.value,
-            true,
-        );
-    };
 
     const saveScroll = () => {
         scrollY.value = window.scrollY;
@@ -30,15 +18,24 @@ export function useSearchOutfits() {
         window.scrollTo(0, scrollY.value);
     };
 
+    const getParams = () => ({
+        filters: queryState.filters.value,
+        sortOrder: queryState.sortOrder.value,
+    });
+
+    const loadMore = () => {
+        fetchState.fetchOutfits({
+            ...getParams(),
+            isLoadMore: true,
+        });
+    };
+
     watch(
-        () => [queryState.filters.value, queryState.sortOrder.value],
+        () => route.fullPath,
         async () => {
             fetchState.reset();
 
-            await fetchState.fetchInitialOutfits({
-                filters: queryState.filters.value,
-                sortOrder: queryState.sortOrder.value,
-            });
+            await fetchState.fetchInitialOutfits(getParams());
 
             if (isFirstLoad) {
                 restoreScroll();
@@ -59,8 +56,8 @@ export function useSearchOutfits() {
     });
 
     return {
-        ...filtersState,
         ...fetchState,
-        applyFilters,
+        ...queryState,
+        loadMore,
     };
 }

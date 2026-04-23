@@ -40,6 +40,7 @@ export function useSearchQuerySync() {
             sort: newSort !== 'popular' ? newSort : undefined,
         };
 
+        if (JSON.stringify(query) === JSON.stringify(route.query)) return;
         router[usePush ? 'push' : 'replace']({ query });
     };
 

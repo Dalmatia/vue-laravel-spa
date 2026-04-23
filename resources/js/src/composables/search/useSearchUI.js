@@ -5,6 +5,10 @@ export function useSearchUI(applyFilters, clearFilters) {
     const openModal = ref(false);
     const isGenderModalOpen = ref(false);
 
+    const openColorModal = () => {
+        openModal.value = true;
+    };
+
     const handleFilterByCategory = async () => {
         openFilter.value = false;
         await applyFilters();
@@ -20,6 +24,7 @@ export function useSearchUI(applyFilters, clearFilters) {
         openFilter,
         openModal,
         isGenderModalOpen,
+        openColorModal,
         handleFilterByCategory,
         handleClearFilters,
     };

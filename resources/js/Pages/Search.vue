@@ -7,11 +7,12 @@ import SelectColor from './SelectColor.vue';
 import GenderSelectModal from '../Components/Search/Modals/GenderSelectModal.vue';
 
 import { useSearchOutfits } from '../src/composables/search/useSearchOutfits';
-import { useSearchUI } from '../src/composables/search/useSearchUI';
+import { useSearchForm } from '../src/composables/search/useSearchForm';
+import { useInitEnums } from '../src/composables/useInitEnums';
 import { useResponsive } from '../src/composables/search/useResponsive';
-import { useOutfitEvents } from '../src/composables/outfit/useOutfitEvents';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 import { specialColors } from '../src/specialColors';
+import { useSearchUI } from '../src/composables/search/useSearchUI';
 
 const sortOptions = {
     popular: '人気順',
@@ -21,33 +22,32 @@ const sortOptions = {
 
 const search = useSearchOutfits();
 
-const ui = useSearchUI(search.applyFilters, search.clearFilters);
+const { genders, mainCategories, subCategories, colors, seasons } =
+    useInitEnums();
+
+const {
+    localFilters,
+    localSortOrder,
+    filteredSubCategory,
+    applyFilters,
+    clearFilters,
+    selectColor,
+} = useSearchForm(search, subCategories);
 
 const { isMobile } = useResponsive();
-
-useOutfitEvents(search.applyFilters);
 
 const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 
 const { getColorClass, getColorStyle } = specialColors();
 
-const handleSortChange = async () => {
-    await search.applyFilters();
-};
-
-const openColorModal = () => {
-    ui.openModal.value = true;
-};
-
-const selectColor = (color) => {
-    if (search.filters.value.color?.id === color?.id) {
-        // 同じ色をもう一度選ぶ → 選択解除
-        search.filters.value.color = null;
-    } else {
-        // 新しい色を選択
-        search.filters.value.color = color;
-    }
-};
+const {
+    openFilter,
+    openModal,
+    isGenderModalOpen,
+    openColorModal,
+    handleFilterByCategory,
+    handleClearFilters,
+} = useSearchUI(applyFilters, clearFilters);
 </script>
 
 <template>
@@ -60,9 +60,9 @@ const selectColor = (color) => {
                 <SearchHeaderSection
                     :isMobile="isMobile"
                     :sortOptions="sortOptions"
-                    v-model:sortOrder="search.sortOrder.value"
-                    v-model:openFilter="ui.openFilter.value"
-                    @sort-change="handleSortChange"
+                    v-model:sortOrder="localSortOrder"
+                    v-model:openFilter="openFilter"
+                    @sort-change="applyFilters"
                 />
 
                 <!-- フィルターパネル -->
@@ -72,19 +72,19 @@ const selectColor = (color) => {
                     leave-active-class="transition duration-150"
                 >
                     <FilterPanel
-                        :filters="search.filters.value"
-                        :genders="search.genders.value"
-                        :mainCategories="search.mainCategories.value"
-                        :subCategories="search.filteredSubCategories.value"
-                        :seasons="search.seasons.value"
-                        :openFilter="ui.openFilter.value"
+                        :filters="localFilters"
+                        :genders="genders"
+                        :mainCategories="mainCategories"
+                        :subCategories="filteredSubCategory"
+                        :seasons="seasons"
+                        :openFilter="openFilter"
                         :openColorModal="openColorModal"
                         :getColorClass="getColorClass"
                         :getColorStyle="getColorStyle"
                         :isMobile="isMobile"
-                        @open-gender-modal="ui.isGenderModalOpen.value = true"
-                        @request-clear="ui.handleClearFilters"
-                        @request-submit="ui.handleFilterByCategory"
+                        @open-gender-modal="isGenderModalOpen = true"
+                        @request-clear="handleClearFilters"
+                        @request-submit="handleFilterByCategory"
                     />
                 </transition>
             </header>
@@ -99,13 +99,7 @@ const selectColor = (color) => {
                 :hasMore="search.hasMore.value"
                 :isFetchingMore="search.isFetchingMore.value"
                 @openOutfitOverlay="toggleOutfitOverlay($event)"
-                @loadMore="
-                    search.fetchOutfits({
-                        filters: search.filters.value,
-                        sortOrder: search.sortOrder.value,
-                        isLoadMore: true,
-                    })
-                "
+                @loadMore="search.loadMore"
             />
         </div>
     </div>
@@ -118,19 +112,19 @@ const selectColor = (color) => {
     />
 
     <SelectColor
-        v-if="ui.openModal.value"
-        :colors="search.colors.value"
-        :selectedColor="search.filters.color?.id"
+        v-if="openModal"
+        :colors="colors"
+        :selectedColor="localFilters.color?.id"
         @color-selected="selectColor($event)"
-        @close="ui.openModal.value = false"
+        @close="openModal = false"
     />
 
     <GenderSelectModal
-        v-if="ui.isGenderModalOpen.value"
-        :genders="search.genders.value"
-        :modelValue="search.filters.value.gender"
-        @update:modelValue="search.filters.value.gender = $event"
-        @close="ui.isGenderModalOpen.value = false"
+        v-if="isGenderModalOpen"
+        :genders="genders"
+        :modelValue="localFilters.gender"
+        @update:modelValue="localFilters.gender = $event"
+        @close="isGenderModalOpen = false"
     />
 </template>
 
