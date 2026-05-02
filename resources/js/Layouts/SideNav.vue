@@ -2,11 +2,12 @@
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import MenuItem from '@/Components/MenuItem.vue';
+import { useSearchQueryStore } from '../stores/searchQueryStore';
 
 const emit = defineEmits(['open-create-post', 'toggle-menu', 'logout']);
 
 const authStore = useAuthStore();
-
+const searchQueryStore = useSearchQueryStore();
 const notifications = ref(null);
 
 const toggleMenu = (type, event) => {
@@ -38,7 +39,9 @@ const logout = () => emit('logout');
             <router-link :to="{ name: 'Home' }">
                 <MenuItem iconString="Home" class="mb-4 lg:mb-2" />
             </router-link>
-            <router-link :to="{ name: 'Search' }">
+            <router-link
+                :to="{ name: 'Search', query: searchQueryStore.query }"
+            >
                 <MenuItem iconString="Search" class="mb-4 lg:mb-2" />
             </router-link>
             <router-link :to="{ name: 'Calendar' }" v-if="authStore.user">

@@ -7,8 +7,10 @@ import Calendar from 'vue-material-design-icons/Calendar.vue';
 import Plus from 'vue-material-design-icons/Plus.vue';
 import AccountOutline from 'vue-material-design-icons/AccountOutline.vue';
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue';
+import { useSearchQueryStore } from '../stores/searchQueryStore';
 
 const authStore = useAuthStore();
+const searchQueryStore = useSearchQueryStore();
 const emit = defineEmits(['open-create-post']);
 </script>
 
@@ -25,7 +27,7 @@ const emit = defineEmits(['open-create-post']);
             />
         </router-link>
 
-        <router-link :to="{ name: 'Search' }">
+        <router-link :to="{ name: 'Search', query: searchQueryStore.query }">
             <Magnify fillColor="#000000" :size="33" class="cursor-pointer" />
         </router-link>
 

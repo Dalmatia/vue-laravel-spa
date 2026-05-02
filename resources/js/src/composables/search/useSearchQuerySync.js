@@ -1,10 +1,12 @@
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useInitEnums } from '../useInitEnums';
+import { useSearchQueryStore } from '../../../stores/searchQueryStore';
 
 export function useSearchQuerySync() {
     const route = useRoute();
     const router = useRouter();
+    const searchQueryStore = useSearchQueryStore();
     const { colors } = useInitEnums();
 
     const filters = computed(() => {
@@ -43,6 +45,14 @@ export function useSearchQuerySync() {
         if (JSON.stringify(query) === JSON.stringify(route.query)) return;
         router[usePush ? 'push' : 'replace']({ query });
     };
+
+    watch(
+        () => route.query,
+        (newQuery) => {
+            searchQueryStore.setQuery(newQuery);
+        },
+        { immediate: true, deep: true },
+    );
 
     return {
         filters,

@@ -22,7 +22,7 @@ class AiClient
   public function getClothingAdviceJson(string $prompt): array
   {
     try {
-      $client = Gemini::generativeModel("gemini-2.5-flash");
+      $client = Gemini::generativeModel("gemini-3-flash-preview");
       $response = $client->generateContent($prompt);
       $text = $response->text();
 
