@@ -1,21 +1,24 @@
-import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useSearchFetch } from './useSearchFetch';
 import { useSearchQuerySync } from './useSearchQuerySync';
+import { useSearchCacheStore } from '../../../stores/searchCacheStore';
+import { createQueryKey } from './createQueryKey';
+import { useScrollContainer } from '../dom/useScrollContainer';
 
 export function useSearchOutfits() {
-    let isFirstLoad = true;
-    const scrollY = ref(0);
     const route = useRoute();
     const fetchState = useSearchFetch();
     const queryState = useSearchQuerySync();
+    const cacheStore = useSearchCacheStore();
+    const { scrollTo, getScrollTop, addScrollListener, removeScrollListener } =
+        useScrollContainer();
 
     const saveScroll = () => {
-        scrollY.value = window.scrollY;
-    };
+        const key = createQueryKey(route.query);
+        if (!cacheStore.has(key)) return;
 
-    const restoreScroll = () => {
-        window.scrollTo(0, scrollY.value);
+        cacheStore.updateScroll(key, getScrollTop());
     };
 
     const getParams = () => ({
@@ -23,36 +26,74 @@ export function useSearchOutfits() {
         sortOrder: queryState.sortOrder.value,
     });
 
-    const loadMore = () => {
-        fetchState.fetchOutfits({
-            ...getParams(),
-            isLoadMore: true,
+    const loadMore = async () => {
+        await fetchState.fetchMoreOutfits(getParams());
+        await nextTick();
+
+        const key = createQueryKey(route.query);
+
+        // キャッシュ更新
+        cacheStore.set(key, {
+            outfits: [...fetchState.outfits.value],
+            page: fetchState.page.value,
+            hasMore: fetchState.hasMore.value,
+            scrollY: getScrollTop(),
         });
+    };
+
+    const restoreFromCache = (cached) => {
+        fetchState.outfits.value = [...cached.outfits];
+        fetchState.page.value = cached.page;
+        fetchState.hasMore.value = cached.hasMore;
+
+        fetchState.isLoading.value = false;
+        fetchState.isFetchingMore.value = false;
     };
 
     watch(
         () => route.fullPath,
         async () => {
+            const key = createQueryKey(route.query);
+
+            // キャッシュ復元
+            if (cacheStore.has(key)) {
+                const cached = cacheStore.get(key);
+                restoreFromCache(cached);
+
+                await nextTick();
+                requestAnimationFrame(() => {
+                    scrollTo(cached.scrollY ?? 0);
+                });
+
+                return;
+            }
+
+            // 新規fetch
             fetchState.reset();
 
             await fetchState.fetchInitialOutfits(getParams());
 
-            if (isFirstLoad) {
-                restoreScroll();
-                isFirstLoad = false;
-            } else {
-                window.scrollTo(0, 0); // フィルタ変更時はトップへ
-            }
+            // キャッシュ保存
+            cacheStore.set(key, {
+                outfits: [...fetchState.outfits.value],
+                page: fetchState.page.value,
+                hasMore: fetchState.hasMore.value,
+                scrollY: 0,
+            });
+
+            // フィルタ変更時はトップへ
+            scrollTo(0);
         },
         { immediate: true },
     );
 
     onMounted(async () => {
-        window.addEventListener('scroll', saveScroll);
+        addScrollListener(saveScroll);
     });
 
-    onUnmounted(() => {
-        window.removeEventListener('scroll', saveScroll);
+    onUnmounted(async () => {
+        await nextTick();
+        removeScrollListener(saveScroll);
     });
 
     return {

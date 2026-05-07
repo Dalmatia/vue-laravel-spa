@@ -68,6 +68,7 @@ onUnmounted(() => {
         />
 
         <div
+            id="scroll-container"
             class="flex lg:justify-between bg-white h-full w-[100%-280px] xl:pl-[280px] lg:pl-[100px] overflow-auto"
         >
             <div

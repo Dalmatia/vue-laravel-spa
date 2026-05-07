@@ -10,7 +10,15 @@ export function useSearchFetch() {
     const page = ref(1);
     const hasMore = ref(true);
 
-    const fetchOutfits = async ({ filters, sortOrder, isLoadMore = false }) => {
+    // リクエスト管理
+    let currentRequestId = 0;
+
+    const fetchOutfits = async ({
+        filters,
+        sortOrder,
+        isLoadMore = false,
+        requestId,
+    }) => {
         if (isLoadMore) {
             if (!hasMore.value) return;
             isFetchingMore.value = true;
@@ -27,6 +35,8 @@ export function useSearchFetch() {
                     page: page.value,
                 });
 
+            if (requestId !== currentRequestId) return;
+
             if (isLoadMore) {
                 outfits.value.push(...newOutfits);
             } else {
@@ -36,26 +46,44 @@ export function useSearchFetch() {
             hasMore.value = newHasMore;
             page.value++;
         } finally {
-            isLoading.value = false;
-            isFetchingMore.value = false;
+            if (requestId === currentRequestId) {
+                isLoading.value = false;
+                isFetchingMore.value = false;
+            }
         }
     };
 
+    // 初回ロードと、フィルタ変更後のロード
     const fetchInitialOutfits = async (params) => {
-        // 初回ロード
-        await fetchOutfits(params);
+        const requestId = ++currentRequestId;
 
-        // 1回だけ追加ロード
-        const isScreenFilled = () => {
-            return document.body.scrollHeight > window.innerHeight;
-        };
+        await fetchOutfits({ ...params, requestId });
 
-        if (!isScreenFilled() && hasMore.value) {
+        // 途中で別リクエストが来たら中断
+        if (requestId !== currentRequestId) return;
+
+        // 画面埋まらなければ追加ロード
+        const isScreenFilled = () =>
+            document.body.scrollHeight > window.innerHeight;
+
+        while (!isScreenFilled() && hasMore.value) {
             await fetchOutfits({
                 ...params,
                 isLoadMore: true,
+                requestId,
             });
+            if (requestId !== currentRequestId) return;
         }
+    };
+
+    const fetchMoreOutfits = async (params) => {
+        const requestId = currentRequestId; // 今のを使う
+
+        await fetchOutfits({
+            ...params,
+            isLoadMore: true,
+            requestId,
+        });
     };
 
     const reset = () => {
@@ -64,6 +92,8 @@ export function useSearchFetch() {
         hasMore.value = true;
         isLoading.value = false;
         isFetchingMore.value = false;
+
+        currentRequestId++; // これで全てのリクエストを無効化
     };
 
     return {
@@ -71,8 +101,10 @@ export function useSearchFetch() {
         isLoading,
         isFetchingMore,
         hasMore,
+        page,
         fetchOutfits,
         fetchInitialOutfits,
+        fetchMoreOutfits,
         reset,
     };
 }
