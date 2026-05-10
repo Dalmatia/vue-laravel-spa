@@ -17,21 +17,26 @@ class RelatedOutfitService
    * @param int $limit
    * @return Collection
    */
-  public function getByCategories(int $viewerUserId, array $categories, ?int $season, CarbonImmutable $baseDate, int $limit = 5): Collection
+  public function getByCategories(int $viewerUserId, array $categories, ?int $season, string $tempBand, CarbonImmutable $baseDate, int $limit = 5): Collection
   {
     if (empty($categories)) {
       return collect();
     }
 
     return Outfit::query()
-      ->excludeUser($viewerUserId)
-      ->usesCategories($categories)
-      ->preferSeason($season, $baseDate)
-      ->with(['user'])
       ->withCount([
         'likes as likes_count' => fn($q) => $q->where('like', 1)
       ])
+      ->excludeUser($viewerUserId)
+      ->usesCategories($categories)
+      ->preferSeason($season, $baseDate)
+      ->preferTemperatureBand($tempBand)
+
       ->orderByDesc('likes_count')
+      ->inRandomOrder()
+
+      ->with(['user'])
+
       ->limit($limit)
       ->get()
       ->map(fn($outfit) => RelatedOutfitDto::fromModel($outfit));

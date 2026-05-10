@@ -78,6 +78,7 @@ class Outfit extends Model
     {
         $baseDateString = $baseDate->toDateString();
         $threshold = self::RECENT_THRESHOLD_DAYS;
+        $seasonCount = self::SEASON_COUNT;
 
         if (!$season) {
             return $query->orderByRaw(
@@ -94,7 +95,7 @@ class Outfit extends Model
                WHEN season = ? THEN 1
                WHEN LEAST(
                      ABS(CAST(season AS SIGNED) - ?),
-                     4 - ABS(CAST(season AS SIGNED) - ?)
+                     {$seasonCount} - ABS(CAST(season AS SIGNED) - ?)
                     ) = 1 THEN 2
                ELSE 3
              END,
@@ -103,5 +104,42 @@ class Outfit extends Model
             ",
             [$season, $baseDateString, $season, $season, $season, $baseDateString]
         );
+    }
+
+    public function scopePreferTemperatureBand($query, string $tempBand)
+    {
+        if (in_array($tempBand, ['freezing', 'cold'])) {
+            return $query->orderByRaw("
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM outfits_items oi
+                    INNER JOIN items i ON i.id = oi.item_id
+                    WHERE oi.outfit_id = outfits.id
+                    AND i.main_category = 1
+                )
+                THEN 0
+                ELSE 1
+            END
+        ");
+        }
+
+        if (in_array($tempBand, ['warm', 'hot'])) {
+            return $query->orderByRaw("
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM outfits_items oi
+                    INNER JOIN items i ON i.id = oi.item_id
+                    WHERE oi.outfit_id = outfits.id
+                    AND i.main_category = 1
+                )
+                THEN 1
+                ELSE 0
+            END
+        ");
+        }
+
+        return $query;
     }
 }

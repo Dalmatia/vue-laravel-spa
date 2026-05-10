@@ -151,4 +151,18 @@ final class WeatherDto
       ? Season::spring
       : Season::fall;
   }
+
+  public function temperatureBand(): string
+  {
+    $feels = $this->feelsLike();
+
+    return match (true) {
+      $feels <= 5  => 'freezing',
+      $feels <= 12 => 'cold',
+      $feels <= 18 => 'cool',
+      $feels <= 24 => 'mild',
+      $feels <= 29 => 'warm',
+      default      => 'hot',
+    };
+  }
 }

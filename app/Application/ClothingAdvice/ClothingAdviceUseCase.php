@@ -30,7 +30,12 @@ final class ClothingAdviceUseCase
       $cityId,
       $user->profile_hash
     )) {
-      $cached['related_outfits'] = [];
+      $cached['related_outfits'] = $this->buildRelatedOutfits(
+        $user,
+        $cached['outfit_suggestion'] ?? [],
+        $weatherDto,
+        $date
+      );
       return $cached;
     }
 
@@ -51,16 +56,13 @@ final class ClothingAdviceUseCase
     $items = $this->normalizeOutfitSuggestionStructure($items);
     $items = $this->normalizeAndTranslateReasons($items);
 
-    // 提案カテゴリ抽出
-    $usedCategories = $this->extractMainCategories($items);
-
-    $season = $weatherDto->thermalSeason();
-
     // 関連コーデ取得（キャッシュしない）
-    $relatedOutfits = $this->relatedOutfitService
-      ->getByCategories($user->id, $usedCategories, $season, CarbonImmutable::today(), 5)
-      ->map(fn($dto) => $dto->toArray())
-      ->all();
+    $relatedOutfits = $this->buildRelatedOutfits(
+      $user,
+      $items,
+      $weatherDto,
+      $date,
+    );
 
     $result = [
       'category' => $isAiAvailable ? 'AIによる提案' : '手持ちアイテムからの提案',
@@ -83,6 +85,31 @@ final class ClothingAdviceUseCase
     );
 
     return $result;
+  }
+
+  private function buildRelatedOutfits(User $user, array $items, WeatherDto $weatherDto, string $date): array
+  {
+    $usedCategories = $this->extractMainCategories($items);
+
+    $season = $weatherDto->thermalSeason();
+    $tempBand = $weatherDto->temperatureBand();
+    logger()->debug([
+      'date' => $date,
+      'season' => $season,
+      'tempBand' => $tempBand,
+    ]);
+
+    return $this->relatedOutfitService
+      ->getByCategories(
+        $user->id,
+        $usedCategories,
+        $season,
+        $tempBand,
+        CarbonImmutable::parse($date),
+        5
+      )
+      ->map(fn($dto) => $dto->toArray())
+      ->all();
   }
 
   private function normalizeOutfitSuggestionStructure(array $items): array
