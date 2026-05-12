@@ -14,6 +14,7 @@ import CreateItemOverlay from '@/Components/Items/Register/CreateItemOverlay.vue
 
 let showCreateItem = ref(false);
 let prevUserId = ref(null);
+let observer = null;
 
 const authStore = useAuthStore();
 const followStore = useFollowStore();
@@ -25,17 +26,36 @@ const route = useRoute();
 const userId = computed(() => route.params.id);
 const authUser = computed(() => authStore.user?.id === user.value?.id);
 
+const currentPage = ref(1);
+const hasMorePages = ref(true);
+const isLoading = ref(false);
+const loadMoreTrigger = ref(null);
+
 // ユーザー情報の取得
-const fetchUser = async () => {
-    if (!userId.value) return;
+const fetchUserProfile = async () => {
+    const response = await axios.get(`/api/users/${userId.value}?page=0`);
+    user.value = response.data.user;
+    username.value = response.data.user.name;
+    outfit_count.value = response.data.outfit_count;
+};
+
+// ユーザーの投稿コーディネートの取得
+const fetchUserOutfits = async (page = currentPage.value) => {
+    if (isLoading.value || !hasMorePages.value) return;
+
+    isLoading.value = true;
+
     try {
-        const response = await axios.get(`/api/users/${userId.value}`);
-        user.value = response.data.user;
-        username.value = user.value.name;
-        outfits.value = response.data.outfits;
-        outfit_count.value = response.data.outfit_count;
+        const response = await axios.get(
+            `/api/users/${userId.value}?page=${page}`,
+        );
+        outfits.value.push(...response.data.outfits);
+        currentPage.value = response.data.meta.current_page + 1;
+        hasMorePages.value = response.data.meta.has_more_pages;
     } catch (error) {
-        console.error('ユーザー情報の取得に失敗しました:', error);
+        console.error('コーディネート一覧の取得に失敗しました:', error);
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -54,7 +74,11 @@ const fetchFollowData = async () => {
 
 const fetchUserData = async () => {
     if (!userId.value) return;
-    await Promise.all([fetchUser(), fetchFollowData()]);
+    await Promise.all([
+        fetchUserProfile(),
+        fetchUserOutfits(),
+        fetchFollowData(),
+    ]);
 };
 
 const toggleFollow = async () => {
@@ -79,27 +103,67 @@ const userBackRoute = computed(() => {
     return null;
 });
 
+const resetPagination = () => {
+    outfits.value = [];
+    currentPage.value = 1;
+    hasMorePages.value = true;
+    isLoading.value = false;
+};
+
+const refreshUserOutfits = async () => {
+    resetPagination();
+    await fetchUserOutfits();
+};
+
+const setupIntersectionObserver = () => {
+    observer = new IntersectionObserver(
+        async (entries) => {
+            const entry = entries[0];
+
+            if (
+                entry.isIntersecting &&
+                hasMorePages.value &&
+                !isLoading.value
+            ) {
+                await fetchUserOutfits();
+            }
+        },
+        {
+            threshold: 0.5,
+        },
+    );
+
+    if (loadMoreTrigger.value) {
+        observer.observe(loadMoreTrigger.value);
+    }
+};
+
 watch(
     () => route.params.id,
-    (newId, oldId) => {
+    async (newId) => {
         if (newId && newId !== prevUserId.value) {
             prevUserId.value = newId;
-            fetchUserData();
+
+            resetPagination();
+
+            await fetchUserData();
         }
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 onMounted(() => {
-    window.addEventListener('outfit-created', fetchUserData);
-    window.addEventListener('outfit-updated', fetchUserData);
-    window.addEventListener('outfit-deleted', fetchUserData);
+    setupIntersectionObserver();
+    window.addEventListener('outfit-created', refreshUserOutfits);
+    window.addEventListener('outfit-updated', refreshUserOutfits);
+    window.addEventListener('outfit-deleted', refreshUserOutfits);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('outfit-created', fetchUserData);
-    window.removeEventListener('outfit-updated', fetchUserData);
-    window.removeEventListener('outfit-deleted', fetchUserData);
+    observer?.disconnect();
+    window.removeEventListener('outfit-created', refreshUserOutfits);
+    window.removeEventListener('outfit-updated', refreshUserOutfits);
+    window.removeEventListener('outfit-deleted', refreshUserOutfits);
 });
 </script>
 
@@ -324,6 +388,7 @@ onUnmounted(() => {
                 />
             </router-view>
         </div>
+        <div ref="loadMoreTrigger" class="h-10"></div>
 
         <div class="pb-20"></div>
     </div>

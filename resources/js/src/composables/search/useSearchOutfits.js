@@ -2,7 +2,7 @@ import { watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useSearchFetch } from './useSearchFetch';
 import { useSearchQuerySync } from './useSearchQuerySync';
-import { useSearchCacheStore } from '../../../stores/searchCacheStore';
+import { usePageCacheStore } from '../../../stores/pageCacheStore';
 import { createQueryKey } from './createQueryKey';
 import { useScrollContainer } from '../dom/useScrollContainer';
 
@@ -10,7 +10,7 @@ export function useSearchOutfits() {
     const route = useRoute();
     const fetchState = useSearchFetch();
     const queryState = useSearchQuerySync();
-    const cacheStore = useSearchCacheStore();
+    const cacheStore = usePageCacheStore();
     const { scrollTo, getScrollTop, addScrollListener, removeScrollListener } =
         useScrollContainer();
 

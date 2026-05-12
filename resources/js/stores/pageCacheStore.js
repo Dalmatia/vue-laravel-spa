@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-export const useSearchCacheStore = defineStore('searchCache', {
+export const usePageCacheStore = defineStore('pageCache', {
     state: () => ({
         cache: {},
     }),

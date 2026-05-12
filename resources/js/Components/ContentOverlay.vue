@@ -25,7 +25,7 @@ watch(
     (newOutfits) => {
         isHover.value = Array(newOutfits.length).fill(false);
     },
-    { immediate: true }
+    { immediate: true },
 );
 </script>
 

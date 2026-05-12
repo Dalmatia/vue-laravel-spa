@@ -32,13 +32,18 @@ class UserController extends Controller
                 $query->where('like', 1);
             }, 'comments as comments_count'])
             ->where('user_id', $id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderByDesc('created_at')
+            ->paginate(12);
 
         return response()->json([
             'user' => $user,
-            'outfits' => OutfitResource::collection($outfits)->resolve(),
-            'outfit_count' => $outfits->count(),
+            'outfits' => OutfitResource::collection($outfits->items())->resolve(),
+            'meta' => [
+                'current_page' => $outfits->currentPage(),
+                'last_page' => $outfits->lastPage(),
+                'has_more_pages' => $outfits->hasMorePages(),
+            ],
+            'outfit_count' => $outfits->total(),
         ], 200);
     }
 
