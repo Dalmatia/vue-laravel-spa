@@ -84,18 +84,18 @@ watch(loadMoreTrigger, (el) => {
                     :key="outfit.id"
                     class="flex flex-col h-full border rounded bg-white shadow-sm"
                 >
-                    <p
-                        class="w-full overflow-hidden bg-[#f6f7f8] aspect-[1/1.3]"
+                    <div
+                        class="relative w-full overflow-hidden bg-[#f6f7f8] aspect-[1/1.3]"
                         @click="emit('openOutfitOverlay', outfit)"
                     >
                         <img
                             :src="outfit.file"
                             loading="lazy"
-                            class="w-full h-full object-cover cursor-pointer transition-opacity duration-500"
+                            class="absolute inset-0 w-full h-full object-cover cursor-pointer transition-opacity duration-500"
                             :class="{ 'opacity-0': !loadedImages[outfit.id] }"
                             @load="loadedImages[outfit.id] = true"
                         />
-                    </p>
+                    </div>
                     <div
                         class="mt-auto px-[10px] py-[9px] flex items-center gap-2"
                     >

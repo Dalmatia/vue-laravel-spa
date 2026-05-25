@@ -1,129 +1,66 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useIntersectionObserver } from '../common/useIntersectionObserver';
+import { useUserFetch } from './useUserFetch';
+import { usePageCacheStore } from '../../../stores/pageCacheStore';
+import { useScrollContainer } from '../dom/useScrollContainer';
+import { useInfinitePage } from '../common/useInfinitePage';
 
 export function useUserOutfits(userId) {
-    const outfits = ref([]);
-
-    const currentPage = ref(1);
-    const hasMorePages = ref(true);
-    const isLoading = ref(false);
-
     const loadMoreTrigger = ref(null);
 
-    let observer = null;
-    let prevUserId = null;
+    const fetchState = useUserFetch(userId);
 
-    // ===== コーディネート一覧取得 =====
-    const fetchUserOutfits = async (page = currentPage.value) => {
-        if (isLoading.value || !hasMorePages.value) return;
+    useInfinitePage({
+        key: () => `user:${userId.value}`,
+        watchSource: () => userId.value,
 
-        isLoading.value = true;
+        fetchInitial: () => fetchState.fetchInitial(),
+        fetchMore: () => fetchState.fetchUserOutfits(),
+        reset: fetchState.reset,
 
-        try {
-            const response = await axios.get(
-                `/api/users/${userId.value}?page=${page}`,
-            );
-
-            outfits.value.push(...response.data.outfits);
-
-            currentPage.value = response.data.meta.current_page + 1;
-
-            hasMorePages.value = response.data.meta.has_more_pages;
-        } catch (error) {
-            console.error('コーディネート一覧の取得に失敗しました:', error);
-        } finally {
-            isLoading.value = false;
-        }
-    };
-
-    // ===== ページネーションリセット =====
-    const resetPagination = () => {
-        outfits.value = [];
-
-        currentPage.value = 1;
-
-        hasMorePages.value = true;
-
-        isLoading.value = false;
-    };
-
-    // ===== リフレッシュ =====
-    const refreshUserOutfits = async () => {
-        resetPagination();
-
-        await fetchUserOutfits();
-    };
-
-    // ===== 無限スクロール =====
-    const setupIntersectionObserver = () => {
-        observer = new IntersectionObserver(
-            async (entries) => {
-                const entry = entries[0];
-
-                if (
-                    entry.isIntersecting &&
-                    hasMorePages.value &&
-                    !isLoading.value
-                ) {
-                    await fetchUserOutfits();
-                }
-            },
-            {
-                threshold: 0.5,
-            },
-        );
-
-        if (loadMoreTrigger.value) {
-            observer.observe(loadMoreTrigger.value);
-        }
-    };
-
-    // ===== route user切替 =====
-    watch(
-        () => userId.value,
-        async (newId) => {
-            if (newId && newId !== prevUserId) {
-                prevUserId = newId;
-
-                resetPagination();
-
-                await fetchUserOutfits();
-            }
-        },
-        {
-            immediate: true,
-        },
-    );
+        items: fetchState.outfits,
+        page: fetchState.currentPage,
+        hasMore: fetchState.hasMorePages,
+        isLoading: fetchState.isLoading,
+        loadMoreTrigger,
+    });
 
     onMounted(() => {
-        setupIntersectionObserver();
+        window.addEventListener(
+            'outfit-created',
+            fetchState.refreshUserOutfits,
+        );
 
-        window.addEventListener('outfit-created', refreshUserOutfits);
+        window.addEventListener(
+            'outfit-updated',
+            fetchState.refreshUserOutfits,
+        );
 
-        window.addEventListener('outfit-updated', refreshUserOutfits);
-
-        window.addEventListener('outfit-deleted', refreshUserOutfits);
+        window.addEventListener(
+            'outfit-deleted',
+            fetchState.refreshUserOutfits,
+        );
     });
 
     onUnmounted(() => {
-        observer?.disconnect();
+        window.removeEventListener(
+            'outfit-created',
+            fetchState.refreshUserOutfits,
+        );
 
-        window.removeEventListener('outfit-created', refreshUserOutfits);
+        window.removeEventListener(
+            'outfit-updated',
+            fetchState.refreshUserOutfits,
+        );
 
-        window.removeEventListener('outfit-updated', refreshUserOutfits);
-
-        window.removeEventListener('outfit-deleted', refreshUserOutfits);
+        window.removeEventListener(
+            'outfit-deleted',
+            fetchState.refreshUserOutfits,
+        );
     });
 
     return {
-        outfits,
-
-        currentPage,
-        hasMorePages,
-        isLoading,
-
+        ...fetchState,
         loadMoreTrigger,
-
-        fetchUserOutfits,
-        refreshUserOutfits,
     };
 }

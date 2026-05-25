@@ -60,11 +60,13 @@ watch(
                 </div>
             </div>
 
-            <img
-                class="aspect-square mx-auto z-0 object-cover cursor-pointer"
-                v-if="outfit.file"
-                :src="outfit.file"
-            />
+            <div class="aspect-square w-full relative overflow-hidden">
+                <img
+                    class="absolute inset-0 w-full h-full object-cover"
+                    v-if="outfit.file"
+                    :src="outfit.file"
+                />
+            </div>
         </div>
     </div>
     <ShowOutfitOverlay

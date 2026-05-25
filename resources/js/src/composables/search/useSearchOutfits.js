@@ -1,104 +1,58 @@
-import { watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useSearchFetch } from './useSearchFetch';
 import { useSearchQuerySync } from './useSearchQuerySync';
-import { usePageCacheStore } from '../../../stores/pageCacheStore';
 import { createQueryKey } from './createQueryKey';
-import { useScrollContainer } from '../dom/useScrollContainer';
+import { useInfinitePage } from '../common/useInfinitePage';
 
 export function useSearchOutfits() {
     const route = useRoute();
     const fetchState = useSearchFetch();
     const queryState = useSearchQuerySync();
-    const cacheStore = usePageCacheStore();
-    const { scrollTo, getScrollTop, addScrollListener, removeScrollListener } =
-        useScrollContainer();
-
-    const saveScroll = () => {
-        const key = createQueryKey(route.query);
-        if (!cacheStore.has(key)) return;
-
-        cacheStore.updateScroll(key, getScrollTop());
-    };
+    const loadMoreTrigger = ref(null);
 
     const getParams = () => ({
         filters: queryState.filters.value,
         sortOrder: queryState.sortOrder.value,
     });
 
-    const loadMore = async () => {
-        await fetchState.fetchMoreOutfits(getParams());
-        await nextTick();
+    const refreshSearchOutfits = async () => {
+        fetchState.reset();
 
-        const key = createQueryKey(route.query);
-
-        // キャッシュ更新
-        cacheStore.set(key, {
-            outfits: [...fetchState.outfits.value],
-            page: fetchState.page.value,
-            hasMore: fetchState.hasMore.value,
-            scrollY: getScrollTop(),
-        });
+        await fetchState.fetchInitialOutfits(getParams());
+        saveCache();
     };
 
-    const restoreFromCache = (cached) => {
-        fetchState.outfits.value = [...cached.outfits];
-        fetchState.page.value = cached.page;
-        fetchState.hasMore.value = cached.hasMore;
+    const { saveCache } = useInfinitePage({
+        key: () => createQueryKey(route.query),
+        watchSource: () => route.fullPath,
+        fetchInitial: () => fetchState.fetchInitialOutfits(getParams()),
+        fetchMore: () => fetchState.fetchMoreOutfits(getParams()),
+        reset: fetchState.reset,
 
-        fetchState.isLoading.value = false;
-        fetchState.isFetchingMore.value = false;
-    };
-
-    watch(
-        () => route.fullPath,
-        async () => {
-            const key = createQueryKey(route.query);
-
-            // キャッシュ復元
-            if (cacheStore.has(key)) {
-                const cached = cacheStore.get(key);
-                restoreFromCache(cached);
-
-                await nextTick();
-                requestAnimationFrame(() => {
-                    scrollTo(cached.scrollY ?? 0);
-                });
-
-                return;
-            }
-
-            // 新規fetch
-            fetchState.reset();
-
-            await fetchState.fetchInitialOutfits(getParams());
-
-            // キャッシュ保存
-            cacheStore.set(key, {
-                outfits: [...fetchState.outfits.value],
-                page: fetchState.page.value,
-                hasMore: fetchState.hasMore.value,
-                scrollY: 0,
-            });
-
-            // フィルタ変更時はトップへ
-            scrollTo(0);
-        },
-        { immediate: true },
-    );
-
-    onMounted(async () => {
-        addScrollListener(saveScroll);
+        items: fetchState.outfits,
+        page: fetchState.page,
+        hasMore: fetchState.hasMore,
+        isLoading: fetchState.isLoading,
+        isFetchingMore: fetchState.isFetchingMore,
+        loadMoreTrigger,
     });
 
-    onUnmounted(async () => {
-        await nextTick();
-        removeScrollListener(saveScroll);
+    onMounted(() => {
+        window.addEventListener('outfit-created', refreshSearchOutfits);
+        window.addEventListener('outfit-updated', refreshSearchOutfits);
+        window.addEventListener('outfit-deleted', refreshSearchOutfits);
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('outfit-created', refreshSearchOutfits);
+        window.removeEventListener('outfit-updated', refreshSearchOutfits);
+        window.removeEventListener('outfit-deleted', refreshSearchOutfits);
     });
 
     return {
         ...fetchState,
         ...queryState,
-        loadMore,
+        loadMoreTrigger,
     };
 }
