@@ -17,13 +17,6 @@ const skeletonCount = computed(() => (props.isMobile ? 9 : 12));
 const loadMoreTrigger = ref(null);
 const loadedImages = ref({});
 
-watch(
-    () => props.outfits,
-    () => {
-        loadedImages.value = {};
-    },
-);
-
 onMounted(() => {
     observer = new IntersectionObserver(
         (entries) => {
@@ -64,7 +57,9 @@ onUnmounted(() => {
 });
 
 watch(loadMoreTrigger, (el) => {
-    if (el) observer.observe(el);
+    if (el && observer) {
+        observer.observe(el);
+    }
 });
 </script>
 
@@ -82,7 +77,7 @@ watch(loadMoreTrigger, (el) => {
                 <div
                     v-for="outfit in outfits"
                     :key="outfit.id"
-                    class="flex flex-col h-full border rounded bg-white shadow-sm"
+                    class="content-card flex flex-col h-full border rounded bg-white shadow-sm"
                 >
                     <div
                         class="relative w-full overflow-hidden bg-[#f6f7f8] aspect-[1/1.3]"
@@ -91,6 +86,7 @@ watch(loadMoreTrigger, (el) => {
                         <img
                             :src="outfit.file"
                             loading="lazy"
+                            decoding="async"
                             class="absolute inset-0 w-full h-full object-cover cursor-pointer transition-opacity duration-500"
                             :class="{ 'opacity-0': !loadedImages[outfit.id] }"
                             @load="loadedImages[outfit.id] = true"
@@ -102,6 +98,7 @@ watch(loadMoreTrigger, (el) => {
                         <img
                             :src="outfit.user.file"
                             loading="lazy"
+                            decoding="async"
                             class="rounded-full w-[22px] h-[22px] md:w-[40px] md:h-[40px]"
                         />
                         <p
@@ -172,6 +169,17 @@ watch(loadMoreTrigger, (el) => {
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+.content-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 160px 240px;
+}
+
+@media (min-width: 768px) {
+    .content-card {
+        contain-intrinsic-size: 320px 480px;
     }
 }
 </style>

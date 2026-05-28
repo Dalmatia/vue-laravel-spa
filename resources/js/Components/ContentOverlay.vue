@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 
 import ShowOutfitOverlay from './Outfit/ShowOutfitOverlay.vue';
@@ -18,31 +18,23 @@ const props = defineProps({
         required: true,
     },
 });
-const isHover = ref([]);
 
-watch(
-    props.outfits,
-    (newOutfits) => {
-        isHover.value = Array(newOutfits.length).fill(false);
-    },
-    { immediate: true },
-);
+const hoveredId = ref(null);
 </script>
 
 <template>
     <div class="grid md:gap-4 gap-1 grid-cols-3 relative">
         <div
-            class="flex items-center justify-center cursor-pointer relative"
-            v-for="(outfit, index) in props.outfits"
+            class="content-card flex items-center justify-center cursor-pointer relative"
+            v-for="outfit in props.outfits"
             :key="outfit.id"
             @click="toggleOutfitOverlay(outfit)"
-            @mouseenter="isHover[index] = true"
-            @mouseleave="isHover[index] = false"
+            @mouseenter="hoveredId = outfit.id"
+            @mouseleave="hoveredId = null"
         >
             <div
-                v-if="isHover[index]"
-                :class="isHover[index] ? 'bg-black bg-opacity-40' : ''"
-                class="absolute w-full h-full z-50 flex items-center justify-around text-lg font-extrabold text-white"
+                v-if="hoveredId === outfit.id"
+                class="absolute w-full h-full z-50 flex items-center justify-around text-lg font-extrabold text-white bg-black bg-opacity-40"
             >
                 <div class="flex items-center justify-around w-[50%]">
                     <div class="flex items-center justify-center">
@@ -65,6 +57,8 @@ watch(
                     class="absolute inset-0 w-full h-full object-cover"
                     v-if="outfit.file"
                     :src="outfit.file"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
         </div>
@@ -76,3 +70,16 @@ watch(
         @close-overlay="toggleOutfitOverlay(null)"
     />
 </template>
+
+<style scoped>
+.content-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 140px 140px;
+}
+
+@media (min-width: 768px) {
+    .content-card {
+        contain-intrinsic-size: 240px 240px;
+    }
+}
+</style>

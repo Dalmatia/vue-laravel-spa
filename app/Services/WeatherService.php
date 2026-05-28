@@ -8,24 +8,31 @@ use Illuminate\Support\Facades\Log;
 
 class WeatherService
 {
-  public function getWeatherData($lat, $lon)
+  private const API_URL = 'https://api.open-meteo.com/v1/forecast';
+
+  public function getWeatherData(float $lat, float $lon): ?array
   {
     $cacheKey = $this->generateCacheKey($lat, $lon);
 
     return Cache::remember($cacheKey, now()->addMinutes(30), function () use ($lat, $lon) {
-      $url = $this->buildWeatherApiUrl($lat, $lon);
-      $response = Http::get($url);
+      $query = $this->buildWeatherQuery($lat, $lon);
+      try {
+        $response = Http::retry(3, 500)
+          ->timeout(10)
+          ->get(self::API_URL, $query)
+          ->throw();
 
-      if ($response->failed()) {
-        Log::error("Weather API エラー: ", [
-          'url' => $url,
-          'status' => $response->status(),
-          'body' => $response->body(),
+        return $response->json();
+      } catch (\Throwable $e) {
+
+        Log::error('Weather API connection error', [
+          'url' => self::API_URL,
+          'query' => $query,
+          'message' => $e->getMessage(),
         ]);
+
         return null;
       }
-
-      return $response->json();
     });
   }
 
@@ -34,11 +41,23 @@ class WeatherService
     return 'weather_' . hash('sha256', "{$lat}_{$lon}");
   }
 
-  protected function buildWeatherApiUrl(float $lat, float $lon): string
+  protected function buildWeatherQuery(float $lat, float $lon): array
   {
-    return "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}"
-      . "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_probability_mean,weathercode"
-      . "&hourly=weathercode,relative_humidity_2m,windspeed_10m"
-      . "&timezone=Asia/Tokyo";
+    return [
+      'latitude' => $lat,
+      'longitude' => $lon,
+      'daily' =>
+      'temperature_2m_max,temperature_2m_min,' .
+        'precipitation_probability_max,' .
+        'precipitation_probability_mean,' .
+        'weathercode',
+
+      'hourly' =>
+      'weathercode,' .
+        'relative_humidity_2m,' .
+        'windspeed_10m',
+
+      'timezone' => 'Asia/Tokyo',
+    ];
   }
 }

@@ -3,6 +3,7 @@ import { watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { usePageCacheStore } from '../../../stores/pageCacheStore';
 import { useScrollContainer } from '../dom/useScrollContainer';
 import { useIntersectionObserver } from './useIntersectionObserver';
+import { useDebounce } from '../utils/useDebounce';
 
 export function useInfinitePage({
     key,
@@ -20,17 +21,21 @@ export function useInfinitePage({
 
     loadMoreTrigger,
 }) {
+    let requestId = 0;
+
     const cacheStore = usePageCacheStore();
 
     const { scrollTo, getScrollTop, addScrollListener, removeScrollListener } =
         useScrollContainer();
 
+    const CACHE_TTL = 1000 * 60 * 30;
+
     // スクロール保存
-    const saveScroll = () => {
+    const saveScroll = useDebounce(() => {
         if (!cacheStore.has(key())) return;
 
         cacheStore.updateScroll(key(), getScrollTop());
-    };
+    }, 100);
 
     // キャッシュ保存
     const saveCache = () => {
@@ -39,6 +44,7 @@ export function useInfinitePage({
             page: page.value,
             hasMore: hasMore.value,
             scrollY: getScrollTop(),
+            savedAt: Date.now(),
         });
     };
 
@@ -61,11 +67,12 @@ export function useInfinitePage({
 
         onIntersect: async () => {
             if (isLoading.value) return;
-
             if (isFetchingMore?.value) return;
 
-            await fetchMore();
+            const currentRequestId = requestId;
 
+            await fetchMore();
+            if (currentRequestId !== requestId) return;
             saveCache();
         },
     });
@@ -74,7 +81,17 @@ export function useInfinitePage({
     watch(
         watchSource,
         async () => {
-            const cached = cacheStore.get(key());
+            const currentRequestId = ++requestId;
+            let cached = cacheStore.get(key());
+
+            if (cached) {
+                const isExpired = Date.now() - cached.savedAt > CACHE_TTL;
+
+                if (isExpired) {
+                    cacheStore.remove(key());
+                    cached = null;
+                }
+            }
 
             // cache restore
             if (cached) {
@@ -88,6 +105,7 @@ export function useInfinitePage({
                     });
                 });
 
+                if (currentRequestId !== requestId) return;
                 scrollTo(cached.scrollY ?? 0);
 
                 return;
@@ -95,11 +113,9 @@ export function useInfinitePage({
 
             // fresh fetch
             reset();
-
             await fetchInitial();
-
+            if (currentRequestId !== requestId) return;
             saveCache();
-
             scrollTo(0);
         },
         { immediate: true },
@@ -111,6 +127,7 @@ export function useInfinitePage({
 
     onUnmounted(() => {
         removeScrollListener(saveScroll);
+        saveScroll.cancel?.();
     });
 
     return { saveCache };
