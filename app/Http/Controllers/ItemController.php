@@ -7,6 +7,7 @@ use App\Services\ItemService;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
 {
@@ -19,7 +20,7 @@ class ItemController extends Controller
 
     public function index()
     {
-        $items = Item::where('user_id', auth()->user()->id)->orderBy('created_at', 'desc')->get();
+        $items = Item::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
         return response()->json(['items' => $items], 200);
     }
 
@@ -30,6 +31,16 @@ class ItemController extends Controller
         $item->save();
 
         return response()->json($item, 200);
+    }
+
+    public function categoryItems($mainCategory)
+    {
+        $items = Item::where('user_id', Auth::id())
+            ->where('main_category', $mainCategory)
+            ->orderBy('created_at', 'desc')
+            ->paginate(18);
+
+        return response()->json($items);
     }
 
     public function show($id)
@@ -48,7 +59,7 @@ class ItemController extends Controller
             return response()->json(['message' => 'アイテムが見つかりません'], 404);
         }
 
-        if (auth()->user()->id !== $item->user_id) {
+        if (Auth::id() !== $item->user_id) {
             return abort(403);
         }
 

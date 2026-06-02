@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCategoryData } from '../src/composables/useCategoryData';
+import { useItemEvents } from '../src/composables/item/useItemEvents';
 
 const router = useRouter();
 const route = useRoute();
@@ -47,16 +48,11 @@ const navigateToCategory = (mainCategoryName) => {
     router.push(path);
 };
 
+useItemEvents(fetchItems);
+
 onMounted(() => {
     initEnums();
     fetchItems();
-    window.addEventListener('item-registered', fetchItems);
-    window.addEventListener('item-updated', fetchItems);
-});
-
-onUnmounted(() => {
-    window.removeEventListener('item-registered', fetchItems);
-    window.removeEventListener('item-updated', fetchItems);
 });
 </script>
 
@@ -83,6 +79,8 @@ onUnmounted(() => {
                         <img
                             v-if="item.file"
                             :src="item.file"
+                            loading="lazy"
+                            decoding="async"
                             class="flex-shrink-0 aspect-square mx-auto z-0 object-cover cursor-pointer"
                         />
                     </div>

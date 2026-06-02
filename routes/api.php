@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // クローゼットアイテム関連
     Route::post('items', [ItemController::class, 'store']);
     Route::get('/items', [ItemController::class, 'index']);
+    Route::get('/items/category/{mainCategory}', [ItemController::class, 'categoryItems']);
     Route::get('/items/{id}', [ItemController::class, 'show']);
     Route::post('/items/{id}', [ItemController::class, 'update']);
     Route::delete('/items/{id}', [ItemController::class, 'destroy']);
