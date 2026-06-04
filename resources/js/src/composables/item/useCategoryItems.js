@@ -13,7 +13,7 @@ export function useCategoryItems(mainCategoryId) {
     const lastPage = ref(1);
 
     // 登録アイテムの表示
-    const fetchItems = async (page = 1) => {
+    const fetchCategoryItems = async (page = 1) => {
         try {
             isLoading.value = true;
 
@@ -66,7 +66,7 @@ export function useCategoryItems(mainCategoryId) {
 
         await axios.delete(`/api/items/${id}`);
 
-        fetchItems(targetPage);
+        fetchCategoryItems(targetPage);
     };
 
     watch(
@@ -74,7 +74,7 @@ export function useCategoryItems(mainCategoryId) {
         ([page, categoryId]) => {
             if (!categoryId) return;
 
-            fetchItems(Number(page ?? 1));
+            fetchCategoryItems(Number(page ?? 1));
         },
         { immediate: true },
     );
@@ -87,7 +87,7 @@ export function useCategoryItems(mainCategoryId) {
         currentPage,
         lastPage,
 
-        fetchItems,
+        fetchCategoryItems,
         deleteItem,
 
         goToNextPage,

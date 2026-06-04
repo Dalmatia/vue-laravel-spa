@@ -31,7 +31,7 @@ const {
     isLoading,
     currentPage,
     lastPage,
-    fetchItems,
+    fetchCategoryItems,
     deleteItem,
     goToNextPage,
     goToPrevPage,
@@ -48,7 +48,7 @@ const handleDeleteItem = async (object) => {
 };
 
 const refreshItems = () => {
-    fetchItems(currentPage.value);
+    fetchCategoryItems(currentPage.value);
 };
 
 useItemEvents(refreshItems);

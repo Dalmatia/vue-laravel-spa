@@ -1,58 +1,15 @@
 <script setup>
-import { ref, onMounted, onUnmounted, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onMounted } from 'vue';
+import { useItems } from '../src/composables/item/useItems';
 import { useCategoryData } from '../src/composables/useCategoryData';
-import { useItemEvents } from '../src/composables/item/useItemEvents';
 
-const router = useRouter();
-const route = useRoute();
-const userId = route.params.id;
-const items = ref([]);
+const { categorizedItems, navigateToCategory } = useItems();
 
 // カテゴリごとにアイテムを分類するためのデータ構造
-const categorizedItems = reactive({});
 const { getMainCategoryName, initEnums } = useCategoryData();
-
-// 登録アイテムの表示
-const fetchItems = async () => {
-    try {
-        const response = await axios.get('/api/items');
-        items.value = response.data.items;
-
-        // カテゴリごとにアイテムを分類
-        categorizeItems();
-    } catch (error) {
-        console.error(error);
-    }
-};
-
-// カテゴリごとにアイテムを分類する関数
-const categorizeItems = () => {
-    // カテゴリごとのデータを一度クリア
-    for (const key in categorizedItems) {
-        delete categorizedItems[key];
-    }
-
-    items.value.forEach((item) => {
-        // 新しいアイテムだけを分類
-        if (!categorizedItems[item.main_category]) {
-            categorizedItems[item.main_category] = [];
-        }
-        categorizedItems[item.main_category].push(item);
-    });
-};
-
-// フォルダークリック時にページ遷移
-const navigateToCategory = (mainCategoryName) => {
-    const path = `/user/${userId}/items/${mainCategoryName}`;
-    router.push(path);
-};
-
-useItemEvents(fetchItems);
 
 onMounted(() => {
     initEnums();
-    fetchItems();
 });
 </script>
 

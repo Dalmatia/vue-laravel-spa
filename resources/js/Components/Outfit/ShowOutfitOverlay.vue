@@ -27,7 +27,8 @@ const {
     fetchOutfit,
 } = useOutfitDetail(props.outfit);
 
-const { enumStore, outfitItems, fetchItems } = useOutfitItemDisplay();
+const { enumStore, outfitItems, buildOutfitItemsDisplay } =
+    useOutfitItemDisplay();
 
 // 選択したシーズン情報の取得
 const season = computed(() => enumStore.getSeason(outfit.value.season));
@@ -74,7 +75,7 @@ const openCommentOverlay = () => {
 
 const refreshOutfitData = async () => {
     await fetchOutfit();
-    await fetchItems(outfit.value);
+    await buildOutfitItemsDisplay(outfit.value);
 };
 
 onMounted(async () => {
@@ -83,7 +84,7 @@ onMounted(async () => {
         followStatus(),
         fetchComments(outfit.value.id),
     ]);
-    await fetchItems(outfit.value);
+    await buildOutfitItemsDisplay(outfit.value);
 
     window.addEventListener('outfit-updated', refreshOutfitData);
     window.addEventListener('comment-posted', fetchComments);

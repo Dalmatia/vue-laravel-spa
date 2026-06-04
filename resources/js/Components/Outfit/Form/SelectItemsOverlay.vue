@@ -36,12 +36,13 @@ onMounted(() => fetchItems());
             <Close :size="27" fillColor="#FFFFFF" />
         </button>
         <div
-            class="max-w-6xl h-[calc(100%-100px)] mx-auto mt-10 bg-white rounded-xl p-5"
+            class="max-w-6xl h-[calc(100vh-100px)] mx-auto mt-10 bg-white rounded-xl p-5"
         >
-            <div
-                class="w-full h-full overflow-auto rounded-xl flex justify-center items-center"
-            >
-                <div v-if="isLoading" class="flex flex-col items-center">
+            <div class="w-full h-full overflow-auto rounded-xl">
+                <div
+                    v-if="isLoading"
+                    class="flex flex-col items-center justify-center h-full"
+                >
                     <svg
                         class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"
                         fill="none"
@@ -52,7 +53,7 @@ onMounted(() => fetchItems());
 
                 <div
                     v-else-if="hasError"
-                    class="text-center text-lg text-red-500 font-bold"
+                    class="flex items-center justify-center h-full text-lg text-red-500 font-bold"
                 >
                     アイテムの取得に失敗しました。再度お試しください。
                 </div>
@@ -60,7 +61,7 @@ onMounted(() => fetchItems());
                 <!-- アイテムがない場合のメッセージ -->
                 <div
                     v-else-if="filteredItems.length === 0"
-                    class="text-center text-lg font-bold"
+                    class="flex items-center justify-center h-full text-lg font-bold"
                 >
                     アイテムが登録されていません！
                 </div>

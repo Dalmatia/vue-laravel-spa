@@ -8,7 +8,7 @@ export function useOutfitItemDisplay() {
     const enumStore = useEnumStore();
 
     // コーディネートに使用したアイテム情報取得
-    const fetchItems = async (outfit) => {
+    const buildOutfitItemsDisplay = async (outfit) => {
         try {
             await enumStore.fetchEnums();
             await categoryData.fetchMainCategories();
@@ -40,6 +40,6 @@ export function useOutfitItemDisplay() {
     return {
         enumStore,
         outfitItems,
-        fetchItems,
+        buildOutfitItemsDisplay,
     };
 }

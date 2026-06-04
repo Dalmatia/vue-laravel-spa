@@ -12,7 +12,7 @@ let openEdit = ref(false);
 let successMessage = ref(false);
 
 // アイテム情報取得
-const fetchItems = async () => {
+const fetchItem = async () => {
     try {
         const response = await axios.get(`/api/items/${id.value}`);
         item.value = response.data;
@@ -38,7 +38,7 @@ const closeSuccessMessage = () => {
 };
 
 onMounted(() => {
-    fetchItems();
+    fetchItem();
     window.addEventListener('item-updated', closeOverlay);
 });
 
