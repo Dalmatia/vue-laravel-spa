@@ -20,7 +20,7 @@ class ItemController extends Controller
 
     public function index()
     {
-        $items = Item::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+        $items = Item::ownedBy(Auth::id())->latest()->get();
         return response()->json(['items' => $items], 200);
     }
 
@@ -35,9 +35,9 @@ class ItemController extends Controller
 
     public function categoryItems($mainCategory)
     {
-        $items = Item::where('user_id', Auth::id())
-            ->where('main_category', $mainCategory)
-            ->orderBy('created_at', 'desc')
+        $items = Item::ownedBy(Auth::id())
+            ->mainCategory($mainCategory)
+            ->latest()
             ->paginate(18);
 
         return response()->json($items);

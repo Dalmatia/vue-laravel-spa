@@ -30,4 +30,14 @@ class Item extends Model
     {
         return $this->belongsToMany(Outfit::class, 'outfits_items');
     }
+
+    public function scopeOwnedBy($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeMainCategory($query, int $mainCategory)
+    {
+        return $query->where('main_category', $mainCategory);
+    }
 }
