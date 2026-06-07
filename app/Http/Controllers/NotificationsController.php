@@ -14,7 +14,11 @@ class NotificationsController extends Controller
     public function index(User $user)
     {
         // ユーザーの通知を取得
-        $notifications = $user->notifications->map(function ($notification) {
+        $notifications = $user->notifications()
+            ->latest()
+            ->paginate(20);
+
+        $notifications->getCollection()->transform(function ($notification) {
             return [
                 'id' => $notification->id,
                 'type' => $notification->type,
@@ -29,7 +33,12 @@ class NotificationsController extends Controller
             ];
         });
 
-        return response()->json(['notifications' => $notifications]);
+        return response()->json([
+            'data' => $notifications->items(),
+            'has_more' => $notifications->hasMorePages(),
+            'current_page' => $notifications->currentPage(),
+            'last_page' => $notifications->lastPage(),
+        ]);
     }
 
     public function store(Request $request)

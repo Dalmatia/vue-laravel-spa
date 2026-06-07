@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useLayoutState } from '../src/composables/useLayoutState';
 import { useNotification } from '../src/composables/useNotification';
 import { useNotificationActions } from '../src/composables/useNotificationActions';
+import { useIntersectionObserver } from '../src/composables/common/useIntersectionObserver';
 
 import TopNavHome from './TopNavHome.vue';
 import SideNav from './SideNav.vue';
@@ -12,12 +13,20 @@ import BottomNav from './BottomNav.vue';
 import OutfitFormOverlay from '../Components/Outfit/Form/OutfitFormOverlay.vue';
 import ShowOutfitOverlay from '../Components/Outfit/ShowOutfitOverlay.vue';
 import NotificationPanel from '../Components/NotificationPanel.vue';
+import NotificationOptions from '../Pages/Notification/NotificationOptions.vue';
 
 let showCreatePost = ref(false);
 const route = useRoute();
-const { notifications, fetchNotifications, markAsRead, stopListening } =
-    useNotification();
 const {
+    notifications,
+    hasMore,
+    fetchNotifications,
+    markAsRead,
+    stopListening,
+} = useNotification();
+
+const {
+    openModal,
     handleNotificationAction,
     showDeleteModal,
     confirmDelete,
@@ -36,6 +45,19 @@ const {
     logout,
 } = useLayoutState();
 const topsNavRef = ref();
+const notificationPanel = ref(null);
+
+useIntersectionObserver({
+    target: computed(
+        () => notificationPanel.value?.notificationList?.loadMoreTrigger,
+    ),
+
+    root: computed(() => notificationPanel.value?.scrollContainer),
+
+    onIntersect: fetchNotifications,
+
+    enabled: hasMore,
+});
 
 onMounted(() => {
     if (topsNavRef.value?.account) {
@@ -107,6 +129,7 @@ onUnmounted(() => {
         leave-to-class="-translate-x-full"
     >
         <NotificationPanel
+            ref="notificationPanel"
             v-if="!isMobile && noticeOpen"
             :notifications="notifications"
             :onRead="handleNotificationAction"
@@ -116,4 +139,10 @@ onUnmounted(() => {
             class="fixed top-0 left-[80px] xl:left-64 z-20 h-full"
         />
     </Transition>
+
+    <NotificationOptions
+        v-if="openModal"
+        @delete-selected="confirmDelete()"
+        @close="openModal = false"
+    />
 </template>

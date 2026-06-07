@@ -1,5 +1,5 @@
 <script setup>
-import { computed, defineProps, defineEmits } from 'vue';
+import { computed, defineProps, defineEmits, ref } from 'vue';
 import Clock from 'vue-material-design-icons/Clock.vue';
 
 const props = defineProps({
@@ -12,6 +12,12 @@ const props = defineProps({
 const emit = defineEmits(['read', 'delete']);
 
 const hasNotifications = computed(() => props.notifications.length > 0);
+
+const loadMoreTrigger = ref(null);
+
+defineExpose({
+    loadMoreTrigger,
+});
 </script>
 
 <template>
@@ -74,6 +80,7 @@ const hasNotifications = computed(() => props.notifications.length > 0);
                     />
                 </div>
             </div>
+            <div ref="loadMoreTrigger" class="h-4"></div>
         </div>
 
         <!-- 通知が無い場合 -->

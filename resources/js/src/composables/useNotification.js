@@ -15,7 +15,7 @@ export function useNotification() {
     const fetchUnreadCount = async () => {
         try {
             const response = await axios.get(
-                `/api/notifications/${authStore.user.id}/unread_count`
+                `/api/notifications/${authStore.user.id}/unread_count`,
             );
             unreadCount.value = response.data.unread_count;
         } catch (error) {
@@ -30,9 +30,9 @@ export function useNotification() {
         isLoading.value = true;
         try {
             const response = await axios.get(
-                `/api/notifications/${authStore.user.id}?page=${currentPage.value}`
+                `/api/notifications/${authStore.user.id}?page=${currentPage.value}`,
             );
-            const newNotifications = response.data.notifications || [];
+            const newNotifications = response.data.data || [];
 
             // 投稿画像をセット
             await Promise.all(
@@ -40,17 +40,17 @@ export function useNotification() {
                     if (n.outfit_id) {
                         try {
                             const res = await axios.get(
-                                `/api/outfit/${n.outfit_id}`
+                                `/api/outfit/${n.outfit_id}`,
                             );
                             n.outfit_image = res.data.outfit.file;
                         } catch (e) {
                             console.error('投稿情報取得失敗:', e);
                         }
                     }
-                })
+                }),
             );
             notifications.value.push(...newNotifications);
-            hasMore.value = response.data.hasMore ?? false;
+            hasMore.value = response.data.has_more;
             currentPage.value++;
         } catch (e) {
             console.error('通知取得エラー:', e);
@@ -76,7 +76,7 @@ export function useNotification() {
 
         const beforeCount = notifications.value.length;
         notifications.value = notifications.value.filter(
-            (n) => n.outfit_id !== deletedId
+            (n) => n.outfit_id !== deletedId,
         );
         const afterCount = notifications.value.length;
 
@@ -98,7 +98,7 @@ export function useNotification() {
                 if (notification.outfit_id) {
                     try {
                         const res = await axios.get(
-                            `/api/outfit/${notification.outfit_id}`
+                            `/api/outfit/${notification.outfit_id}`,
                         );
                         notification.outfit_image = res.data.outfit.file;
                     } catch (e) {
@@ -111,7 +111,7 @@ export function useNotification() {
                 // 未読数
                 unreadCount.value =
                     notification.unread_count ?? unreadCount.value + 1;
-            }
+            },
         );
         return channel;
     };
@@ -141,7 +141,7 @@ export function useNotification() {
             if (authStore.user?.id) {
                 fetchUnreadCount();
             }
-        }
+        },
     );
 
     return {

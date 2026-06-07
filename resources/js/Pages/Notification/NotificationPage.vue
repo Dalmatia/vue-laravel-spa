@@ -1,10 +1,11 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 
 import { useNotification } from '../../src/composables/useNotification';
 import { useNotificationActions } from '../../src/composables/useNotificationActions';
+import { useIntersectionObserver } from '../../src/composables/common/useIntersectionObserver';
 
 import NotificationList from './NotificationList.vue';
 import NotificationOptions from './NotificationOptions.vue';
@@ -12,8 +13,14 @@ import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 
 const router = useRouter();
 const isMobile = ref(window.innerWidth <= 640);
-const { notifications, fetchNotifications, markAsRead, stopListening } =
-    useNotification();
+const {
+    notifications,
+    hasMore,
+    fetchNotifications,
+    markAsRead,
+    stopListening,
+} = useNotification();
+
 const {
     errorMessage,
     selectedNotification,
@@ -27,6 +34,8 @@ const {
     deleteOutfit,
 } = useNotificationActions(notifications);
 
+const notificationList = ref(null);
+
 const handleResize = debounce(() => {
     const mobile = window.innerWidth <= 640;
     if (
@@ -38,6 +47,12 @@ const handleResize = debounce(() => {
     }
     isMobile.value = mobile;
 }, 200);
+
+useIntersectionObserver({
+    target: computed(() => notificationList.value?.loadMoreTrigger),
+    onIntersect: fetchNotifications,
+    enabled: hasMore,
+});
 
 onMounted(() => {
     window.addEventListener('resize', handleResize);
@@ -64,6 +79,7 @@ onUnmounted(() => {
         <div class="fixed inset-0 z-20 bg-white overflow-y-auto">
             <NotificationList
                 class="pt-[61px]"
+                ref="notificationList"
                 :notifications="notifications"
                 @read="handleNotificationAction"
                 @delete="showDeleteModal($event)"
