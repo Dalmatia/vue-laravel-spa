@@ -5,6 +5,9 @@ import Close from 'vue-material-design-icons/Close.vue';
 
 const props = defineProps({
     notifications: Array,
+    isLoading: Boolean,
+    hasLoaded: Boolean,
+    hasMore: Boolean,
     onRead: Function,
     onDelete: Function,
     onClose: Function,
@@ -40,6 +43,9 @@ defineExpose({
         <NotificationList
             ref="notificationList"
             :notifications="notifications"
+            :isLoading="isLoading"
+            :hasLoaded="hasLoaded"
+            :hasMore="hasMore"
             @read="onRead"
             @delete="onDelete"
         />

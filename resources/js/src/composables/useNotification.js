@@ -1,18 +1,21 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+
 export const unreadCount = ref(0);
+const notifications = ref([]);
+const isLoading = ref(false);
+const hasLoaded = ref(false);
+const currentPage = ref(1);
+const hasMore = ref(true);
+let channel = null;
+const initialized = ref(false);
 
 export function useNotification() {
     const authStore = useAuthStore();
     const route = useRoute();
-    const notifications = ref([]);
-    const isLoading = ref(false);
-    const hasLoaded = ref(false);
-    const currentPage = ref(1);
-    const hasMore = ref(true);
-    let channel = null;
 
+    // 未読数を取得
     const fetchUnreadCount = async () => {
         try {
             const response = await axios.get(
@@ -122,29 +125,24 @@ export function useNotification() {
         if (!channel) return;
         Echo.leave(`user-notifications.${authStore.user.id}`);
         channel = null;
+        initialized.value = false;
     };
 
     onMounted(async () => {
         await authStore.fetchUserData();
-        if (authStore.user?.id) {
+
+        if (!initialized.value && authStore.user?.id) {
             await fetchUnreadCount();
             listenNotifications();
+            initialized.value = true;
         }
+
         window.addEventListener('outfit-deleted', handleOutfitDeleted);
     });
 
     onUnmounted(() => {
         window.removeEventListener('outfit-deleted', handleOutfitDeleted);
     });
-
-    watch(
-        () => route.fullPath,
-        () => {
-            if (authStore.user?.id) {
-                fetchUnreadCount();
-            }
-        },
-    );
 
     return {
         unreadCount,

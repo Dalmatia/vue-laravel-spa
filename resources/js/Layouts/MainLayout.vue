@@ -20,6 +20,7 @@ const route = useRoute();
 const {
     notifications,
     isLoading,
+    hasLoaded,
     hasMore,
     fetchNotifications,
     markAsRead,
@@ -34,7 +35,7 @@ const {
     overlayState,
     toggleOutfitOverlay,
     deleteOutfit,
-} = useNotificationActions(notifications);
+} = useNotificationActions(notifications, markAsRead);
 
 const {
     isDropdownOpen,
@@ -134,6 +135,7 @@ onUnmounted(() => {
             v-if="!isMobile && noticeOpen"
             :notifications="notifications"
             :isLoading="isLoading"
+            :hasLoaded="hasLoaded"
             :hasMore="hasMore"
             :onRead="handleNotificationAction"
             :onDelete="showDeleteModal"

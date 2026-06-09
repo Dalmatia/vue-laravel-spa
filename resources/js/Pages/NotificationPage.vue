@@ -34,7 +34,7 @@ const {
     overlayState,
     toggleOutfitOverlay,
     deleteOutfit,
-} = useNotificationActions(notifications);
+} = useNotificationActions(notifications, markAsRead);
 
 const notificationList = ref(null);
 

@@ -1,13 +1,11 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useLayoutState } from './useLayoutState';
-import { useNotification } from './useNotification';
 import { useOutfitOverlay } from './useOutfitOverlay';
 
-export function useNotificationActions(notifications) {
+export function useNotificationActions(notifications, markAsRead) {
     const router = useRouter();
     const { noticeOpen } = useLayoutState();
-    const { markAsRead } = useNotification();
     const {
         openOutfitById,
         overlayState,
@@ -50,7 +48,7 @@ export function useNotificationActions(notifications) {
         try {
             await axios.delete(`/api/notifications/${id}`);
             notifications.value = notifications.value.filter(
-                (n) => n.id !== id
+                (n) => n.id !== id,
             );
         } catch {
             showError('通知削除に失敗しました');
