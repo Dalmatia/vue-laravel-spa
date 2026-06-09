@@ -8,6 +8,7 @@ export function useNotification() {
     const route = useRoute();
     const notifications = ref([]);
     const isLoading = ref(false);
+    const hasLoaded = ref(false);
     const currentPage = ref(1);
     const hasMore = ref(true);
     let channel = null;
@@ -56,6 +57,7 @@ export function useNotification() {
             console.error('通知取得エラー:', e);
         } finally {
             isLoading.value = false;
+            hasLoaded.value = true;
         }
     };
 
@@ -148,6 +150,7 @@ export function useNotification() {
         unreadCount,
         notifications,
         isLoading,
+        hasLoaded,
         currentPage,
         hasMore,
         channel,

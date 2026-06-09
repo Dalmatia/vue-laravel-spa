@@ -3,18 +3,20 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { debounce } from 'lodash';
 
-import { useNotification } from '../../src/composables/useNotification';
-import { useNotificationActions } from '../../src/composables/useNotificationActions';
-import { useIntersectionObserver } from '../../src/composables/common/useIntersectionObserver';
+import { useNotification } from '../src/composables/useNotification';
+import { useNotificationActions } from '../src/composables/useNotificationActions';
+import { useIntersectionObserver } from '../src/composables/common/useIntersectionObserver';
 
-import NotificationList from './NotificationList.vue';
-import NotificationOptions from './NotificationOptions.vue';
+import NotificationList from '../Components/Notification/NotificationList.vue';
+import NotificationOptions from '../Components/Notification/NotificationOptions.vue';
 import ShowOutfitOverlay from '@/Components/Outfit/ShowOutfitOverlay.vue';
 
 const router = useRouter();
 const isMobile = ref(window.innerWidth <= 640);
 const {
     notifications,
+    isLoading,
+    hasLoaded,
     hasMore,
     fetchNotifications,
     markAsRead,
@@ -81,6 +83,9 @@ onUnmounted(() => {
                 class="pt-[61px]"
                 ref="notificationList"
                 :notifications="notifications"
+                :isLoading="isLoading"
+                :hasLoaded="hasLoaded"
+                :hasMore="hasMore"
                 @read="handleNotificationAction"
                 @delete="showDeleteModal($event)"
             />

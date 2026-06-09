@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import NotificationList from '@/pages/Notification/NotificationList.vue';
+import NotificationList from '@/Components/Notification/NotificationList.vue';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const props = defineProps({

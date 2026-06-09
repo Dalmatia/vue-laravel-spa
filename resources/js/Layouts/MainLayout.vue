@@ -12,13 +12,14 @@ import SuggestionsSection from './SuggestionsSection.vue';
 import BottomNav from './BottomNav.vue';
 import OutfitFormOverlay from '../Components/Outfit/Form/OutfitFormOverlay.vue';
 import ShowOutfitOverlay from '../Components/Outfit/ShowOutfitOverlay.vue';
-import NotificationPanel from '../Components/NotificationPanel.vue';
-import NotificationOptions from '../Pages/Notification/NotificationOptions.vue';
+import NotificationPanel from '../Components/Notification/NotificationPanel.vue';
+import NotificationOptions from '../Components/Notification/NotificationOptions.vue';
 
 let showCreatePost = ref(false);
 const route = useRoute();
 const {
     notifications,
+    isLoading,
     hasMore,
     fetchNotifications,
     markAsRead,
@@ -132,6 +133,8 @@ onUnmounted(() => {
             ref="notificationPanel"
             v-if="!isMobile && noticeOpen"
             :notifications="notifications"
+            :isLoading="isLoading"
+            :hasMore="hasMore"
             :onRead="handleNotificationAction"
             :onDelete="showDeleteModal"
             :onClose="() => (noticeOpen = false)"
