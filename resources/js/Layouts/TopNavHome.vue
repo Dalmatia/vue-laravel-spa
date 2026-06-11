@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { unreadCount } from '../src/composables/useNotification';
 import BellOutline from 'vue-material-design-icons/BellOutline.vue';
@@ -19,6 +19,12 @@ defineExpose({ account });
 
 const toggleMenu = (type, event) => emit('toggle-menu', type, event);
 const logout = () => emit('logout');
+
+onMounted(() => {
+    console.log('TopNavHome mounted');
+    console.log('authStore.user', authStore.user);
+    console.log('user id', authStore.user?.id);
+});
 </script>
 
 <template>

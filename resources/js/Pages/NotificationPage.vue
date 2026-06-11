@@ -18,13 +18,13 @@ const {
     isLoading,
     hasLoaded,
     hasMore,
+    errorMessage,
     fetchNotifications,
     markAsRead,
     stopListening,
 } = useNotification();
 
 const {
-    errorMessage,
     selectedNotification,
     openModal,
     handleNotificationAction,
@@ -72,7 +72,7 @@ onUnmounted(() => {
         <!-- エラーメッセージ -->
         <div
             v-if="errorMessage"
-            class="fixed top-0 left-0 w-full z-50 bg-red-500 text-white p-2 text-center text-sm sm:text-base break-words"
+            class="fixed top-[61px] left-0 w-full z-50 bg-red-500 text-white p-2 text-center text-sm sm:text-base break-words"
         >
             {{ errorMessage }}
         </div>

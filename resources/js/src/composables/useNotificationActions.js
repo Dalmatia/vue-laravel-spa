@@ -2,18 +2,15 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useLayoutState } from './useLayoutState';
 import { useOutfitOverlay } from './useOutfitOverlay';
+import { useErrorMessage } from './useErrorMessage';
 
 export function useNotificationActions(notifications, markAsRead) {
     const router = useRouter();
     const { noticeOpen } = useLayoutState();
-    const {
-        openOutfitById,
-        overlayState,
-        toggleOutfitOverlay,
-        deleteOutfit,
-        errorMessage,
-        showError,
-    } = useOutfitOverlay();
+    const { openOutfitById, overlayState, toggleOutfitOverlay, deleteOutfit } =
+        useOutfitOverlay();
+
+    const { showError } = useErrorMessage();
     const selectedNotification = ref(null);
     const openModal = ref(false);
 
@@ -72,7 +69,6 @@ export function useNotificationActions(notifications, markAsRead) {
     };
 
     return {
-        errorMessage,
         selectedNotification,
         openModal,
         handleNotificationAction,
@@ -83,6 +79,5 @@ export function useNotificationActions(notifications, markAsRead) {
         overlayState,
         toggleOutfitOverlay,
         deleteOutfit,
-        showError,
     };
 }

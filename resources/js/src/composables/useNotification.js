@@ -1,6 +1,6 @@
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useErrorMessage } from './useErrorMessage';
 
 export const unreadCount = ref(0);
 const notifications = ref([]);
@@ -13,7 +13,7 @@ const initialized = ref(false);
 
 export function useNotification() {
     const authStore = useAuthStore();
-    const route = useRoute();
+    const { errorMessage, showError } = useErrorMessage();
 
     // 未読数を取得
     const fetchUnreadCount = async () => {
@@ -23,7 +23,8 @@ export function useNotification() {
             );
             unreadCount.value = response.data.unread_count;
         } catch (error) {
-            console.error('通知の取得に失敗しました:', error);
+            console.error('未読通知の取得に失敗しました:', error);
+            showError('未読通知の取得に失敗しました');
             unreadCount.value = 0;
         }
     };
@@ -58,6 +59,7 @@ export function useNotification() {
             currentPage.value++;
         } catch (e) {
             console.error('通知取得エラー:', e);
+            showError('通知の取得に失敗しました');
         } finally {
             isLoading.value = false;
             hasLoaded.value = true;
@@ -72,6 +74,7 @@ export function useNotification() {
             unreadCount.value = Math.max(unreadCount.value - 1, 0);
         } catch (e) {
             console.error('通知既読エラー:', e);
+            showError('通知の既読処理に失敗しました');
         }
     };
 
@@ -128,15 +131,29 @@ export function useNotification() {
         initialized.value = false;
     };
 
-    onMounted(async () => {
-        await authStore.fetchUserData();
+    const resetNotificationState = () => {
+        unreadCount.value = 0;
+        notifications.value = [];
+        currentPage.value = 1;
+        hasMore.value = true;
+        hasLoaded.value = false;
+        initialized.value = false;
+    };
 
-        if (!initialized.value && authStore.user?.id) {
+    watch(
+        () => authStore.user?.id,
+        async (userId) => {
+            if (!userId || initialized.value) return;
+
             await fetchUnreadCount();
             listenNotifications();
-            initialized.value = true;
-        }
 
+            initialized.value = true;
+        },
+        { immediate: true },
+    );
+
+    onMounted(async () => {
         window.addEventListener('outfit-deleted', handleOutfitDeleted);
     });
 
@@ -151,10 +168,12 @@ export function useNotification() {
         hasLoaded,
         currentPage,
         hasMore,
+        errorMessage,
         channel,
         fetchNotifications,
         markAsRead,
         listenNotifications,
         stopListening,
+        resetNotificationState,
     };
 }
