@@ -22,19 +22,25 @@ export const useAuthStore = defineStore('auth', {
                 const response = await axios.get('/api/user');
                 this.authUser = response.data;
             } catch (error) {
+                if (error.response?.status === 401) {
+                    this.clearAuthData();
+                    return;
+                }
                 console.error('ユーザー情報の取得に失敗:', error);
-                this.authUser = null;
                 throw error;
             }
         },
         async logout() {
             try {
                 await axios.post('/api/logout');
-                this.authUser = null;
+                this.clearAuthData();
             } catch (error) {
                 console.error('ログアウトに失敗:', error);
                 throw error;
             }
+        },
+        clearAuthData() {
+            this.authUser = null;
         },
     },
 });

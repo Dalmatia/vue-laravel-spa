@@ -28,17 +28,6 @@ const seasons = ref([]);
 
 defineEmits(['closeOverlay', 'deleteSelected']);
 
-// ユーザー情報の取得
-const fetchUserData = async () => {
-    try {
-        await authStore.fetchUserData();
-    } catch (error) {
-        if (error.response && error.response.status === 401) {
-            handleUnauthorized();
-        }
-    }
-};
-
 // 登録・更新時のアイテム情報取得
 const fetchItemData = async () => {
     try {
@@ -76,7 +65,7 @@ const fetchSelectData = async () => {
 };
 
 onMounted(async () => {
-    await Promise.all([fetchUserData(), fetchItemData(), fetchSelectData()]);
+    await Promise.all([fetchItemData(), fetchSelectData()]);
     // EditItemOverlay.vueのitemUpdateメソッドで定義したイベントの購読
     window.addEventListener('item-updated', fetchItemData);
 });

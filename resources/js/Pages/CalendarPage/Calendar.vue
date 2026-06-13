@@ -43,7 +43,7 @@ const fetchOutfits = async () => {
     if (loading.value) return;
     loading.value = true;
     try {
-        await authStore.fetchUserData();
+        if (!authStore.user) return;
         const response = await axios.get(`/api/users/${authStore.user.id}`);
         outfits.value = response.data.outfits;
         outfitImgMap.value = new Map(

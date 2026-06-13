@@ -14,7 +14,9 @@ app.use(createPinia());
 
 const authStore = useAuthStore();
 
-authStore.fetchUserData().finally(() => {
+(async () => {
+    await authStore.fetchUserData();
+
     app.use(router).mount('#app');
     useThemeStore().initTheme();
-});
+})();

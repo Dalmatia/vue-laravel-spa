@@ -58,6 +58,7 @@ const login = async () => {
                         <input
                             type="text"
                             id="email"
+                            autocomplete="email"
                             class="w-full bg-gray-50 text-gray-800 border focus:ring ring-indigo-300 rounded outline-none transition duration-100 px-3 py-2"
                             v-model="form.email"
                             required

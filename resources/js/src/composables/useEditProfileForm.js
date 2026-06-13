@@ -11,23 +11,6 @@ export function useEditProfileForm() {
     const genders = ref([]);
     const { fileDisplay, isValidFile, getUploadedImage } = useFileUploader();
 
-    // ユーザー情報取得
-    const fetchUserData = async () => {
-        try {
-            await authStore.fetchUserData();
-        } catch (error) {
-            if (error.response?.status === 401) {
-                handleUnauthorized();
-            }
-        }
-    };
-
-    // 認証切れ時
-    const handleUnauthorized = () => {
-        authStore.logout();
-        router.push({ name: 'Login' });
-    };
-
     // 性別一覧の取得
     const fetchGenders = async () => {
         try {
@@ -61,12 +44,11 @@ export function useEditProfileForm() {
             const response = await axios.post(
                 `/api/user/${authStore.user.id}/update`,
                 formData,
-                { headers: { 'Content-Type': 'multipart/form-data' } }
+                { headers: { 'Content-Type': 'multipart/form-data' } },
             );
 
             if (response.status === 200) {
                 window.dispatchEvent(new Event('profile-updated'));
-                await fetchUserData();
                 await nextTick();
                 router.push({
                     name: 'User',
@@ -97,7 +79,6 @@ export function useEditProfileForm() {
 
     // 初期化
     onMounted(() => {
-        fetchUserData();
         fetchGenders();
     });
 
@@ -108,7 +89,6 @@ export function useEditProfileForm() {
         fileDisplay,
         isValidFile,
         updateProfile,
-        fetchUserData,
         fetchGenders,
         profileImageChange,
     };
