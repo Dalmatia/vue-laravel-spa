@@ -1,4 +1,5 @@
 <script setup>
+import { OUTFIT_ROLE_META } from '@/src/constants/outfitRoles';
 import ItemSelectionSection from '@/Components/Outfit/Form/ItemSelectionSection.vue';
 import SelectItemsOverlay from '@/Components/Outfit/Form/SelectItemsOverlay.vue';
 
@@ -57,7 +58,7 @@ const emit = defineEmits([
 
     <SelectItemsOverlay
         v-if="showItemSelectionModal"
-        :itemType="selectedItemType ?? null"
+        :itemType="OUTFIT_ROLE_META[selectedItemType]?.mainCategory"
         @onItemSelected="emit('itemSelected', $event)"
         @close="emit('closeItemModal')"
     />

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useItems } from '../../../src/composables/item/useItems';
+import { useCategoryData } from '@/src/composables/useCategoryData.js';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close', 'onItemSelected']);
@@ -8,9 +9,14 @@ const props = defineProps({ itemType: Number });
 
 const { items, isLoading, hasError, fetchItems } = useItems();
 
+const { fetchSubCategories, getSubCategoryName } = useCategoryData();
+
 const filteredItems = computed(() =>
     items.value.filter((i) => i.main_category === props.itemType),
 );
+
+const subCategoryName = (item) =>
+    getSubCategoryName(props.itemType, item.sub_category);
 
 const selectItem = (item) => {
     // 選択されたアイテムのIDを親コンポーネントに伝える
@@ -24,7 +30,10 @@ const selectNone = () => {
     emit('close'); // モーダルを閉じる
 };
 
-onMounted(() => fetchItems());
+onMounted(async () => {
+    await fetchItems();
+    await fetchSubCategories(props.itemType);
+});
 </script>
 
 <template>
@@ -75,20 +84,18 @@ onMounted(() => fetchItems());
                         v-for="item in filteredItems"
                         :key="item.id"
                         class="flex flex-col items-center justify-center cursor-pointer relative"
+                        @click="selectItem(item)"
                     >
+                        <!-- 選択されたアイテムを親コンポーネントに伝える -->
                         <img
                             v-if="item.file"
                             :src="item.file"
                             class="aspect-square mx-auto z-0 object-cover cursor-pointer"
-                            @click="selectItem(item)"
                         />
-                        <!-- 選択ボタンを押したら、選択されたアイテムを親コンポーネントに伝える -->
-                        <button
-                            class="mt-1 text-blue-500 hover:text-gray-900 font-extrabold"
-                            @click="selectItem(item)"
-                        >
-                            選択
-                        </button>
+
+                        <p class="text-xs font-bold mt-1 text-center">
+                            {{ subCategoryName(item) }}
+                        </p>
                     </div>
 
                     <!-- 「選択しない」ボタン -->
