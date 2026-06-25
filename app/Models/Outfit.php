@@ -67,7 +67,17 @@ class Outfit extends Model
         });
     }
 
-    //　特定ユーザーの投稿を除外
+    public function scopeUsesSubCategories(Builder $query, array $subCategoryIds): Builder
+    {
+        return $query->whereHas(
+            'items',
+            function ($q) use ($subCategoryIds) {
+                $q->whereIn('sub_category', $subCategoryIds);
+            }
+        );
+    }
+
+    // 特定ユーザーの投稿を除外
     public function scopeExcludeUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', '!=', $userId);

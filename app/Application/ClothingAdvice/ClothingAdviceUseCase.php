@@ -22,8 +22,9 @@ final class ClothingAdviceUseCase
   {
     $date ??= now()->toDateString();
     $user = User::findOrFail($userId);
+    $isDebug = config('app.debug');
 
-    if ($cached = $this->adviceCache->get(
+    if (!$isDebug && $cached = $this->adviceCache->get(
       $userId,
       $date,
       $tpo,
@@ -89,20 +90,15 @@ final class ClothingAdviceUseCase
 
   private function buildRelatedOutfits(User $user, array $items, WeatherDto $weatherDto, string $date): array
   {
-    $usedCategories = $this->extractMainCategories($items);
+    $usedSubCategories = $this->extractSubCategories($items);
 
     $season = $weatherDto->thermalSeason();
     $tempBand = $weatherDto->temperatureBand();
-    logger()->debug([
-      'date' => $date,
-      'season' => $season,
-      'tempBand' => $tempBand,
-    ]);
 
-    return $this->relatedOutfitService
-      ->getByCategories(
+    $relatedOutfits = $this->relatedOutfitService
+      ->getBySubCategories(
         $user->id,
-        $usedCategories,
+        $usedSubCategories,
         $season,
         $tempBand,
         CarbonImmutable::parse($date),
@@ -110,6 +106,8 @@ final class ClothingAdviceUseCase
       )
       ->map(fn($dto) => $dto->toArray())
       ->all();
+
+    return $relatedOutfits;
   }
 
   private function normalizeOutfitSuggestionStructure(array $items): array
@@ -169,21 +167,13 @@ final class ClothingAdviceUseCase
     return $items;
   }
 
-  /**
-   * Outfit 提案から「実際に採用された」主要カテゴリを抽出
-   *
-   * @param array $items
-   * @return array ['tops', 'outer', ...]
-   */
-  private function extractMainCategories(array $items): array
+  private function extractSubCategories(array $items): array
   {
     return collect($items)
-      ->filter(
-        fn($entry, $category) =>
-        in_array($category, ['tops', 'outer', 'bottoms', 'shoes'], true)
-          && !empty($entry['item'])
-      )
-      ->keys()
+      ->map(fn($entry) => $entry['item'] ?? null)
+      ->filter()
+      ->pluck('sub_category')
+      ->unique()
       ->values()
       ->all();
   }
