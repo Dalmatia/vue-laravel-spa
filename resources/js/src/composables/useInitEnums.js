@@ -13,6 +13,7 @@ export function useInitEnums() {
         mainCategories: computed(() => enumStore.mainCategories),
         subCategories: computed(() => enumStore.subCategories),
         seasons: computed(() => enumStore.seasons),
+        scenes: computed(() => enumStore.scenes),
         colors: computed(() => enumStore.colors),
     };
 }

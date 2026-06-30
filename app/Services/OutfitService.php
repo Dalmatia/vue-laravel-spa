@@ -42,6 +42,7 @@ class OutfitService
     $outfit->description = $this->normalizeNull($request->input('description'));
     $outfit->outfit_date = $request->input('outfit_date');
     $outfit->season = $this->normalizeNull($request->input('season'));
+    $outfit->scene = $this->normalizeNull($request->input('scene'));
   }
 
   private function syncItemRelations(Outfit $outfit, Request $request)

@@ -8,6 +8,7 @@ export function useOutfitForm(initialData = null) {
         description: null,
         outfit_date: '',
         season: null,
+        scene: null,
     });
 
     const error = ref({});
@@ -34,7 +35,12 @@ export function useOutfitForm(initialData = null) {
         }
         payload.append('description', form.description);
         payload.append('outfit_date', form.outfit_date);
-        payload.append('season', form.season);
+        if (form.season !== null) {
+            payload.append('season', form.season);
+        }
+        if (form.scene !== null) {
+            payload.append('scene', form.scene);
+        }
         payload.append('items', JSON.stringify(items.value));
         return payload;
     };
@@ -43,7 +49,7 @@ export function useOutfitForm(initialData = null) {
         form.description = null;
         form.outfit_date = '';
         form.season = null;
-
+        form.scene = null;
         items.value = [];
         file.value = null;
         fileDisplay.value = '';

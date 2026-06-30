@@ -6,7 +6,6 @@ use App\Http\Requests\StoreOutfitRequest;
 use App\Http\Requests\UpdateOutfitRequest;
 use App\Http\Resources\OutfitResource;
 use App\Models\Outfit;
-use App\Models\User;
 use App\Services\OutfitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -105,7 +104,6 @@ class OutfitController extends Controller
 
     public function show($id)
     {
-        // Outfit を user リレーション込みで取得（N+1問題対策）
         $outfit = Outfit::with([
             'user',
             'items' => function ($query) {
@@ -113,25 +111,16 @@ class OutfitController extends Controller
             }
         ])->find($id);
 
-        // コーディネートが見つからない場合
         if (!$outfit) {
             return response()->json([
                 'message' => 'お探しのコーディネートが見つかりません。',
             ], 404);
         }
 
-        // ユーザーが見つからない場合
-        if (!$outfit->user) {
-            return response()->json([
-                'message' => 'コーディネートに関連付けられたユーザー情報が見つかりません。',
-            ], 404);
-        }
-
-        // 正常なレスポンス
         return response()->json([
-            'outfit' => $outfit,
-            'user' => $outfit->user
-        ], 200);
+            'outfit' => new OutfitResource($outfit),
+            'user' => $outfit->user,
+        ]);
     }
 
 

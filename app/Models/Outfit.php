@@ -20,6 +20,13 @@ class Outfit extends Model
         'description',
         'outfit_date',
         'season',
+        'scene',
+    ];
+
+    protected $casts = [
+        'outfit_date' => 'date:Y-m-d',
+        'season' => 'integer',
+        'scene' => 'integer',
     ];
 
     private const RECENT_THRESHOLD_DAYS = 30;
@@ -55,15 +62,6 @@ class Outfit extends Model
         static::deleting(function ($outfit) {
             // outfit_id が一致する通知を削除
             DatabaseNotification::where('data->outfit_id', $outfit->id)->delete();
-        });
-    }
-
-    public function scopeUsesCategories($query, array $categories)
-    {
-        return $query->where(function ($q) use ($categories) {
-            foreach ($categories as $category) {
-                $q->orWhereNotNull($category);
-            }
         });
     }
 

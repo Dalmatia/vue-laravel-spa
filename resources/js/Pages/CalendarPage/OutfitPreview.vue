@@ -1,5 +1,8 @@
 <script setup>
+import { useDateFormat } from '@/src/composables/common/useDateFormat';
 import Plus from 'vue-material-design-icons/Plus.vue';
+
+const { formatDate } = useDateFormat();
 
 defineProps({
     selectedDay: { type: String, default: null },
@@ -29,11 +32,11 @@ const emit = defineEmits(['prev', 'next', 'openOutfit', 'createOutfit']);
             class="text-center cursor-pointer"
             @click="emit('openOutfit', selectedDay)"
         >
-            <p class="font-bold mb-2">{{ selectedDay }}</p>
+            <p class="font-bold mb-2">{{ formatDate(selectedDay) }}</p>
             <img
                 class="w-40 h-52 md:w-80 md:h-96 mx-auto"
                 :src="selectedOutfit.file"
-                :alt="`プレビュー: ${selectedDay}`"
+                :alt="`プレビュー: ${formatDate(selectedDay)}`"
             />
         </div>
 

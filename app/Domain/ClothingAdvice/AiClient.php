@@ -27,7 +27,13 @@ class AiClient
       $text = $response->text();
 
       $jsonText = $this->extractJson($text);
-      return json_decode($jsonText, true, 512, JSON_THROW_ON_ERROR);
+      $decoded = json_decode($jsonText, true, 512, JSON_THROW_ON_ERROR);
+
+      Log::info('Gemini response', [
+        'response' => $decoded,
+      ]);
+
+      return $decoded;
     } catch (\Throwable $e) {
       Log::error('Gemini JSON parse error', [
         'error' => $e->getMessage(),

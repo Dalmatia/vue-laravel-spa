@@ -15,13 +15,21 @@ class OutfitResource extends JsonResource
   {
     return [
       'id' => $this->id,
+      'user_id' => $this->user_id,
       'file' => asset($this->file),
       'description' => $this->description,
-      'outfit_date' => $this->outfit_date,
+      'outfit_date' => $this->outfit_date?->format('Y-m-d'),
+      'season' => $this->season,
+      'scene' => $this->scene,
       'items' => $this->items->map(function ($item) {
         return [
           'id' => $item->id,
+          'role' => $item->pivot->role,
           'file' => asset($item->file),
+          'main_category' => $item->main_category,
+          'sub_category' => $item->sub_category,
+          'color' => $item->color,
+          'season' => $item->season,
           'sub_category_name' => SubCategory::getDescription($item->sub_category),
         ];
       }),

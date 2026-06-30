@@ -1,5 +1,8 @@
 export function useOutfitApi() {
     const createOutfit = async (formData) => {
+        for (const [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
         return axios.post('/api/outfit', formData);
     };
 

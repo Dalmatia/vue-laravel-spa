@@ -1,9 +1,13 @@
 <script setup>
+import { useDateFormat } from '@/src/composables/common/useDateFormat';
 import Heart from 'vue-material-design-icons/Heart.vue';
+import ClockOutline from 'vue-material-design-icons/ClockTimeThreeOutline.vue';
 
 const props = defineProps({
     outfit: Object,
 });
+
+const { formatDate } = useDateFormat();
 </script>
 
 <template>
@@ -69,8 +73,9 @@ const props = defineProps({
                 {{ outfit.likes_count }}
             </div>
 
-            <div>
-                {{ outfit.outfit_date }}
+            <div class="flex items-center gap-1">
+                <ClockOutline :size="16" />
+                {{ formatDate(outfit.outfit_date) }}
             </div>
         </div>
     </div>

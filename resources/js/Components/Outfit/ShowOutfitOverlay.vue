@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useDateFormat } from '@/src/composables/common/useDateFormat';
 import { useFollowStore } from '../../stores/follow';
 import { useOutfitDetail } from '../../src/composables/outfit/useOutfitDetail';
 import { useOutfitItemDisplay } from '../../src/composables/outfit/useOutfitItemDisplay';
@@ -18,6 +19,7 @@ let deleteType = ref(null);
 let id = ref(null);
 let commentOverlay = ref(false);
 
+const { formatDate } = useDateFormat();
 const followStore = useFollowStore();
 const props = defineProps(['outfit', 'commentOverlay']);
 
@@ -32,6 +34,7 @@ const { enumStore, outfitItems, buildOutfitItemsDisplay } =
 
 // 選択したシーズン情報の取得
 const season = computed(() => enumStore.getSeason(outfit.value.season));
+const scene = computed(() => enumStore.getScene(outfit.value.scene));
 
 const { comments, isLoading, fetchComments } = useOutfitComments();
 
@@ -224,21 +227,28 @@ onUnmounted(() => {
                                     </p>
                                 </div>
                                 <div class="pt-1 lg:pt-5">
-                                    <p
-                                        class="flex items-center justify-between leading-[1.8] text-gray-500 lg:text-[12px] lg:leading-none lg:tracking-widest lg:text-gray-600"
+                                    <div
+                                        class="flex items-start justify-between leading-[1.8] text-gray-500 lg:text-[12px] lg:leading-none lg:tracking-widest lg:text-gray-600"
                                     >
                                         <span class="pr-[5px] lg:text-[13px]">
                                             着用日:
-                                            <span>
-                                                {{ outfit.outfit_date }}
-                                            </span>
+                                            {{ formatDate(outfit.outfit_date) }}
                                         </span>
 
-                                        <span class="pr-[5px] lg:text-[13px]">
-                                            シーズン:
-                                            <span>{{ season }}</span>
+                                        <span
+                                            class="flex flex-col items-end gap-1 pr-[5px] lg:text-[13px]"
+                                        >
+                                            <div>
+                                                シーズン:
+                                                <span>{{ season }}</span>
+                                            </div>
+
+                                            <div>
+                                                着用シーン:
+                                                <span>{{ scene }}</span>
+                                            </div>
                                         </span>
-                                    </p>
+                                    </div>
                                 </div>
                             </div>
                         </section>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Color;
 use App\Enums\Gender;
 use App\Enums\MainCategory;
+use App\Enums\Scene;
 use App\Enums\Season;
 
 class EnumController extends Controller
@@ -30,7 +31,8 @@ class EnumController extends Controller
             'mainCategories' => $mainCategories,
             'subCategories' => $subCategories,
             'colors' => Color::toSelectArray(),
-            'seasons' => Season::toSelectArray()
+            'seasons' => Season::toSelectArray(),
+            'scenes' => Scene::toSelectArray(),
         ];
     }
 

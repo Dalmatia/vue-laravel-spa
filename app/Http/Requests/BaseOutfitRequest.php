@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 use App\Models\Outfit;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use App\Enums\Scene;
 
 abstract class BaseOutfitRequest extends FormRequest
 {
@@ -33,10 +35,8 @@ abstract class BaseOutfitRequest extends FormRequest
             'description' => 'nullable|max:1000',
             'outfit_date' => 'required',
             'season' => 'nullable',
-            'tops' => 'nullable|exists:items,id',
-            'outer' => 'nullable|exists:items,id',
-            'bottoms' => 'nullable|exists:items,id',
-            'shoes' => 'nullable|exists:items,id',
+            'scene' => ['nullable', 'integer', Rule::in(Scene::getValues())],
+            'items' => 'nullable|json',
         ];
     }
 

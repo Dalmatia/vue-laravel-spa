@@ -37,7 +37,7 @@ const {
     resetForm,
 } = useOutfitForm(props.editOutfit);
 
-const { seasons } = useInitEnums();
+const { seasons, scenes } = useInitEnums();
 const { createOutfit, updateOutfit } = useOutfitApi();
 
 const itemTypeEntries = Object.entries(itemTypes);
@@ -127,6 +127,7 @@ function closeOverlay() {
                     :form="form"
                     :error="error"
                     :seasons="seasons"
+                    :scenes="scenes"
                     :itemTypeEntries="itemTypeEntries"
                     :getItemByRole="getItemByRole"
                     :isOpen="isOpen"

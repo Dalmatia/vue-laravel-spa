@@ -8,6 +8,7 @@ const props = defineProps({
     form: Object,
     error: Object,
     seasons: Array,
+    scenes: Array,
     itemTypeEntries: Array,
     getItemByRole: Function,
     isOpen: Boolean,
@@ -92,6 +93,31 @@ const emit = defineEmits([
                     :value="season.id"
                 >
                     {{ season.name }}
+                </option>
+            </select>
+        </div>
+
+        <!-- シーン -->
+        <div
+            v-if="error?.scene"
+            class="text-red-500 text-center p-2 font-extrabold"
+        >
+            {{ error.scene[0] }}
+        </div>
+        <div class="flex items-center justify-between border-b p-3">
+            <div class="text-lg font-extrabold text-gray-500">シーン</div>
+            <select
+                v-model="form.scene"
+                id="scene"
+                class="text-lg text-right font-extrabold text-gray-500 outline-none"
+            >
+                <option :value="null">選択してください</option>
+                <option
+                    v-for="scene in scenes"
+                    :key="scene.id"
+                    :value="scene.id"
+                >
+                    {{ scene.name }}
                 </option>
             </select>
         </div>
