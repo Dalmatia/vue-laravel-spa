@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Analyzers\WeatherAnalyzer;
 use App\Domain\ClothingAdvice\SeasonResolver;
 use App\Domain\Weather\WeatherDto;
+use App\Enums\Scene;
 use App\Http\Resources\OutfitResource;
+use App\Models\Outfit;
 use App\Models\User;
 use App\Queries\HomeOutfitQuery;
 use App\Services\WeatherService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -31,7 +34,6 @@ class HomeController extends Controller
         $lon = request()->get('lon');
 
         if ($lat && $lon) {
-
             $weatherData = $this->weatherService->getWeatherData($lat, $lon);
 
             if ($weatherData) {
@@ -48,7 +50,19 @@ class HomeController extends Controller
             $season = $this->seasonResolver->resolve($baseDate->toDateString());
         }
 
-        $outfits = $query->get($season, $baseDate, $genderFilter, $authUser);
+        $sceneKey = request('scene');
+
+        $scene = $sceneKey ? Scene::fromKey($sceneKey)->value : null;
+
+        if ($scene === null && $authUser) {
+            $scene = Outfit::query()
+                ->where('user_id', $authUser->id)
+                ->whereNotNull('scene')
+                ->latest('outfit_date')
+                ->value('scene');
+        }
+
+        $outfits = $query->get($season, $scene, $baseDate, $genderFilter, $authUser);
 
         return response()->json(['outfits' => OutfitResource::collection($outfits)->resolve()], 200);
     }

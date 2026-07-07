@@ -28,15 +28,13 @@ final class Scene extends Enum
 
   public static function toSelectArray(): array
   {
-    $selectArray = [];
-
-    foreach (static::getValues() as $value) {
-      $selectArray[] = [
+    return collect(static::getValues())
+      ->map(fn($value) => [
         'id' => $value,
+        'key' => static::getKey($value),
         'name' => static::getDescription($value),
-      ];
-    }
-
-    return $selectArray;
+      ])
+      ->values()
+      ->all();
   }
 }

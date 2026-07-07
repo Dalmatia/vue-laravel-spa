@@ -4,15 +4,24 @@ namespace App\Queries;
 
 use App\Enums\Gender;
 use App\Models\Outfit;
+use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class HomeOutfitQuery
 {
-  public function get($season, $baseDate, $genderFilter, $authUser)
+  public function get(?int $season, ?int $scene, CarbonImmutable $baseDate, ?string $genderFilter, ?User $authUser)
   {
-    return Outfit::query()
-      ->preferSeason($season, $baseDate)
+    $outfits = Outfit::query()
+      ->withCount([
+        'likes as likes_count' => fn($q) => $q->where('like', 1)
+      ])
 
+      ->when(
+        $authUser,
+        fn($query) => $query->excludeUser($authUser->id)
+      )
       ->when(
         filled($genderFilter),
         function ($query) use ($genderFilter) {
@@ -32,9 +41,8 @@ class HomeOutfitQuery
         }
       )
 
-      ->withCount([
-        'likes as likes_count' => fn($q) => $q->where('like', 1)
-      ])
+      ->preferScene($scene)
+      ->preferSeason($season, $baseDate)
 
       ->withExists([
         'likes as is_liked' => fn($q) =>
@@ -48,5 +56,7 @@ class HomeOutfitQuery
 
       ->limit(5)
       ->get();
+
+    return $outfits;
   }
 }

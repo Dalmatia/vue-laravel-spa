@@ -1,8 +1,5 @@
 export function useOutfitApi() {
     const createOutfit = async (formData) => {
-        for (const [key, value] of formData.entries()) {
-            console.log(key, value);
-        }
         return axios.post('/api/outfit', formData);
     };
 
@@ -27,8 +24,10 @@ export function useOutfitApi() {
         };
     };
 
-    const getHomeOutfits = async () => {
-        const { data } = await axios.get('/api/home');
+    const getHomeOutfits = async (scene) => {
+        const { data } = await axios.get('/api/home', {
+            params: { scene },
+        });
         return data;
     };
 

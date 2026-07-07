@@ -18,6 +18,7 @@ class RelatedOutfitService
     int $viewerUserId,
     array $subCategoryIds,
     ?int $season,
+    ?int $scene,
     string $tempBand,
     CarbonImmutable $baseDate,
     int $limit = 5
@@ -30,6 +31,7 @@ class RelatedOutfitService
       $viewerUserId,
       $subCategoryIds,
       $season,
+      $scene,
       $tempBand,
       $baseDate
     );
@@ -43,6 +45,7 @@ class RelatedOutfitService
     int $viewerUserId,
     array $subCategoryIds,
     ?int $season,
+    ?int $scene,
     string $tempBand,
     CarbonImmutable $baseDate
   ): Builder {
@@ -61,6 +64,7 @@ class RelatedOutfitService
       ->excludeUser($viewerUserId)
       ->usesSubCategories($subCategoryIds)
       ->preferSeason($season, $baseDate)
+      ->preferScene($scene)
       ->preferTemperatureBand($tempBand);
   }
 

@@ -114,6 +114,22 @@ class Outfit extends Model
         );
     }
 
+    public function scopePreferScene($query, ?int $scene)
+    {
+        if (!$scene) {
+            return $query;
+        }
+
+        return $query->orderByRaw(
+            'CASE
+            WHEN scene = ? THEN 0
+            WHEN scene IS NULL THEN 1
+            ELSE 2
+        END',
+            [$scene]
+        );
+    }
+
     public function scopePreferTemperatureBand($query, string $tempBand)
     {
         if (in_array($tempBand, ['freezing', 'cold'])) {

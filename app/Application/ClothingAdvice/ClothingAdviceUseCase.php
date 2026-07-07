@@ -22,9 +22,8 @@ final class ClothingAdviceUseCase
   {
     $date ??= now()->toDateString();
     $user = User::findOrFail($userId);
-    $isDebug = config('app.debug');
 
-    if (!$isDebug && $cached = $this->adviceCache->get(
+    if ($cached = $this->adviceCache->get(
       $userId,
       $date,
       $tpo,
@@ -40,13 +39,36 @@ final class ClothingAdviceUseCase
       return $cached;
     }
 
-    $generated = $this->aiCoordinator->generate(
-      $weatherDto,
-      $user,
-      $tpo,
-      $date,
-      $cityId
-    );
+    try {
+      $generated = $this->aiCoordinator->generate(
+        $weatherDto,
+        $user,
+        $tpo,
+        $date,
+        $cityId
+      );
+    } catch (\Throwable $e) {
+      // AIが利用できない場合は、手持ちアイテムからの提案にフォールバック
+      if ($cached = $this->adviceCache->get(
+        $userId,
+        $date,
+        $tpo,
+        $cityId,
+        $user->profile_hash
+      )) {
+
+        $cached['related_outfits'] = $this->buildRelatedOutfits(
+          $user,
+          $cached['outfit_suggestion'] ?? [],
+          $weatherDto,
+          $date
+        );
+
+        return $cached;
+      }
+
+      throw $e;
+    }
 
     $adviceText = $generated['advice'];
     $items = $generated['items'];
@@ -100,6 +122,7 @@ final class ClothingAdviceUseCase
         $user->id,
         $usedSubCategories,
         $season,
+        null, // sceneはAI提案ではまだ考慮しない
         $tempBand,
         CarbonImmutable::parse($date),
         5

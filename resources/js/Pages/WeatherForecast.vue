@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, toRef } from 'vue';
 import { useWeatherForecast } from '../src/composables/useWeatherForecast';
 import { useClothingAdvice } from '../src/composables/useClothingAdvice';
 import SelectCity from '../Components/SelectCity.vue';
@@ -12,6 +12,12 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const authStore = useAuthStore();
 const authUserId = computed(() => authStore.user.id);
+const props = defineProps({
+    selectedTpo: { type: String, required: true },
+});
+
+const emit = defineEmits(['update:selectedTpo']);
+
 const {
     selectedCity,
     weather,
@@ -21,13 +27,8 @@ const {
     fetchWeather,
 } = useWeatherForecast();
 
-const {
-    selectedTpo,
-    selectedTab,
-    advice,
-    isAdviceLoading,
-    fetchClothingAdvice,
-} = useClothingAdvice(selectedCity, weather);
+const { selectedTab, advice, isAdviceLoading, fetchClothingAdvice } =
+    useClothingAdvice(selectedCity, weather, toRef(props, 'selectedTpo'));
 
 const showModal = ref(false);
 
@@ -94,10 +95,10 @@ onMounted(async () => {
 
             <!-- AI服装アドバイス -->
             <AdviceSection
-                :selected-tpo="selectedTpo"
+                :selected-tpo="props.selectedTpo"
                 :advice="advice"
                 :is-advice-loading="isAdviceLoading"
-                @change-tpo="(tpo) => (selectedTpo = tpo)"
+                @change-tpo="emit('update:selectedTpo', $event)"
                 @go-to-items="
                     router.push({ name: 'Items', params: { id: authUserId } })
                 "

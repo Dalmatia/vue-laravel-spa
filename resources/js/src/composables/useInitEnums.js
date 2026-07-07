@@ -4,8 +4,8 @@ import { useEnumStore } from '../../stores/enum';
 export function useInitEnums() {
     const enumStore = useEnumStore();
 
-    onMounted(() => {
-        enumStore.fetchEnums();
+    onMounted(async () => {
+        await enumStore.fetchEnums();
     });
 
     return {

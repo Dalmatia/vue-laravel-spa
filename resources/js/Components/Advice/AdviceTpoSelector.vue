@@ -1,18 +1,13 @@
 <script setup>
+import { useInitEnums } from '../../src/composables/useInitEnums';
 import PaletteOutline from 'vue-material-design-icons/PaletteOutline.vue';
 
+const { scenes } = useInitEnums();
 defineProps({
     selectedTpo: { type: String, required: true },
 });
 
 defineEmits(['change']);
-
-const tpoOptions = [
-    { key: 'casual', label: 'カジュアル' },
-    { key: 'date', label: 'デート' },
-    { key: 'office', label: 'オフィス' },
-    { key: 'outdoor', label: 'アウトドア' },
-];
 </script>
 
 <template>
@@ -24,17 +19,17 @@ const tpoOptions = [
 
         <div class="flex overflow-x-auto space-x-2 scrollbar-hide">
             <button
-                v-for="option in tpoOptions"
-                :key="option.key"
+                v-for="scene in scenes"
+                :key="scene.key"
                 class="px-3 py-1 rounded-full text-sm font-semibold border whitespace-nowrap transition"
                 :class="
-                    selectedTpo === option.key
+                    selectedTpo === scene.key
                         ? 'bg-blue-500 text-white border-blue-500'
                         : 'text-gray-500 hover:border-gray-400'
                 "
-                @click="$emit('change', option.key)"
+                @click="$emit('change', scene.key)"
             >
-                {{ option.label }}
+                {{ scene.name }}
             </button>
         </div>
     </div>

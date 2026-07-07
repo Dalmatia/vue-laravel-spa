@@ -16,11 +16,15 @@ class UsersTableSeeder extends Seeder
     {
         Schema::disableForeignKeyConstraints();
 
+        DB::table('notifications')->truncate();
         DB::table('comments')->truncate();
+        DB::table('follows')->truncate();
         DB::table('likes')->truncate();
         DB::table('outfits_items')->truncate();
         DB::table('items')->truncate();
         DB::table('outfits')->truncate();
+        DB::table('selected_cities')->truncate();
+        DB::table('user_settings')->truncate();
         DB::table('users')->truncate();
 
         Schema::enableForeignKeyConstraints();

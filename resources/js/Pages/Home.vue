@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useFollowStore } from '../stores/follow';
 import OutfitCard from '../Components/Outfit/OutfitCard.vue';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
@@ -11,6 +11,7 @@ import { useOutfitApi } from '../src/composables/outfit/useOutfitApi';
 let wWidth = ref(window.innerWidth);
 const { getHomeOutfits } = useOutfitApi();
 const outfits = ref([]);
+const selectedTpo = ref('casual');
 const followStore = useFollowStore();
 const { overlayState, toggleOutfitOverlay, deleteOutfit } = useOutfitOverlay();
 
@@ -21,7 +22,7 @@ const resizeHandler = () => {
 // 投稿したコーディネートの表示
 const fetchOutfits = async () => {
     try {
-        const response = await getHomeOutfits();
+        const response = await getHomeOutfits(selectedTpo.value);
         outfits.value = response.outfits;
 
         // 各ユーザーのフォロー状態をチェック
@@ -31,6 +32,10 @@ const fetchOutfits = async () => {
         console.error('コーディネート一覧の取得に失敗しました。', error);
     }
 };
+
+watch(selectedTpo, () => {
+    fetchOutfits();
+});
 
 onMounted(() => {
     window.addEventListener('resize', resizeHandler);
@@ -51,7 +56,7 @@ onUnmounted(() => {
 <template>
     <div id="Posts" class="md:pr-1.5 lg:pl-0 md:pl-[90px]">
         <!-- 天気予報 -->
-        <WeatherForecast />
+        <WeatherForecast v-model:selected-tpo="selectedTpo" />
         <!-- コーディネート一覧 -->
         <span class="font-bold text-lg pr-6">他ユーザーのコーディネート</span>
         <div class="grid gap-6 mt-4">

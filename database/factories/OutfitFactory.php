@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Domain\ClothingAdvice\SeasonResolver;
 use App\Domain\Outfit\OutfitItemGenerator;
 use App\Enums\Gender;
+use App\Enums\Scene;
 use App\Enums\Season;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,12 +20,14 @@ class OutfitFactory extends Factory
         $seasonResolver = app(SeasonResolver::class);
         $date = $this->generateNaturalDate();
         $season = $seasonResolver->resolve($date->toDateString());
+        $scene = $this->generateNaturalScene();
 
         return [
             'description' => fake()->sentence(),
             'file' => '/dummy/outfits/default.jpg',
             'outfit_date' => $date,
             'season' => $season,
+            'scene' => $scene,
         ];
     }
 
@@ -39,7 +42,7 @@ class OutfitFactory extends Factory
         } elseif ($range < 0.95) {
             $date = now()->addDays(fake()->numberBetween(-90, 90));
         } else {
-            $date = now()->addDays(fake()->numberBetween(-365, 365));
+            $date = now()->addDays(fake()->numberBetween(-180, 180));
         }
 
         return $date;
@@ -99,5 +102,15 @@ class OutfitFactory extends Factory
                 $outfit->items()->attach($items->pluck('id'));
             }
         });
+    }
+
+    public function generateNaturalScene(): int
+    {
+        return fake()->randomElement([
+            Scene::casual,
+            Scene::date,
+            Scene::office,
+            Scene::outdoor,
+        ]);
     }
 }

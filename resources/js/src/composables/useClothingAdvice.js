@@ -1,8 +1,7 @@
 import { ref, watch } from 'vue';
 import axios from 'axios';
 
-export function useClothingAdvice(selectedCity, weather) {
-    const selectedTpo = ref('casual');
+export function useClothingAdvice(selectedCity, weather, selectedTpo) {
     const selectedTab = ref('today');
     const advice = ref(null);
     const isAdviceLoading = ref(false);
@@ -56,7 +55,6 @@ export function useClothingAdvice(selectedCity, weather) {
     );
 
     return {
-        selectedTpo,
         selectedTab,
         advice,
         isAdviceLoading,
