@@ -15,13 +15,8 @@ import ShowItemOverlay from '../Components/Items/ShowItemOverlay.vue';
 const route = useRoute();
 const authStore = useAuthStore();
 
-const {
-    subCategoriesMap,
-    fetchSubCategories,
-    getMainCategoryName,
-    getSubCategoryName,
-    initEnums,
-} = useCategoryData();
+const { loadEnums, getMainCategoryName, getSubCategoryName } =
+    useCategoryData();
 
 const mainCategoryId = ref(0);
 
@@ -59,10 +54,9 @@ const itemSubCategoryName = (item) =>
 onMounted(async () => {
     // ページ遷移時にパラメータを取得
     const routeParams = route.params;
-    await initEnums();
+    await loadEnums();
     if (routeParams.mainCategory) {
-        mainCategoryId.value = parseInt(routeParams.mainCategory);
-        await fetchSubCategories(mainCategoryId.value);
+        mainCategoryId.value = Number(routeParams.mainCategory);
     }
 });
 </script>

@@ -12,16 +12,10 @@ export function useOutfitItemDisplay() {
     const buildOutfitItemsDisplay = async (outfit) => {
         try {
             await enumStore.fetchEnums();
-            await categoryData.fetchMainCategories();
 
             if (!outfit.items) {
                 outfitItems.value = [];
                 return;
-            }
-
-            // 必要なサブカテゴリを取得
-            for (const item of outfit.items) {
-                await categoryData.fetchSubCategories(item.main_category);
             }
 
             outfitItems.value = outfit.items

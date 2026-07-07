@@ -6,10 +6,10 @@ import { useCategoryData } from '../src/composables/useCategoryData';
 const { categorizedItems, navigateToCategory } = useItems();
 
 // カテゴリごとにアイテムを分類するためのデータ構造
-const { getMainCategoryName, initEnums } = useCategoryData();
+const { loadEnums, getMainCategoryName } = useCategoryData();
 
-onMounted(() => {
-    initEnums();
+onMounted(async () => {
+    await loadEnums();
 });
 </script>
 

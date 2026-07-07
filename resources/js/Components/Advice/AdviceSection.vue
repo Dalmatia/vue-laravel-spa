@@ -7,7 +7,7 @@ import AdviceText from './AdviceText.vue';
 import ItemRegistrationGuide from './ItemRegistrationGuide.vue';
 import OutfitSuggestion from './OutfitSuggestion.vue';
 
-const { initEnums, getMainCategoryName } = useCategoryData();
+const { loadEnums, getMainCategoryName } = useCategoryData();
 
 const props = defineProps({
     advice: { type: Object, default: null },
@@ -41,8 +41,8 @@ watch(
     },
 );
 
-onMounted(() => {
-    initEnums();
+onMounted(async () => {
+    await loadEnums();
 });
 </script>
 
