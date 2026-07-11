@@ -35,26 +35,4 @@ class EnumController extends Controller
             'scenes' => Scene::toSelectArray(),
         ];
     }
-
-    public function getColors()
-    {
-        return ['colors' => Color::toSelectArray()];
-    }
-
-    public function getSeasons()
-    {
-        return ['seasons' => Season::toSelectArray()];
-    }
-
-    public function getGenders()
-    {
-        $options = [];
-        foreach (Gender::getValues() as $value) {
-            $options[] = [
-                'value' => $value,
-                'label' => Gender::fromValue($value)->label(),
-            ];
-        }
-        return response()->json($options);
-    }
 }

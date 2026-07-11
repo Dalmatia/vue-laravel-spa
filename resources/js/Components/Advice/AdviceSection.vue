@@ -1,13 +1,14 @@
 <script setup>
 import { defineProps, defineEmits, onMounted, ref, computed, watch } from 'vue';
-import { useCategoryData } from '../../src/composables/useCategoryData';
+import { useEnumStore } from '@/stores/enum';
 import AdviceTpoSelector from './AdviceTpoSelector.vue';
 import AdviceStatus from './AdviceStatus.vue';
 import AdviceText from './AdviceText.vue';
 import ItemRegistrationGuide from './ItemRegistrationGuide.vue';
 import OutfitSuggestion from './OutfitSuggestion.vue';
 
-const { loadEnums, getMainCategoryName } = useCategoryData();
+const enumStore = useEnumStore();
+const { fetchEnums, getMainCategoryName } = enumStore;
 
 const props = defineProps({
     advice: { type: Object, default: null },
@@ -42,7 +43,7 @@ watch(
 );
 
 onMounted(async () => {
-    await loadEnums();
+    await fetchEnums();
 });
 </script>
 

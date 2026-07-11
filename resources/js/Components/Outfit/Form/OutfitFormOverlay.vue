@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@/stores/auth';
 import { useOutfitForm } from '@/src/composables/outfit/useOutfitForm';
-import { useInitEnums } from '../../../src/composables/useInitEnums';
+import { useEnumStore } from '@/stores/enum';
 import { useModal } from '@/src/composables/useModal';
 import { useOutfitApi } from '@/src/composables/outfit/useOutfitApi';
 
@@ -37,7 +38,8 @@ const {
     resetForm,
 } = useOutfitForm(props.editOutfit);
 
-const { seasons, scenes } = useInitEnums();
+const enumStore = useEnumStore();
+const { seasons, scenes } = storeToRefs(enumStore);
 const { createOutfit, updateOutfit } = useOutfitApi();
 
 const itemTypeEntries = Object.entries(itemTypes);

@@ -8,15 +8,20 @@ import { useAuthStore } from './stores/auth';
 
 import App from '../js/App.vue';
 import { useThemeStore } from './stores/theme';
+import { useEnumStore } from './stores/enum';
 
 const app = createApp(App);
-app.use(createPinia());
+const pinia = createPinia();
+
+app.use(pinia);
 
 const authStore = useAuthStore();
+const enumStore = useEnumStore();
+const themeStore = useThemeStore();
 
 (async () => {
-    await authStore.fetchUserData();
+    await Promise.all([authStore.fetchUserData(), enumStore.fetchEnums()]);
 
     app.use(router).mount('#app');
-    useThemeStore().initTheme();
+    themeStore.initTheme();
 })();

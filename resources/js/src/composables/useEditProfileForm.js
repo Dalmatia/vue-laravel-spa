@@ -1,30 +1,24 @@
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import { useEnumStore } from '@/stores/enum';
 import { useFileUploader } from './useFileUploader';
 
 export function useEditProfileForm() {
     const authStore = useAuthStore();
     const router = useRouter();
+    const enumStore = useEnumStore();
 
     // 入力状態
-    const genders = ref([]);
-    const { fileDisplay, isValidFile, getUploadedImage } = useFileUploader();
-
+    const selectedFile = ref(null);
     // 性別一覧の取得
-    const fetchGenders = async () => {
-        try {
-            const response = await axios.get('/api/get_genders');
-            genders.value = response.data;
-        } catch (error) {
-            console.error('性別一覧の取得に失敗しました:', error);
-        }
-    };
+    const { genders } = enumStore;
+    const { fileDisplay, isValidFile, getUploadedImage } = useFileUploader();
 
     // ファイルアップロード
     const profileImageChange = (e) => {
         getUploadedImage(e, (file) => {
-            authStore.user.file = file;
+            selectedFile.value = file;
         });
     };
 
@@ -34,8 +28,8 @@ export function useEditProfileForm() {
         formData.append('name', authStore.user.name);
         formData.append('email', authStore.user.email);
 
-        if (authStore.user.file instanceof File) {
-            formData.append('file', authStore.user.file);
+        if (selectedFile.value) {
+            formData.append('file', selectedFile.value);
         }
         formData.append('gender', authStore.user.gender);
         formData.append('birthdate', authStore.user.birthdate || '');
@@ -48,6 +42,7 @@ export function useEditProfileForm() {
             );
 
             if (response.status === 200) {
+                await authStore.fetchUserData();
                 window.dispatchEvent(new Event('profile-updated'));
                 await nextTick();
                 router.push({
@@ -77,11 +72,6 @@ export function useEditProfileForm() {
         return age;
     });
 
-    // 初期化
-    onMounted(() => {
-        fetchGenders();
-    });
-
     return {
         authStore,
         genders,
@@ -89,7 +79,6 @@ export function useEditProfileForm() {
         fileDisplay,
         isValidFile,
         updateProfile,
-        fetchGenders,
         profileImageChange,
     };
 }

@@ -1,13 +1,16 @@
 <script setup>
-import { useInitEnums } from '../../src/composables/useInitEnums';
+import { useEnumStore } from '../../stores/enum';
+import { storeToRefs } from 'pinia';
 import PaletteOutline from 'vue-material-design-icons/PaletteOutline.vue';
 
-const { scenes } = useInitEnums();
 defineProps({
     selectedTpo: { type: String, required: true },
 });
-
 defineEmits(['change']);
+
+const enumStore = useEnumStore();
+
+const { scenes } = storeToRefs(enumStore);
 </script>
 
 <template>

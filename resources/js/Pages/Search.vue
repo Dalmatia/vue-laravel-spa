@@ -1,4 +1,5 @@
 <script setup>
+import { storeToRefs } from 'pinia';
 import SearchHeaderSection from '../Components/Search/SearchHeaderSection.vue';
 import FilterPanel from '../Components/Search/FilterPanel.vue';
 import OutfitList from '../Components/Search/OutfitList.vue';
@@ -8,7 +9,7 @@ import GenderSelectModal from '../Components/Search/Modals/GenderSelectModal.vue
 
 import { useSearchOutfits } from '../src/composables/search/useSearchOutfits';
 import { useSearchForm } from '../src/composables/search/useSearchForm';
-import { useInitEnums } from '../src/composables/useInitEnums';
+import { useEnumStore } from '../stores/enum';
 import { useResponsive } from '../src/composables/search/useResponsive';
 import { useOutfitOverlay } from '../src/composables/useOutfitOverlay';
 import { specialColors } from '../src/specialColors';
@@ -20,10 +21,11 @@ const sortOptions = {
     oldest: '古い順',
 };
 
-const search = useSearchOutfits();
-
+const enumStore = useEnumStore();
 const { genders, mainCategories, subCategories, colors, seasons } =
-    useInitEnums();
+    storeToRefs(enumStore);
+
+const search = useSearchOutfits();
 
 const {
     localFilters,

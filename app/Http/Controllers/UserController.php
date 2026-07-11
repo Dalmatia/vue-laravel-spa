@@ -78,6 +78,7 @@ class UserController extends Controller
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
             ]);
+            $user->refresh(); // データベースの最新状態にリフレッシュ
             return response()->json(['message' => 'プロフィールの更新に失敗しました'], 500);
         }
     }

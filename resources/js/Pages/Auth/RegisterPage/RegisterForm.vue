@@ -1,12 +1,14 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../../stores/auth';
+import { useEnumStore } from '../../../stores/enum';
 
 import RegisterFields from './RegisterFields.vue';
 
-const authStore = useAuthStore();
 const router = useRouter();
+const authStore = useAuthStore();
+const enumStore = useEnumStore();
 const form = ref({
     email: '',
     name: '',
@@ -15,7 +17,10 @@ const form = ref({
     password: '',
     password_confirmation: '',
 });
-const genders = ref([]);
+
+// 性別一覧の取得
+const { genders } = enumStore;
+
 const errors = ref([]);
 
 const signup = async () => {
@@ -26,16 +31,6 @@ const signup = async () => {
         router.push({ name: 'Home' });
     } catch (reason) {
         errors.value = reason?.response?.data?.errors ?? {};
-    }
-};
-
-// 性別一覧の取得
-const fetchGenders = async () => {
-    try {
-        const response = await axios.get('/api/get_genders');
-        genders.value = response.data;
-    } catch (error) {
-        console.error('性別一覧の取得に失敗しました:', error);
     }
 };
 
@@ -50,10 +45,6 @@ const age = computed(() => {
         age--;
     }
     return age;
-});
-
-onMounted(() => {
-    fetchGenders();
 });
 </script>
 

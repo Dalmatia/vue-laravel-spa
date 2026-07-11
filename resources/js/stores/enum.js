@@ -28,6 +28,19 @@ export const useEnumStore = defineStore('enum', {
         },
 
         // --- 名前変換ヘルパー ---
+        getMainCategoryName(id) {
+            const found = this.mainCategories.find(
+                (cat) => cat.id === Number(id),
+            );
+            return found ? found.name : '不明なカテゴリ';
+        },
+
+        getSubCategoryName(mainId, subId) {
+            const subs = this.subCategories[mainId] ?? [];
+            const found = subs.find((sub) => sub.id === Number(subId));
+            return found ? found.name : '不明なサブカテゴリ';
+        },
+
         getGender(id) {
             const item = this.genders.find((g) => g.value === Number(id));
             return item ? item.label : '未選択';

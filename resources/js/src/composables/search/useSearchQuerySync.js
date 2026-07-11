@@ -1,13 +1,15 @@
 import { computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
-import { useInitEnums } from '../useInitEnums';
+import { useEnumStore } from '../../../stores/enum';
 import { useSearchQueryStore } from '../../../stores/searchQueryStore';
 
 export function useSearchQuerySync() {
     const route = useRoute();
     const router = useRouter();
     const searchQueryStore = useSearchQueryStore();
-    const { colors } = useInitEnums();
+    const enumStore = useEnumStore();
+    const { colors } = storeToRefs(enumStore);
 
     const filters = computed(() => {
         const q = route.query;

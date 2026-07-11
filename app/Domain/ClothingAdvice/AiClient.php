@@ -3,6 +3,10 @@
 namespace App\Domain\ClothingAdvice;
 
 use Gemini\Laravel\Facades\Gemini;
+use Gemini\Data\GenerationConfig;
+use Gemini\Data\Schema;
+use Gemini\Enums\DataType;
+use Gemini\Enums\ResponseMimeType;
 use Illuminate\Support\Facades\Log;
 
 class AiClient
@@ -22,18 +26,16 @@ class AiClient
   public function getClothingAdviceJson(string $prompt): array
   {
     try {
-      $client = Gemini::generativeModel("gemini-3-flash-preview");
-      $response = $client->generateContent($prompt);
-      $text = $response->text();
+      $response = Gemini::generativeModel("gemini-3.5-flash")
+        ->withGenerationConfig(
+          new GenerationConfig(
+            responseMimeType: ResponseMimeType::APPLICATION_JSON,
+            responseSchema: $this->buildResponseSchema(),
+          )
+        )
+        ->generateContent($prompt);
 
-      $jsonText = $this->extractJson($text);
-      $decoded = json_decode($jsonText, true, 512, JSON_THROW_ON_ERROR);
-
-      Log::info('Gemini response', [
-        'response' => $decoded,
-      ]);
-
-      return $decoded;
+      return (array) $response->json();
     } catch (\Throwable $e) {
       Log::error('Gemini JSON parse error', [
         'error' => $e->getMessage(),
@@ -43,15 +45,40 @@ class AiClient
     }
   }
 
-  private function extractJson(string $text): string
+  private function buildResponseSchema(): Schema
   {
-    $start = strpos($text, '{');
-    $end = strrpos($text, '}');
-
-    if ($start === false || $end === false) {
-      return '{}';
-    }
-
-    return substr($text, $start, $end - $start + 1);
+    return new Schema(
+      type: DataType::OBJECT,
+      properties: [
+        'summary' => new Schema(type: DataType::STRING),
+        'items' => new Schema(
+          type: DataType::OBJECT,
+          properties: [
+            'outer' => new Schema(
+              type: DataType::ARRAY,
+              items: new Schema(type: DataType::STRING)
+            ),
+            'tops' => new Schema(
+              type: DataType::ARRAY,
+              items: new Schema(type: DataType::STRING)
+            ),
+            'bottoms' => new Schema(
+              type: DataType::ARRAY,
+              items: new Schema(type: DataType::STRING)
+            ),
+            'shoes' => new Schema(
+              type: DataType::ARRAY,
+              items: new Schema(type: DataType::STRING)
+            ),
+          ],
+          required: ['outer', 'tops', 'bottoms', 'shoes']
+        ),
+        'notes' => new Schema(
+          type: DataType::ARRAY,
+          items: new Schema(type: DataType::STRING),
+        )
+      ],
+      required: ['summary', 'items', 'notes']
+    );
   }
 }

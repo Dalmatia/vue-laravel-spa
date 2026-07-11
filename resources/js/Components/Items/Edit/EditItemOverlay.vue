@@ -1,7 +1,8 @@
 <script setup>
-import { defineEmits, defineProps, ref, onMounted } from 'vue';
+import { defineEmits, defineProps, ref, onMounted, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useEditItemForm } from '../../../src/composables/editItemForm';
-import { useInitEnums } from '../../../src/composables/useInitEnums';
+import { useEnumStore } from '../../../stores/enum';
 import { useCategoryOptions } from '../../../src/composables/categoryOptions';
 import { specialColors } from '../../../src/specialColors';
 
@@ -14,7 +15,8 @@ import FileUpdatePreview from '../../FileUpdatePreview.vue';
 
 const emit = defineEmits(['closeOverlay']);
 const props = defineProps({ editItem: Object, required: true });
-const { colors, seasons } = useInitEnums();
+const enumStore = useEnumStore();
+const { colors, seasons } = storeToRefs(enumStore);
 const openModal = ref(false);
 const selectedColor = ref(null);
 const {
@@ -26,8 +28,9 @@ const {
     getUploadedImage,
 } = useEditItemForm(props.editItem, () => emit('closeOverlay'));
 
-const { mainCategories, subCategories, fetchAllCategories } =
-    useCategoryOptions(() => editForm.value.main_category);
+const { mainCategories, subCategories } = useCategoryOptions(
+    () => editForm.value.main_category,
+);
 
 const { getColorClass, getColorStyle } = specialColors();
 
@@ -51,8 +54,15 @@ onMounted(async () => {
             (c) => c.id === props.editItem.color,
         );
     }
-    await fetchAllCategories();
 });
+
+watch(
+    () => editForm.value.main_category,
+    (newValue, oldValue) => {
+        if (oldValue === null) return;
+        editForm.value.sub_category = null;
+    },
+);
 </script>
 
 <template>

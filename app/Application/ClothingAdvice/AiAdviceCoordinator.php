@@ -26,6 +26,7 @@ final class AiAdviceCoordinator
     try {
       $prompt = $this->promptBuilder->buildJson($weather, $user, $tpo);
       $json = $this->aiClient->getClothingAdviceJson($prompt);
+      dd($json);
 
       if (!$this->isValidAiResponse($json)) {
         throw new \RuntimeException('Invalid AI response structure');

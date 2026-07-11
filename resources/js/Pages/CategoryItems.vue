@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { useCategoryData } from '../src/composables/useCategoryData';
+import { useEnumStore } from '../stores/enum';
 import { useCategoryItems } from '../src/composables/item/useCategoryItems';
 import { useItemOverlay } from '../src/composables/item/useItemOverlay';
 import { useItemEvents } from '../src/composables/item/useItemEvents';
@@ -15,8 +15,8 @@ import ShowItemOverlay from '../Components/Items/ShowItemOverlay.vue';
 const route = useRoute();
 const authStore = useAuthStore();
 
-const { loadEnums, getMainCategoryName, getSubCategoryName } =
-    useCategoryData();
+const enumStore = useEnumStore();
+const { fetchEnums, getMainCategoryName, getSubCategoryName } = enumStore;
 
 const mainCategoryId = ref(0);
 
@@ -54,7 +54,7 @@ const itemSubCategoryName = (item) =>
 onMounted(async () => {
     // ページ遷移時にパラメータを取得
     const routeParams = route.params;
-    await loadEnums();
+    await fetchEnums();
     if (routeParams.mainCategory) {
         mainCategoryId.value = Number(routeParams.mainCategory);
     }

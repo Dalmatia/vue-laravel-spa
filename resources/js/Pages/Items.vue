@@ -1,15 +1,15 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useItems } from '../src/composables/item/useItems';
-import { useCategoryData } from '../src/composables/useCategoryData';
+import { useEnumStore } from '../stores/enum';
 
 const { categorizedItems, navigateToCategory } = useItems();
 
-// カテゴリごとにアイテムを分類するためのデータ構造
-const { loadEnums, getMainCategoryName } = useCategoryData();
+const enumStore = useEnumStore();
+const { fetchEnums, getMainCategoryName } = enumStore;
 
 onMounted(async () => {
-    await loadEnums();
+    await fetchEnums();
 });
 </script>
 

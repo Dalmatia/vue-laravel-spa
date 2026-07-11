@@ -48,11 +48,11 @@ export function useClothingAdvice(selectedCity, weather, selectedTpo) {
     };
 
     // TPOまたは日付タブが切り替わったら再取得
-    watch(
-        [selectedCity, selectedTpo, selectedTab, weather],
-        fetchClothingAdvice,
-        { deep: true },
-    );
+    // watch(
+    //     [selectedCity, selectedTpo, selectedTab, weather],
+    //     fetchClothingAdvice,
+    //     { deep: true },
+    // );
 
     return {
         selectedTab,

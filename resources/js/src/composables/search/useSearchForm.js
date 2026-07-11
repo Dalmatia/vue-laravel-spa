@@ -6,6 +6,10 @@ export function useSearchForm(searchState, subCategories) {
 
     // メインカテゴリーに応じたサブカテゴリーの絞り込み
     const filteredSubCategory = computed(() => {
+        if (!subCategories.value) {
+            return [];
+        }
+
         const main = localFilters.value.mainCategory;
 
         if (!main) {

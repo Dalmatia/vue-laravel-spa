@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useItemForm } from '../../../src/composables/itemForm';
-import { useInitEnums } from '../../../src/composables/useInitEnums';
+import { useEnumStore } from '../../../stores/enum';
 import { useCategoryOptions } from '../../../src/composables/categoryOptions';
 import { specialColors } from '../../../src/specialColors';
 
@@ -23,11 +24,13 @@ const {
     resetForm,
 } = useItemForm(() => emit('close'));
 
-const { mainCategories, subCategories, fetchAllCategories } =
-    useCategoryOptions(() => form.main_category);
+const { mainCategories, subCategories } = useCategoryOptions(
+    () => form.main_category,
+);
 
 const { getColorClass, getColorStyle } = specialColors();
-const { colors, seasons } = useInitEnums();
+const enumStore = useEnumStore();
+const { colors, seasons } = storeToRefs(enumStore);
 const openModal = ref(false);
 const selectedColor = ref(null);
 
@@ -49,10 +52,14 @@ const selectColor = (color) => {
     openModal.value = false;
 };
 
-// 各選択項目の値取得
-onMounted(async () => {
-    await fetchAllCategories();
-});
+watch(
+    () => form.main_category,
+    (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+            form.sub_category = null;
+        }
+    },
+);
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useItems } from '../../../src/composables/item/useItems';
-import { useCategoryData } from '@/src/composables/useCategoryData.js';
+import { useEnumStore } from '../../../stores/enum';
 import Close from 'vue-material-design-icons/Close.vue';
 
 const emit = defineEmits(['close', 'onItemSelected']);
@@ -9,7 +9,8 @@ const props = defineProps({ itemType: Number });
 
 const { items, isLoading, hasError, fetchItems } = useItems();
 
-const { fetchSubCategories, getSubCategoryName } = useCategoryData();
+const enumStore = useEnumStore();
+const { fetchEnums, getSubCategoryName } = enumStore;
 
 const filteredItems = computed(() =>
     items.value.filter((i) => i.main_category === props.itemType),
@@ -32,7 +33,7 @@ const selectNone = () => {
 
 onMounted(async () => {
     await fetchItems();
-    await fetchSubCategories(props.itemType);
+    await fetchEnums();
 });
 </script>
 
