@@ -20,19 +20,21 @@ class PromptBuilder
     return <<<PROMPT
       あなたはファッションの専門家です。
 
-      以下のJSONを返してください。
+      【ユーザー情報】 
+      - 性別: {$genderText} 
+      - 年齢: {$ageText} 
+      - シーン: {$tpoText} 
+      【天気】 
+      - 最高気温: {$weatherData->max()}℃ 
+      - 最低気温: {$weatherData->min()}℃ 
+      - 降水確率: {$weatherData->pop()}% 
+      - 湿度: {$weatherData->humidityAvg()}% 
+      - 風速: {$weatherData->windAvg()} m/s 
 
-      summary:
-      今日の服装を一文で説明
-
-      items:
-      outer
-      tops
-      bottoms
-      shoes
-
-      notes:
-      3件程度
+      以下を提案してください。 
+      summary
+      items
+      notes
     PROMPT;
   }
 

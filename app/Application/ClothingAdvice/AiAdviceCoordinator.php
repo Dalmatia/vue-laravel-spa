@@ -26,7 +26,6 @@ final class AiAdviceCoordinator
     try {
       $prompt = $this->promptBuilder->buildJson($weather, $user, $tpo);
       $json = $this->aiClient->getClothingAdviceJson($prompt);
-      dd($json);
 
       if (!$this->isValidAiResponse($json)) {
         throw new \RuntimeException('Invalid AI response structure');
@@ -44,8 +43,10 @@ final class AiAdviceCoordinator
       ? ($json['summary'] ?? '本日の服装アドバイスです。')
       : 'AI提案が利用できなかったため、手持ちアイテムから組み合わせを提案しました。';
 
+    $items = $json['items'] ?? [];
+
     [$items, $outerPolicy] = $this->outfitBuilder->outfitSuggestion(
-      $json['items'] ?? [],
+      $items,
       $user->id,
       $exclude,
       $tpo,
@@ -86,10 +87,6 @@ final class AiAdviceCoordinator
 
   private function isValidAiResponse(array $json): bool
   {
-    if (!isset($json['items']) || !is_array($json['items'])) {
-      return false;
-    }
-
-    return true;
+    return isset($json['items']) && is_array($json['items']);
   }
 }

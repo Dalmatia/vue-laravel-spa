@@ -41,7 +41,6 @@ const handleCitySaved = (city) => {
 onMounted(async () => {
     await fetchSavedCity();
     await fetchWeather();
-    await fetchClothingAdvice();
 });
 </script>
 

@@ -35,7 +35,13 @@ class AiClient
         )
         ->generateContent($prompt);
 
-      return (array) $response->json();
+      $json = (array) $response->json();
+
+      if (isset($json['items']) && is_object($json['items'])) {
+        $json['items'] = (array) $json['items'];
+      }
+
+      return $json;
     } catch (\Throwable $e) {
       Log::error('Gemini JSON parse error', [
         'error' => $e->getMessage(),
