@@ -1,5 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
+import '../js/src/specialColors.js';
 
 import { createApp } from 'vue';
 import router from './Router';
