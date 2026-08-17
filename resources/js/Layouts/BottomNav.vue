@@ -31,12 +31,18 @@ const emit = defineEmits(['open-create-post']);
             <Magnify fillColor="#000000" :size="33" class="cursor-pointer" />
         </router-link>
 
-        <Plus
+        <div
             @click="emit('open-create-post')"
-            fillColor="#000000"
-            :size="33"
-            class="cursor-pointer"
-        />
+            class="flex flex-col items-center cursor-pointer"
+        >
+            <div
+                class="flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-black shadow-[0_3px_8px_rgba(0,0,0,0.25)] active:scale-95 transition-transform"
+            >
+                <Plus fillColor="#ffffff" :size="33" />
+            </div>
+
+            <span class="mt-1 text-sm font-medium text-gray-900"> 投稿 </span>
+        </div>
 
         <router-link :to="{ name: 'Calendar' }">
             <Calendar fillColor="#000000" :size="33" class="cursor-pointer" />

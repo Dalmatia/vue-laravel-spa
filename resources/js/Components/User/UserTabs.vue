@@ -3,8 +3,8 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import UserTabButton from './UserTabButton.vue';
 import Grid from 'vue-material-design-icons/Grid.vue';
+import WardrobeOutline from 'vue-material-design-icons/WardrobeOutline.vue';
 import Hanger from 'vue-material-design-icons/Hanger.vue';
-import PlusCircle from 'vue-material-design-icons/PlusCircle.vue';
 
 const route = useRoute();
 
@@ -41,13 +41,18 @@ const isItemsTab = computed(() => route.name === 'Items');
             />
         </UserTabButton>
 
-        <div class="p-3 w-1/3 flex justify-center border-t" v-if="authUser">
-            <PlusCircle
+        <div
+            class="p-2 w-1/3 flex flex-col items-center justify-center -mt-1"
+            v-if="authUser"
+        >
+            <WardrobeOutline
                 @click="emit('openCreateItem')"
                 :size="28"
                 fillColor="#8E8E8E"
                 class="cursor-pointer"
             />
+
+            <span class="mt-1 text-xs font-medium text-gray-700"> 登録 </span>
         </div>
 
         <UserTabButton
@@ -81,15 +86,19 @@ const isItemsTab = computed(() => route.name === 'Items');
             </UserTabButton>
 
             <div
-                class="p-[17px] w-1/3 flex justify-center items-center"
+                class="p-[17px] w-1/3 flex flex-col items-center justify-center"
                 v-if="authUser"
             >
-                <PlusCircle
+                <WardrobeOutline
                     @click="emit('openCreateItem')"
-                    :size="40"
+                    :size="32"
                     fillColor="#8E8E8E"
                     class="cursor-pointer"
                 />
+
+                <span class="mt-1 text-sm font-medium text-gray-700">
+                    ADD ITEM
+                </span>
             </div>
 
             <UserTabButton
