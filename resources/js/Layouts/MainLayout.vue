@@ -66,7 +66,6 @@ onMounted(() => {
         account.value = topsNavRef.value.account;
     }
     document.addEventListener('click', closeMenu);
-    fetchNotifications();
 });
 
 onUnmounted(() => {

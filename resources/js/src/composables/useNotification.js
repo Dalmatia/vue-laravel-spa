@@ -146,6 +146,7 @@ export function useNotification() {
             if (!userId || initialized.value) return;
 
             await fetchUnreadCount();
+            await fetchNotifications();
             listenNotifications();
 
             initialized.value = true;
