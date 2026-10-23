@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.3.36-fpm
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -9,12 +9,14 @@ RUN apt-get update \
         libzip-dev \
         libpng-dev \
         libjpeg-dev \
+        libwebp-dev \
         libfreetype6-dev \
         libicu-dev \
         libonig-dev \
     && docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \
+        --with-webp \
     && docker-php-ext-install \
         pdo_mysql \
         mbstring \
