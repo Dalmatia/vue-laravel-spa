@@ -1,0 +1,74 @@
+services:
+  app:
+    image: daily-outfit-app:latest
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+      target: app
+      args:
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:?Set VITE_REVERB_APP_KEY in .env}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:?Set VITE_REVERB_HOST in .env}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:?Set VITE_REVERB_PORT in .env}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:?Set VITE_REVERB_SCHEME in .env}
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+    restart: unless-stopped
+    volumes:
+      - public_file_uploads:/var/www/public/file
+      - public_user_uploads:/var/www/public/user
+      - public_dummy_uploads:/var/www/public/dummy
+      - public_item_uploads:/var/www/public/item
+      - public_outfit_uploads:/var/www/public/outfit
+
+  reverb:
+    image: daily-outfit-app:latest
+    command:
+      - php
+      - artisan
+      - reverb:start
+      - --host=0.0.0.0
+      - --port=8080
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: "8080"
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  nginx:
+    image: daily-outfit-nginx:latest
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+      target: nginx
+      args:
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:?Set VITE_REVERB_APP_KEY in .env}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:?Set VITE_REVERB_HOST in .env}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:?Set VITE_REVERB_PORT in .env}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:?Set VITE_REVERB_SCHEME in .env}
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+      - reverb
+    restart: unless-stopped
+    volumes:
+      - public_file_uploads:/var/www/public/file:ro
+      - public_user_uploads:/var/www/public/user:ro
+      - public_dummy_uploads:/var/www/public/dummy:ro
+      - public_item_uploads:/var/www/public/item:ro
+      - public_outfit_uploads:/var/www/public/outfit:ro
+
+volumes:
+  public_file_uploads:
+  public_user_uploads:
+  public_dummy_uploads:
+  public_item_uploads:
+  public_outfit_uploads:
