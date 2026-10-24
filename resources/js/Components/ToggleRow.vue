@@ -1,5 +1,5 @@
 <script setup>
-import ReusableToggle from '@/components/ReusableToggle.vue';
+import ReusableToggle from '@/Components/ReusableToggle.vue';
 
 defineProps({
     label: String,

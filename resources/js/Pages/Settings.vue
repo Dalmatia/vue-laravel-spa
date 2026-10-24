@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import Toast from '@/components/Toast.vue';
+import Toast from '@/Components/Toast.vue';
 import SettingsNotification from '../Components/Settings/SettingsNotification.vue';
 import ThemeToggle from '../Components/Settings/ThemeToggle.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';

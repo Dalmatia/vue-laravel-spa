@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import Check from 'vue-material-design-icons/Check.vue';
-import ConfirmModal from '@/components/ConfirmModal.vue';
+import ConfirmModal from '@/Components/ConfirmModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

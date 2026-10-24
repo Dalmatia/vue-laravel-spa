@@ -10,7 +10,7 @@ import Close from 'vue-material-design-icons/Close.vue';
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
-import SelectColor from '@/pages/SelectColor.vue';
+import SelectColor from '@/Pages/SelectColor.vue';
 import FileUpdatePreview from '../../FileUpdatePreview.vue';
 
 const emit = defineEmits(['closeOverlay']);

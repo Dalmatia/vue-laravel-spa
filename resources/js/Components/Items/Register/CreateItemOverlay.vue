@@ -11,7 +11,7 @@ import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue';
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue';
 
 import FileUploadPreview from '../../FileUploadPreview.vue';
-import SelectColor from '@/pages/SelectColor.vue';
+import SelectColor from '@/Pages/SelectColor.vue';
 
 const emit = defineEmits(['close']);
 const {

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import ToggleRow from '../ToggleRow.vue';
 import SkeletonRow from '../SkeletonRow.vue';
 import axios from 'axios';
-import Toast from '@/components/Toast.vue';
+import Toast from '@/Components/Toast.vue';
 
 const toastRef = ref(null);
 // モック設定データ
