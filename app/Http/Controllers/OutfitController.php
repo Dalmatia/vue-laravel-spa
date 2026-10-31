@@ -146,6 +146,11 @@ class OutfitController extends Controller
             return response()->json(['error' => 'コーディネートが見つかりません'], 404);
         }
 
+        // コーディネート投稿者本人か確認
+        if (Auth::id() !== $outfit->user_id) {
+            abort(403);
+        }
+
         if ($outfit->file && file_exists(public_path($outfit->file))) {
             unlink(public_path($outfit->file));
         }

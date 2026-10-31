@@ -49,6 +49,12 @@ class ItemController extends Controller
         if (!$item) {
             return response()->json(['message' => 'アイテムが見つかりません'], 404);
         }
+
+        // アイテムの所有者本人か確認
+        if (Auth::id() !== $item->user_id) {
+            return abort(403);
+        }
+
         return response()->json($item, 200);
     }
 
@@ -76,6 +82,11 @@ class ItemController extends Controller
 
         if (!$item) {
             return response()->json(['error' => 'アイテムが見つかりません'], 404);
+        }
+
+        // アイテムの所有者本人か確認
+        if (Auth::id() !== $item->user_id) {
+            return abort(403);
         }
 
         if (!empty($item->file)) {
