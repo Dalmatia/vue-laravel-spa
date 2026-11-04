@@ -14,7 +14,7 @@ class StoreItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => 'required|mimes:jpg,jpeg,png',
+            'file' => 'required|mimes:jpg,jpeg,png,webp',
             'main_category' => 'required',
             'sub_category' => 'nullable',
             'color' => 'required',
