@@ -26,6 +26,20 @@ class FileService
       $directory = '/outfit/';
     }
 
+    // 保存先ディレクトリのパスを取得
+    $directoryPath = public_path($directory);
+
+    // 保存先ディレクトリが存在しない場合は作成する
+    if (
+      !is_dir($directoryPath) &&
+      !mkdir($directoryPath, 0755, true) &&
+      !is_dir($directoryPath)
+    ) {
+      throw new \RuntimeException(
+        "Failed to create upload directory: {$directoryPath}"
+      );
+    }
+
     $file = null;
     if ($type === "user") {
       $file = Image::decode($request->file('file'))->resize(400, 400);
