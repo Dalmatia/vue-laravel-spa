@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Notifications\FollowedUser;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\DatabaseNotification;
 use Carbon\Carbon;
 
 class NotificationsController extends Controller
@@ -13,6 +13,9 @@ class NotificationsController extends Controller
 
     public function index(User $user)
     {
+        // 認証済みユーザーが自分の通知のみを取得できるようにする
+        abort_unless(Auth::id() === $user->id, 403);
+
         // ユーザーの通知を取得
         $notifications = $user->notifications()
             ->latest()
@@ -41,31 +44,18 @@ class NotificationsController extends Controller
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'follower_id' => 'required|exists:users,id',
-        ]);
-
-        $user = User::find($validated['user_id']); // 通知を受け取るユーザー
-        $follower = User::find($validated['follower_id']); // フォローしたユーザー
-
-        // フォロー通知を送信
-        $user->notify(new FollowedUser($follower));
-
-        return response()->json(['message' => '通知が送信されました。'], 200);
-    }
-
     public function unreadCount(User $user)
     {
+        abort_unless(Auth::id() === $user->id, 403);
         $count = $user->unreadNotifications()->count();
         return response()->json(['unread_count' => $count]);
     }
 
     public function markAsRead($id)
     {
-        $notification = DatabaseNotification::find($id);
+        /** @var User $authenticatedUser */
+        $authenticatedUser = Auth::user();
+        $notification = $authenticatedUser->notifications()->find($id);
 
         if ($notification) {
             $notification->markAsRead();
@@ -77,7 +67,9 @@ class NotificationsController extends Controller
 
     public function destroy($id)
     {
-        $notification = DatabaseNotification::find($id);
+        /** @var User $authenticatedUser */
+        $authenticatedUser = Auth::user();
+        $notification = $authenticatedUser->notifications()->find($id);
 
         if ($notification) {
             $notification->delete();
