@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Image;
+use Intervention\Image\Laravel\Facades\Image;
 
 class FileService
 {
@@ -26,11 +26,25 @@ class FileService
       $directory = '/outfit/';
     }
 
+    // 保存先ディレクトリのパスを取得
+    $directoryPath = public_path($directory);
+
+    // 保存先ディレクトリが存在しない場合は作成する
+    if (
+      !is_dir($directoryPath) &&
+      !mkdir($directoryPath, 0755, true) &&
+      !is_dir($directoryPath)
+    ) {
+      throw new \RuntimeException(
+        "Failed to create upload directory: {$directoryPath}"
+      );
+    }
+
     $file = null;
     if ($type === "user") {
-      $file = Image::make($request->file('file'))->resize(400, 400);
+      $file = Image::decode($request->file('file'))->resize(400, 400);
     } else {
-      $file = Image::make($request->file('file'));
+      $file = Image::decode($request->file('file'));
     }
 
     // ユニークIDを生成
@@ -42,8 +56,8 @@ class FileService
 
     // WebP形式で保存
     $webpHashName = md5($uniqueId . $request->file('file')->getClientOriginalName()) . '.webp';
-    $file->encode('webp', 90);
-    $file->save(public_path() . $directory . $webpHashName);
+    $file->save(public_path() . $directory . $webpHashName, quality: 90);
+
     // モデルにはWebP形式のパスを保存
     $model->file = $directory . $webpHashName;
 

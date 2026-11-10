@@ -7,7 +7,7 @@ class StoreOutfitRequest extends BaseOutfitRequest
     public function fileRules(): array
     {
         return [
-            'file' => 'required|mimes:jpg,jpeg,png'
+            'file' => 'required|mimes:jpg,jpeg,png,webp'
         ];
     }
 }
