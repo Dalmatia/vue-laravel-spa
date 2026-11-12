@@ -1,0 +1,159 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
+
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'CIが成功したデプロイ候補の完全なコミットSHA'
+        required: true
+        type: string
+
+# デフォルトですべてのGITHUB_TOKEN権限を無効化
+permissions: {}
+
+jobs:
+  # ==========================================
+  # CI成功イベントの検知
+  # ==========================================
+  detect-ci-success:
+    name: Detect Successful CI
+    runs-on: ubuntu-latest
+
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.name == 'CI' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+
+    steps:
+      - name: Validate CI commit SHA
+        env:
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          CI_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+          CI_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CI_EVENT: ${{ github.event.workflow_run.event }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$CI_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid commit SHA."
+            exit 1
+          fi
+
+          echo "CI completed successfully."
+          echo "Branch: $CI_BRANCH"
+          echo "Event: $CI_EVENT"
+          echo "Commit SHA: $CI_SHA"
+          echo "CI Run ID: $CI_RUN_ID"
+          echo "CI Run Number: $CI_RUN_NUMBER"
+
+          {
+            echo "## CI Success Detected"
+            echo ""
+            echo "- Branch: \`$CI_BRANCH\`"
+            echo "- Event: \`$CI_EVENT\`"
+            echo "- Commit SHA: \`$CI_SHA\`"
+            echo "- CI Run ID: \`$CI_RUN_ID\`"
+            echo "- CI Run Number: \`$CI_RUN_NUMBER\`"
+            echo ""
+            echo "Production deployment has NOT been executed."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ==========================================
+  # 手動実行時の対象SHA・CI成功確認
+  # ==========================================
+  validate-deployment-candidate:
+    name: Validate Deployment Candidate
+    runs-on: ubuntu-latest
+
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main'
+
+    permissions:
+      actions: read
+
+    steps:
+      - name: Validate SHA format
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid SHA. Please provide a full 40-character commit SHA."
+            exit 1
+          fi
+
+          echo "Target SHA format is valid."
+
+      - name: Verify successful CI run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          set -euo pipefail
+
+          echo "Checking CI results for the specified commit..."
+
+          RUN_JSON=$(gh api \
+            --method GET \
+            "repos/${GH_REPO}/actions/workflows/ci.yml/runs" \
+            -f head_sha="$TARGET_SHA" \
+            -f branch=main \
+            -f event=push \
+            -F per_page=100)
+
+          LATEST_RUN=$(jq -cer \
+            --arg target_sha "$TARGET_SHA" \
+            '[
+              .workflow_runs[]
+              | select(.head_sha == $target_sha)
+              | select(.head_branch == "main")
+              | select(.event == "push")
+              | select(.name == "CI")
+            ]
+            | sort_by(.run_number)
+            | last
+            | select(
+                .status == "completed" and
+                .conclusion == "success"
+              )' <<< "$RUN_JSON")
+
+          RUN_ID=$(jq -r '.id' <<< "$LATEST_RUN")
+          RUN_NUMBER=$(jq -r '.run_number' <<< "$LATEST_RUN")
+          RUN_SHA=$(jq -r '.head_sha' <<< "$LATEST_RUN")
+          RUN_URL=$(jq -r '.html_url' <<< "$LATEST_RUN")
+
+          if [[ "$RUN_SHA" != "$TARGET_SHA" ]]; then
+            echo "CI SHA does not match the requested SHA."
+            exit 1
+          fi
+
+          echo "Successful CI run found."
+          echo "Commit SHA: $RUN_SHA"
+          echo "CI Run ID: $RUN_ID"
+          echo "CI Run Number: $RUN_NUMBER"
+          echo "CI URL: $RUN_URL"
+
+          {
+            echo "## Deployment Candidate Validation"
+            echo ""
+            echo "- Target SHA: \`$RUN_SHA\`"
+            echo "- CI Run ID: \`$RUN_ID\`"
+            echo "- CI Run Number: \`$RUN_NUMBER\`"
+            echo "- CI Result: SUCCESS"
+            echo "- CI URL: $RUN_URL"
+            echo ""
+            echo "Candidate validation completed."
+            echo "Production deployment has NOT been executed."
+          } >> "$GITHUB_STEP_SUMMARY"
