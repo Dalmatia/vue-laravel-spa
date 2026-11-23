@@ -246,6 +246,13 @@ jobs:
             echo ""
 
             echo "===== Compose Configuration ====="
+            echo "Execution user: $(whoami)"
+            echo "HOME: $HOME"
+
+            docker buildx version
+            docker info --format '{{json .ClientInfo.Plugins}}'
+            echo ""
+
             docker compose -p "$PROJECT" -f compose.prod.yml config --quiet
             echo "Compose configuration: OK"
             echo ""
