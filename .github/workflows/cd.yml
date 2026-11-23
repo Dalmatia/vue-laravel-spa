@@ -16,76 +16,93 @@ on:
 # デフォルトですべてのGITHUB_TOKEN権限を無効化
 permissions: {}
 
+# ==========================================
+# デプロイの同時実行を防止
+# ==========================================
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
 jobs:
   # ==========================================
-  # CI成功イベントの検知
+  # デプロイ対象SHAの確定
   # ==========================================
-  detect-ci-success:
-    name: Detect Successful CI
+  resolve-deployment-target:
+    name: Resolve Deployment Target
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     if: >
-      github.event_name == 'workflow_run' &&
-      github.event.workflow_run.name == 'CI' &&
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      github.event.workflow_run.head_repository.full_name == github.repository
-
-    steps:
-      - name: Validate CI commit SHA
-        env:
-          CI_SHA: ${{ github.event.workflow_run.head_sha }}
-          CI_RUN_ID: ${{ github.event.workflow_run.id }}
-          CI_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
-          CI_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          CI_EVENT: ${{ github.event.workflow_run.event }}
-        run: |
-          set -euo pipefail
-
-          if [[ ! "$CI_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Invalid commit SHA."
-            exit 1
-          fi
-
-          echo "CI completed successfully."
-          echo "Branch: $CI_BRANCH"
-          echo "Event: $CI_EVENT"
-          echo "Commit SHA: $CI_SHA"
-          echo "CI Run ID: $CI_RUN_ID"
-          echo "CI Run Number: $CI_RUN_NUMBER"
-
-          {
-            echo "## CI Success Detected"
-            echo ""
-            echo "- Branch: \`$CI_BRANCH\`"
-            echo "- Event: \`$CI_EVENT\`"
-            echo "- Commit SHA: \`$CI_SHA\`"
-            echo "- CI Run ID: \`$CI_RUN_ID\`"
-            echo "- CI Run Number: \`$CI_RUN_NUMBER\`"
-            echo ""
-            echo "Production deployment has NOT been executed."
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  # ==========================================
-  # 手動実行時の対象SHA・CI成功確認
-  # ==========================================
-  validate-deployment-candidate:
-    name: Validate Deployment Candidate
-    runs-on: ubuntu-latest
-
-    if: >
-      github.event_name == 'workflow_dispatch' &&
-      github.ref == 'refs/heads/main'
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.name == 'CI' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      ) ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        github.ref == 'refs/heads/main'
+      )
 
     permissions:
       actions: read
+      contents: read
 
     outputs:
-      target_sha: ${{ steps.verify-ci.outputs.target_sha }}
+      target_sha: ${{ steps.resolve-auto.outputs.target_sha || steps.resolve-manual.outputs.target_sha }}
 
     steps:
-      - name: Validate SHA format
+      # ------------------------------------------
+      # CI成功後の自動実行
+      # ------------------------------------------
+      - name: Resolve automatic deployment target
+        id: resolve-auto
+        if: github.event_name == 'workflow_run'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          CI_RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid CI commit SHA."
+            exit 1
+          fi
+
+          echo "Checking the latest main commit..."
+
+          MAIN_SHA=$(gh api \
+            "repos/${GH_REPO}/commits/main" \
+            --jq '.sha')
+
+          if [[ "$TARGET_SHA" != "$MAIN_SHA" ]]; then
+            echo "Deployment skipped: the successful CI commit is no longer the latest main commit."
+            echo "CI SHA: $TARGET_SHA"
+            echo "Main SHA: $MAIN_SHA"
+            exit 1
+          fi
+
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Automatic Deployment Candidate"
+            echo ""
+            echo "- Target SHA: \`$TARGET_SHA\`"
+            echo "- CI Run ID: \`$CI_RUN_ID\`"
+            echo "- CI Run Number: \`$CI_RUN_NUMBER\`"
+            echo "- Latest main commit: CONFIRMED"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # ------------------------------------------
+      # 手動実行
+      # ------------------------------------------
+      - name: Validate manual target SHA
+        if: github.event_name == 'workflow_dispatch'
         env:
           TARGET_SHA: ${{ inputs.target_sha }}
         run: |
@@ -99,7 +116,8 @@ jobs:
           echo "Target SHA format is valid."
 
       - name: Verify successful CI run
-        id: verify-ci
+        id: resolve-manual
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -126,7 +144,7 @@ jobs:
               | select(.event == "push")
               | select(.name == "CI")
             ]
-            | sort_by(.run_number)
+            | sort_by([.run_number, .run_attempt])
             | last
             | select(
                 .status == "completed" and
@@ -143,40 +161,28 @@ jobs:
             exit 1
           fi
 
-          echo "Successful CI run found."
-          echo "Commit SHA: $RUN_SHA"
-          echo "CI Run ID: $RUN_ID"
-          echo "CI Run Number: $RUN_NUMBER"
-          echo "CI URL: $RUN_URL"
-
-          # 検証済みSHAを後続ジョブへ渡す
           echo "target_sha=$RUN_SHA" >> "$GITHUB_OUTPUT"
 
           {
-            echo "## Deployment Candidate Validation"
+            echo "## Manual Deployment Candidate"
             echo ""
             echo "- Target SHA: \`$RUN_SHA\`"
             echo "- CI Run ID: \`$RUN_ID\`"
             echo "- CI Run Number: \`$RUN_NUMBER\`"
             echo "- CI Result: SUCCESS"
             echo "- CI URL: $RUN_URL"
-            echo ""
-            echo "Candidate validation completed."
-            echo "Production deployment has NOT been executed."
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # ==========================================
   # 本番デプロイ前の事前チェック
+  # ==========================================
   production-preflight:
     name: Production Preflight
     runs-on: ubuntu-latest
-    needs: validate-deployment-candidate
+    needs: resolve-deployment-target
     timeout-minutes: 15
 
-    # 手動実行かつSHA検証成功時のみ実行
-    if: >
-      github.event_name == 'workflow_dispatch' &&
-      github.ref == 'refs/heads/main' &&
-      needs.validate-deployment-candidate.result == 'success'
+    if: needs.resolve-deployment-target.result == 'success'
 
     permissions:
       id-token: write
@@ -184,10 +190,12 @@ jobs:
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       EC2_INSTANCE_ID: i-031ad3c8225459f7b
-      TARGET_SHA: ${{ needs.validate-deployment-candidate.outputs.target_sha }}
+      TARGET_SHA: ${{ needs.resolve-deployment-target.outputs.target_sha }}
 
     steps:
+      # ------------------------------------------
       # AWS OIDC認証
+      # ------------------------------------------
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -201,7 +209,9 @@ jobs:
           echo "Verifying AWS identity..."
           aws sts get-caller-identity
 
-      # SSM経由で本番EC2を読み取り専用確認
+      # ------------------------------------------
+      # SSM経由の読み取り専用事前チェック
+      # ------------------------------------------
       - name: Run production preflight checks
         env:
           PREFLIGHT_SCRIPT: |
@@ -214,7 +224,6 @@ jobs:
             echo "Check mode: READ ONLY"
             echo ""
 
-            # 作業ディレクトリ確認
             if [[ ! -d "$APP_DIR" ]]; then
               echo "Application directory not found."
               exit 1
@@ -222,30 +231,29 @@ jobs:
 
             cd "$APP_DIR"
 
-            # Git状態確認
             echo "===== Git ====="
             git -c safe.directory="$APP_DIR" -C "$APP_DIR" rev-parse HEAD
+
             if [[ -z "$(git -c safe.directory="$APP_DIR" -C "$APP_DIR" status --short)" ]]; then
-                echo "Working tree: CLEAN"
+              echo "Working tree: CLEAN"
             else
-                echo "Working tree: CHANGES DETECTED"
-                git -c safe.directory="$APP_DIR" -C "$APP_DIR" status --short
+              echo "Working tree: CHANGES DETECTED"
+              git -c safe.directory="$APP_DIR" -C "$APP_DIR" status --short
             fi
+
             echo "Production HEAD SHA:"
             git -c safe.directory="$APP_DIR" -C "$APP_DIR" rev-parse HEAD
+            echo ""
 
-            # Compose設定の構文確認
             echo "===== Compose Configuration ====="
             docker compose -p "$PROJECT" -f compose.prod.yml config --quiet
             echo "Compose configuration: OK"
             echo ""
 
-            # Compose稼働状態
             echo "===== Compose Services ====="
             docker compose -p "$PROJECT" -f compose.prod.yml ps
             echo ""
 
-            # 既存アップロード用ボリューム確認
             echo "===== Upload Volumes ====="
             for volume in \
               vue-laravel-spa_public_file_uploads \
@@ -259,7 +267,6 @@ jobs:
             done
             echo ""
 
-            # 現在の本番イメージ確認
             echo "===== Production Images ====="
             docker image inspect daily-outfit-app:latest \
               --format 'daily-outfit-app:latest {{.Id}}'
@@ -267,7 +274,6 @@ jobs:
               --format 'daily-outfit-nginx:latest {{.Id}}'
             echo ""
 
-            # ディスク・メモリ確認
             echo "===== Disk ====="
             df -h /
             echo ""
@@ -310,7 +316,6 @@ jobs:
 
           echo "SSM Command ID: $COMMAND_ID"
 
-          # SSMコマンドの完了を最大5分待機
           for attempt in $(seq 1 60); do
             RESULT=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
@@ -325,9 +330,6 @@ jobs:
                 echo "===== EC2 Preflight Output ====="
                 jq -r '.StandardOutputContent // ""' <<< "$RESULT"
 
-                echo "===== SSM Status ====="
-                echo "$STATUS"
-
                 {
                   echo "## Production Preflight"
                   echo ""
@@ -335,8 +337,6 @@ jobs:
                   echo "- EC2 Instance: \`$EC2_INSTANCE_ID\`"
                   echo "- SSM Status: SUCCESS"
                   echo "- Production deployment: NOT executed"
-                  echo ""
-                  echo "Read-only production checks completed."
                 } >> "$GITHUB_STEP_SUMMARY"
 
                 exit 0
@@ -361,4 +361,198 @@ jobs:
           done
 
           echo "Timed out while waiting for SSM command."
+          exit 1
+
+  # ==========================================
+  # 本番デプロイ
+  # ==========================================
+  production-deploy:
+    name: Production Deploy
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
+
+    needs:
+      - resolve-deployment-target
+      - production-preflight
+    timeout-minutes: 45
+
+    if: >
+      needs.resolve-deployment-target.result == 'success' &&
+      needs.production-preflight.result == 'success'
+
+    permissions:
+      id-token: write
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      EC2_INSTANCE_ID: i-031ad3c8225459f7b
+      TARGET_SHA: ${{ needs.resolve-deployment-target.outputs.target_sha }}
+      DEPLOY_MODE: ${{ github.event_name }}
+
+    steps:
+      # ------------------------------------------
+      # AWS OIDC認証
+      # ------------------------------------------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Verify AWS identity
+        run: |
+          set -euo pipefail
+
+          aws sts get-caller-identity
+
+      # ------------------------------------------
+      # SSM経由でEC2デプロイスクリプトを実行
+      # ------------------------------------------
+      - name: Deploy production release
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid deployment SHA."
+            exit 1
+          fi
+
+          if [[ "$DEPLOY_MODE" != "workflow_run" && "$DEPLOY_MODE" != "workflow_dispatch" ]]; then
+            echo "Invalid deployment mode."
+            exit 1
+          fi
+
+          echo "Target SHA: $TARGET_SHA"
+          echo "Deployment mode: $DEPLOY_MODE"
+          echo "Target EC2: $EC2_INSTANCE_ID"
+
+          # SHAは40文字の16進数、DEPLOY_MODEは固定値として検証済み
+          REMOTE_SCRIPT=$(cat <<'REMOTE'
+          set -Eeuo pipefail
+
+          APP_DIR="/home/ssm-user/vue-laravel-spa"
+          TARGET_SHA="__TARGET_SHA__"
+          DEPLOY_MODE="__DEPLOY_MODE__"
+          RUNNER_SCRIPT="/tmp/deploy-production-${TARGET_SHA}.sh"
+
+          if [[ ! -d "$APP_DIR/.git" ]]; then
+            echo "Production Git repository not found."
+            exit 1
+          fi
+
+          if [[ ! -f "$APP_DIR/.env" ]]; then
+            echo "Production environment file not found."
+            exit 1
+          fi
+
+          echo "===== Fetch Deployment Candidate ====="
+
+          git -c safe.directory="$APP_DIR" -C "$APP_DIR" fetch \
+            --no-tags origin \
+            refs/heads/main:refs/remotes/origin/main
+
+          git -c safe.directory="$APP_DIR" -C "$APP_DIR" cat-file -e "${TARGET_SHA}^{commit}"
+
+          # 自動デプロイでは古いCIイベントによる巻き戻しを防止
+          if [[ "$DEPLOY_MODE" == "workflow_run" ]]; then
+            MAIN_SHA=$(git -c safe.directory="$APP_DIR" -C "$APP_DIR" rev-parse refs/remotes/origin/main)
+
+            if [[ "$TARGET_SHA" != "$MAIN_SHA" ]]; then
+              echo "Automatic deployment aborted: target is no longer the latest main commit."
+              echo "Target SHA: $TARGET_SHA"
+              echo "Main SHA: $MAIN_SHA"
+              exit 1
+            fi
+          fi
+
+          echo "===== Prepare Deployment Script ====="
+
+          git -c safe.directory="$APP_DIR" -C "$APP_DIR" show \
+            "${TARGET_SHA}:scripts/deploy-production.sh" > "$RUNNER_SCRIPT"
+
+          if [[ ! -s "$RUNNER_SCRIPT" ]]; then
+            echo "Deployment script is missing from the target commit."
+            exit 1
+          fi
+
+          chmod 700 "$RUNNER_SCRIPT"
+          trap 'rm -f "$RUNNER_SCRIPT"' EXIT
+
+          echo "Deployment script retrieved from target commit."
+          echo "Starting production deployment..."
+
+          bash "$RUNNER_SCRIPT" "$TARGET_SHA"
+          REMOTE
+          )
+
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__TARGET_SHA__/$TARGET_SHA}"
+          REMOTE_SCRIPT="${REMOTE_SCRIPT//__DEPLOY_MODE__/$DEPLOY_MODE}"
+
+          PARAMETERS=$(jq -n \
+            --arg script "$REMOTE_SCRIPT" \
+            '{commands: [$script]}')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Production deployment for ${TARGET_SHA}" \
+            --timeout-seconds 1800 \
+            --parameters "$PARAMETERS" \
+            --query 'Command.CommandId' \
+            --output text)
+
+          if [[ -z "$COMMAND_ID" || "$COMMAND_ID" == "None" ]]; then
+            echo "Failed to obtain SSM command ID."
+            exit 1
+          fi
+
+          echo "SSM Command ID: $COMMAND_ID"
+
+          # デプロイ完了を最大30分待機
+          for attempt in $(seq 1 180); do
+            RESULT=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --output json 2>/dev/null || true)
+
+            if [[ -n "$RESULT" ]]; then
+              STATUS=$(jq -r '.Status // "Unknown"' <<< "$RESULT")
+
+              if [[ "$STATUS" == "Success" ]]; then
+                echo ""
+                echo "===== Production Deployment Output ====="
+                jq -r '.StandardOutputContent // ""' <<< "$RESULT"
+
+                {
+                  echo "## Production Deployment"
+                  echo ""
+                  echo "- Target SHA: \`$TARGET_SHA\`"
+                  echo "- EC2 Instance: \`$EC2_INSTANCE_ID\`"
+                  echo "- SSM Status: SUCCESS"
+                } >> "$GITHUB_STEP_SUMMARY"
+
+                exit 0
+              fi
+
+              case "$STATUS" in
+                Failed|Cancelled|TimedOut|DeliveryTimedOut|ExecutionTimedOut|Undeliverable|Terminated|InvalidPlatform|AccessDenied)
+                  echo "Production deployment failed. SSM Status: $STATUS"
+                  echo ""
+                  echo "===== Standard Output ====="
+                  jq -r '.StandardOutputContent // ""' <<< "$RESULT"
+                  echo ""
+                  echo "===== Standard Error ====="
+                  jq -r '.StandardErrorContent // ""' <<< "$RESULT"
+                  exit 1
+                  ;;
+              esac
+            fi
+
+            echo "Waiting for deployment... ($attempt/180)"
+            sleep 10
+          done
+
+          echo "Timed out while waiting for production deployment."
           exit 1
