@@ -559,6 +559,13 @@ git -c safe.directory="$PROJECT_ROOT" \
     | tar -x -C "$STAGING_DIR"
 
 # ==========================================
+# 9.1 Set staging directory permissions
+# ==========================================
+
+chmod 755 "$STAGING_DIR" \
+    || fail "Could not set staging directory permissions."
+
+# ==========================================
 # 10. Validate required release files
 # ==========================================
 
